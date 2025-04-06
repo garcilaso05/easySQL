@@ -162,7 +162,11 @@ function downloadSQL() {
                 let colDef = `${col.name} ${col.type}`;
                 if (col.pk) colDef += ' PRIMARY KEY';
                 if (schema.tables[col.type]?.isEnum) {
-                    colDef += ` CHECK(${col.name} IN (${schema.tables[col.type].values.map(v => `'${v}'`).join(', ')}))`;
+                    const enumValues = schema.tables[col.type].values.map(v => `'${v}'`).join(', ');
+                    colDef += ` CHECK(${col.name} IS NULL OR ${col.name} IN (${enumValues}))`;
+                } else if (col.check && typeof col.check === 'object') {
+                    const enumValues = col.check.values.map(v => `'${v}'`).join(', ');
+                    colDef += ` CHECK(${col.name} IS NULL OR ${col.name} IN (${enumValues}))`;
                 }
                 return colDef;
             }).join(',\n  ');
@@ -300,23 +304,59 @@ function processTable(sql) {
     const match = sql.match(/CREATE TABLE (\w+)\s*\(([\s\S]+)\)/i);
     if (match) {
         const tableName = match[1];
-        let columnsPart = match[2];
+        // Limpiar la definición de la tabla y remover cualquier paréntesis extra
+        let columnsPart = match[2].replace(/\)\s*$/g, '').trim();
         
-        // Eliminar todos los CHECKs para no interferir con el parsing
-        columnsPart = columnsPart.replace(/CHECK\s*\([^)]+\)/gi, '');
-        
-        // Dividir las columnas y limpiar
-        const columnDefs = columnsPart.split(',')
-            .map(col => col.trim())
-            .filter(col => col);
+        // Separar las columnas correctamente, teniendo en cuenta los CHECK
+        const columnDefinitions = [];
+        let currentColumn = '';
+        let inCheck = false;
+        let parenCount = 0;
 
-        const columns = columnDefs.map(def => {
-            // Separar solo el nombre y el tipo, ignorando el resto
-            const parts = def.split(' ');
+        for (let char of columnsPart) {
+            if (char === '(' && !inCheck) {
+                inCheck = true;
+                parenCount++;
+            } else if (char === '(') {
+                parenCount++;
+            } else if (char === ')') {
+                parenCount--;
+                if (parenCount === 0) inCheck = false;
+            }
+
+            if (char === ',' && !inCheck && parenCount === 0) {
+                if (currentColumn.trim()) columnDefinitions.push(currentColumn.trim());
+                currentColumn = '';
+            } else {
+                currentColumn += char;
+            }
+        }
+        if (currentColumn.trim()) columnDefinitions.push(currentColumn.trim());
+
+        const columns = columnDefinitions.map(def => {
+            const parts = def.split(/\s+/);
+            const name = parts[0];
+            const type = parts[1];
+            const pk = def.toLowerCase().includes('primary key');
+            
+            // Verificar si el tipo es un ENUM conocido
+            const isEnum = schema.tables[type]?.isEnum;
+            if (isEnum) {
+                return {
+                    name,
+                    type,
+                    pk,
+                    check: {
+                        type: type,
+                        values: schema.tables[type].values
+                    }
+                };
+            }
+            
             return {
-                name: parts[0],
-                type: parts[1],
-                pk: def.toLowerCase().includes('primary key')
+                name,
+                type,
+                pk
             };
         });
 

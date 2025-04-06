@@ -50,7 +50,7 @@ h1 {
     font-weight: 600;
     color: var(--color-primary);
     padding: 1rem 0;
-    z-index: 2;
+    z-index: 1; /* Reducido para estar por debajo de los modales */
     text-transform: uppercase;
     transition: transform 0.3s ease-out;
 }
@@ -64,6 +64,7 @@ h1 {
     align-items: center;
     overflow: hidden;
     margin: 2rem 0 3rem 0;  /* Aumentado el margen superior */
+    z-index: 1; /* Reducido para que esté por debajo de los modales */
 }
 
 .bg-shapes {
@@ -72,7 +73,7 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
+    z-index: 0; /* Reducido para estar por debajo de todo */
     pointer-events: none;
     overflow: hidden;
 }
@@ -201,17 +202,27 @@ textarea:focus {
 
 /* === MODALS === */
 .modal {
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000; /* Aumentado para estar por encima del título */
 }
 
 .modal-content {
     background-color: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: var(--shadow-md);
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
     max-width: 600px;
-    margin: 5vh auto;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1001; /* Aumentado para estar por encima del fondo del modal */
 }
 
 /* === ANIMATIONS === */
@@ -230,6 +241,9 @@ textarea:focus {
     border-radius: 12px;
     background-color: white;
     box-shadow: var(--shadow-sm);
+    height: 600px !important; /* Forzar altura fija */
+    width: 100% !important; /* Forzar ancho completo */
+    min-height: 600px; /* Altura mínima */
 }
 
 /* === BUTTON GROUPS === */
@@ -302,17 +316,6 @@ textarea:focus {
   #result {
     margin-top: 20px;
     padding: 10px;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    white-space: pre-wrap;
-  }
-  
-  #network {
-    width: 100%;
-    height: calc(100vh - 150px); /* Dynamically adjust height */
-    border: 1px solid var(--color-border);
-    margin-top: 10px;
-    resize: both; /* Allow resizing */
     overflow: auto; /* Handle overflow when resized */
   }
   
@@ -805,4 +808,16 @@ textarea:focus {
     padding: 2rem;
     box-shadow: var(--shadow-md);
     min-height: 400px;
+}
+
+.remove-column[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #cccccc;
+}
+
+.remove-column[disabled]:hover {
+    background-color: #cccccc;
+    transform: none;
+    box-shadow: none;
 }

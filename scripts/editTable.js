@@ -43,8 +43,8 @@ function openEditTableModal() {
                     .map(enumName => `<option value="${enumName}" ${col.type === enumName ? 'selected' : ''}>${enumName}</option>`)
                     .join('')}
             </select>
-            <label><input type="checkbox" class="col-pk" ${col.pk ? 'checked' : ''}> Clave Primaria</label>
-            <button onclick="removeColumnInput(this)">Eliminar</button>
+            <label><input type="checkbox" class="col-pk" ${col.pk ? 'checked' : ''} disabled title="No se puede modificar la clave primaria"> Clave Primaria</label>
+            <button onclick="removeColumnInput(this)" class="remove-column" ${col.pk ? 'disabled title="No se puede eliminar una clave primaria"' : ''}>Eliminar</button>
         `;
         container.appendChild(newInput);
     });
@@ -64,40 +64,55 @@ function saveTableChanges() {
     const tableName = document.getElementById('tableDropdown').value;
     const columns = [];
     const columnInputs = document.querySelectorAll('#editColumnsContainer .column-input');
+    let error = false;
+
     columnInputs.forEach(input => {
         const name = input.querySelector('.col-name').value.trim();
         const type = input.querySelector('.col-type').value;
         const pk = input.querySelector('.col-pk').checked;
 
         if (name) {
-            let colDef = `${name} ${type}`;
-            if (schema.tables[type]?.isEnum) {
-                const enumValues = schema.tables[type].values.map(val => `'${val}'`).join(', ');
-                colDef += ` CHECK(${name} IN (${enumValues}))`;
+            try {
+                let colDef = `${name} ${type}`;
+                if (schema.tables[type]?.isEnum) {
+                    const enumValues = schema.tables[type].values;
+                    if (!enumValues || enumValues.length === 0) {
+                        throw new Error(`El enum ${type} no tiene valores definidos`);
+                    }
+                    const enumValuesStr = enumValues.map(val => `'${val}'`).join(', ');
+                    colDef += ` CHECK(${name} IS NULL OR ${name} IN (${enumValuesStr}))`;
+                }
+                if (pk) {
+                    if (colDef.includes('IS NULL')) {
+                        throw new Error('Una clave primaria no puede ser NULL');
+                    }
+                    colDef += ' PRIMARY KEY';
+                }
+                columns.push({
+                    name,
+                    type,
+                    pk,
+                    definition: colDef
+                });
+            } catch (e) {
+                error = true;
+                alert(`Error en la columna ${name}: ${e.message}`);
+                return;
             }
-            if (pk) colDef += ' PRIMARY KEY';
-            columns.push(colDef);
         }
     });
 
-    if (columns.length === 0) {
-        alert('Por favor, añade al menos un elemento.');
+    if (error || columns.length === 0) {
+        if (!error) alert('Por favor, añade al menos un elemento.');
         return;
     }
 
-    const query = `CREATE TABLE ${tableName} (${columns.join(', ')})`;
+    const query = `CREATE TABLE ${tableName} (${columns.map(col => col.definition).join(', ')})`;
     try {
         alasql(`DROP TABLE ${tableName}`);
         alasql(query);
         schema.tables[tableName] = {
-            columns: columns.map(col => {
-                const parts = col.split(' ');
-                return {
-                    name: parts[0],
-                    type: parts[1],
-                    pk: col.includes('PRIMARY KEY')
-                };
-            }),
+            columns: columns.map(({name, type, pk}) => ({name, type, pk})),
             data: []
         };
         updateClassMap();
@@ -198,8 +213,22 @@ function addColumnInputEdit() {
                 .map(enumName => `<option value="${enumName}">${enumName}</option>`)
                 .join('')}
         </select>
-        <label><input type="checkbox" class="col-pk"> Clave Primaria</label>
-        <button onclick="removeColumnInput(this)">Eliminar</button>
+        <label><input type="checkbox" class="col-pk" disabled title="No se puede modificar la clave primaria"> Clave Primaria</label>
+        <button onclick="removeColumnInput(this)" class="remove-column">Eliminar</button>
     `;
     container.appendChild(newInput);
+}
+
+// Actualización de la función removeColumnInput para ambos casos
+function removeColumnInput(button) {
+    const columnDiv = button.parentElement;
+    const isPK = columnDiv.querySelector('.col-pk').checked;
+    
+    if (isPK && document.getElementById('editTableModal').style.display === 'block') {
+        alert('No se puede eliminar una columna que es clave primaria');
+        return;
+    }
+    
+    const container = columnDiv.parentElement;
+    container.removeChild(columnDiv);
 }

@@ -247,6 +247,7 @@ function editRecord(tableName, pkValue, event) {
             let input = '';
             if (schema.tables[col.type]?.isEnum) {
                 input = `<select name="${col.name}">
+                    <option value="">NULL</option>
                     ${schema.tables[col.type].values.map(value => 
                         `<option value="${value}" ${record[col.name] === value ? 'selected' : ''}>${value}</option>`
                     ).join('')}
@@ -302,12 +303,17 @@ function saveEditedRecord(tableName, pkValue, modal) {
             if (!col.pk) {
                 const input = modal.querySelector(`[name="${col.name}"]`);
                 if (input) {
-                    let value = input.value;
-                    if (col.type === 'BOOLEAN') {
-                        value = value === 'true';
+                    let value = input.value.trim();
+                    // Si el valor está vacío, asignar NULL
+                    if (value === '') {
+                        updates.push(`${col.name} = NULL`);
+                    } else {
+                        if (col.type === 'BOOLEAN') {
+                            value = value === 'true';
+                        }
+                        updates.push(`${col.name} = ?`);
+                        values.push(value);
                     }
-                    updates.push(`${col.name} = ?`);
-                    values.push(value);
                 }
             }
         });
@@ -347,12 +353,20 @@ function downloadInsertions() {
                 if (data.length > 0) {
                     insertionsSQL += `-- Inserciones para tabla ${tableName}\n`;
                     data.forEach(row => {
-                        const columns = Object.keys(row).join(', ');
-                        const values = Object.values(row).map(val => {
-                            if (val === null) return 'NULL';
-                            return typeof val === 'string' ? `'${val}'` : val;
-                        }).join(', ');
-                        insertionsSQL += `INSERT INTO ${tableName} (${columns}) VALUES (${values});\n`;
+                        // Filtrar columnas que no son null
+                        const columns = [];
+                        const values = [];
+                        
+                        Object.entries(row).forEach(([col, val]) => {
+                            columns.push(col);
+                            if (val === null || val === undefined || val === '') {
+                                values.push('NULL');
+                            } else {
+                                values.push(typeof val === 'string' ? `'${val}'` : val);
+                            }
+                        });
+
+                        insertionsSQL += `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${values.join(', ')});\n`;
                     });
                     insertionsSQL += '\n';
                 }
@@ -385,6 +399,27 @@ function loadInsertions(event) {
             const queries = content
                 .split('\n')
                 .filter(line => line.trim() && !line.trim().startsWith('--'))
+                .map(query => {
+                    // Procesar cada query para manejar NULL correctamente
+                    if (query.trim().toUpperCase().startsWith('INSERT')) {
+                        // Extraer los valores entre paréntesis
+                        const valuesMatch = query.match(/VALUES\s*\((.*)\)/i);
+                        if (valuesMatch) {
+                            const values = valuesMatch[1].split(',').map(val => {
+                                val = val.trim();
+                                // Manejar explícitamente NULL
+                                if (val.toUpperCase() === 'NULL') {
+                                    return 'NULL';
+                                }
+                                return val;
+                            }).join(', ');
+                            
+                            // Reconstruir la query con los valores procesados
+                            return query.replace(/VALUES\s*\((.*)\)/i, `VALUES (${values})`);
+                        }
+                    }
+                    return query;
+                })
                 .join('\n')
                 .split(';')
                 .map(query => query.trim())
@@ -398,10 +433,9 @@ function loadInsertions(event) {
             for (const query of queries) {
                 try {
                     if (query) {
-                        // Ejecutar la query directamente
+                        // Ejecutar la query procesada
                         alasql(query + ';');
                         successCount++;
-                        console.log('Query ejecutada con éxito:', query); // Para debugging
                     }
                 } catch (error) {
                     console.error('Error en query:', query, error);

@@ -98,3 +98,35 @@ function saveEnumChanges() {
 function closeEditEnumModal() {
     document.getElementById('editEnumModal').style.display = 'none';
 }
+
+function openDeleteEnumModal(enumName) {
+    if (!enumName) {
+        alert('Por favor, selecciona un enum para borrar.');
+        return;
+    }
+
+    // Verificar si el enum está siendo usado en alguna tabla
+    let enumUsage = [];
+    for (const tableName in schema.tables) {
+        if (!schema.tables[tableName].isEnum) {
+            const table = schema.tables[tableName];
+            table.columns.forEach(column => {
+                if (column.type === enumName) {
+                    enumUsage.push(tableName);
+                }
+            });
+        }
+    }
+
+    if (enumUsage.length > 0) {
+        alert(`No se puede eliminar el enum "${enumName}" porque está siendo utilizado en las siguientes tablas:\n\n${enumUsage.join('\n')}`);
+        return;
+    }
+
+    if (confirm(`¿Estás seguro de que deseas eliminar completamente el enum "${enumName}"?`)) {
+        delete schema.tables[enumName];
+        updateClassMap();
+        populateEnumDropdown();
+        alert(`Enum "${enumName}" eliminado correctamente.`);
+    }
+}

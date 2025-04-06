@@ -28,5 +28,14 @@ function showTab(tabName) {
           window.mapaLeaflet.invalidateSize();
         }, 300);
       }
-      
+
+    // Ajustar el tamaño del mapa si se activa la pestaña de esquema
+    if (tabName === 'esquema' && network) {
+        setTimeout(() => {
+            const container = document.getElementById('network');
+            container.style.height = '600px'; // Altura fija para el contenedor
+            network.fit(); // Ajustar la vista del grafo
+            network.redraw(); // Redibujar el grafo
+        }, 100);
+    }
 }

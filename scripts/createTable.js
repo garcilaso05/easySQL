@@ -12,6 +12,8 @@ function closeCreateTableModal() {
 
 function addColumnInput() {
     const container = document.getElementById('columnsContainer');
+    const isFirstColumn = container.children.length === 0;
+
     const newInput = document.createElement('div');
     newInput.className = 'column-input';
     newInput.innerHTML = `
@@ -27,8 +29,11 @@ function addColumnInput() {
                 .map(enumName => `<option value="${enumName}">${enumName}</option>`)
                 .join('')}
         </select>
-        <label><input type="checkbox" class="col-pk"> Clave Primaria</label>
-        <button onclick="removeColumnInput(this)">Eliminar</button>
+        <label><input type="checkbox" class="col-pk" ${isFirstColumn ? 'checked' : ''} 
+            onchange="handlePrimaryKeyChange(this, 'columnsContainer')" 
+            ${isFirstColumn ? 'disabled' : ''}> Clave Primaria</label>
+        <button onclick="removeColumnInput(this)" class="remove-column" 
+            ${isFirstColumn ? 'disabled' : ''}>Eliminar</button>
     `;
     container.appendChild(newInput);
 
@@ -37,9 +42,54 @@ function addColumnInput() {
     container.style.overflowY = 'auto';
 }
 
+function handlePrimaryKeyChange(checkbox, containerId) {
+    if (!checkbox.checked) {
+        // No permitir desmarcar la única PK
+        checkbox.checked = true;
+        return;
+    }
+
+    const container = document.getElementById(containerId);
+    const allCheckboxes = container.querySelectorAll('.col-pk');
+    const allRemoveButtons = container.querySelectorAll('.remove-column');
+    
+    // Desmarcar y habilitar todos los checkboxes y botones de eliminar
+    allCheckboxes.forEach((cb, index) => {
+        if (cb !== checkbox) {
+            cb.checked = false;
+            cb.disabled = false;
+            allRemoveButtons[index].disabled = false;
+        }
+    });
+
+    // Deshabilitar el checkbox y botón de eliminar de la nueva PK
+    checkbox.disabled = true;
+    checkbox.parentElement.parentElement.querySelector('.remove-column').disabled = true;
+}
+
 function removeColumnInput(button) {
-    const container = document.getElementById('columnsContainer');
-    container.removeChild(button.parentElement);
+    const columnDiv = button.parentElement;
+    const container = columnDiv.parentElement;
+    const isPK = columnDiv.querySelector('.col-pk').checked;
+    
+    // No permitir eliminar si es el único elemento
+    if (container.children.length <= 1) {
+        alert('Una tabla debe tener al menos un elemento');
+        return;
+    }
+
+    container.removeChild(columnDiv);
+
+    // Si eliminamos la PK, asignar la primera columna como PK
+    if (isPK) {
+        const firstColumn = container.querySelector('.column-input');
+        if (firstColumn) {
+            const pkCheckbox = firstColumn.querySelector('.col-pk');
+            pkCheckbox.checked = true;
+            pkCheckbox.disabled = true;
+            firstColumn.querySelector('.remove-column').disabled = true;
+        }
+    }
 }
 
 function createTableFromForm() {
@@ -49,47 +99,72 @@ function createTableFromForm() {
         return;
     }
 
-    const columns = [];
     const columnInputs = document.querySelectorAll('.column-input');
+    if (columnInputs.length === 0) {
+        alert('Por favor, añade al menos un elemento a la tabla.');
+        return;
+    }
+
+    // Verificar que hay exactamente una PK
+    const pkCount = Array.from(columnInputs).filter(input => 
+        input.querySelector('.col-pk').checked
+    ).length;
+
+    if (pkCount !== 1) {
+        alert('La tabla debe tener exactamente una clave primaria.');
+        return;
+    }
+
+    const columns = [];
+    let error = false;
+
     columnInputs.forEach(input => {
         const name = input.querySelector('.col-name').value.trim();
         const type = input.querySelector('.col-type').value;
         const pk = input.querySelector('.col-pk').checked;
 
         if (name) {
-            let colDef = `${name} ${type}`;
-            if (schema.tables[type]?.isEnum) {
-                const enumValues = schema.tables[type].values.map(val => `'${val}'`).join(', ');
-                colDef += ` CHECK(${name} IN (${enumValues}))`;
+            try {
+                let colDef = `${name} ${type}`;
+                if (schema.tables[type]?.isEnum) {
+                    const enumValues = schema.tables[type].values;
+                    if (!enumValues || enumValues.length === 0) {
+                        throw new Error(`El enum ${type} no tiene valores definidos`);
+                    }
+                    const enumValuesStr = enumValues.map(val => `'${val}'`).join(', ');
+                    colDef += ` CHECK(${name} IS NULL OR ${name} IN (${enumValuesStr}))`;
+                }
+                if (pk) {
+                    if (colDef.includes('IS NULL')) {
+                        throw new Error('Una clave primaria no puede ser NULL');
+                    }
+                    colDef += ' PRIMARY KEY';
+                }
+                columns.push({
+                    name,
+                    type,
+                    pk,
+                    definition: colDef
+                });
+            } catch (e) {
+                error = true;
+                alert(`Error en la columna ${name}: ${e.message}`);
+                return;
             }
-            if (pk) colDef += ' PRIMARY KEY';
-            columns.push({
-                name,
-                type,
-                pk
-            });
         }
     });
 
-    if (columns.length === 0) {
-        alert('Por favor, añade al menos un elemento.');
+    if (error || columns.length === 0) {
+        if (!error) alert('Por favor, añade al menos un elemento.');
         return;
     }
 
-    const query = `CREATE TABLE ${tableName} (${columns.map(col => {
-        let colDef = `${col.name} ${col.type}`;
-        if (schema.tables[col.type]?.isEnum) {
-            const enumValues = schema.tables[col.type].values.map(val => `'${val}'`).join(', ');
-            colDef += ` CHECK(${col.name} IN (${enumValues}))`;
-        }
-        if (col.pk) colDef += ' PRIMARY KEY';
-        return colDef;
-    }).join(', ')})`;
+    const query = `CREATE TABLE ${tableName} (${columns.map(col => col.definition).join(', ')})`;
 
     try {
         alasql(query);
         schema.tables[tableName] = {
-            columns,
+            columns: columns.map(({name, type, pk}) => ({name, type, pk})),
             data: []
         };
         updateClassMap();
