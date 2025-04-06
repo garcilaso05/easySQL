@@ -32,10 +32,20 @@ function addColumnInput() {
         <label><input type="checkbox" class="col-pk" ${isFirstColumn ? 'checked' : ''} 
             onchange="handlePrimaryKeyChange(this, 'columnsContainer')" 
             ${isFirstColumn ? 'disabled' : ''}> Clave Primaria</label>
+        <label><input type="checkbox" class="col-notnull" 
+            ${isFirstColumn ? 'disabled' : ''}> NOT NULL</label>
         <button onclick="removeColumnInput(this)" class="remove-column" 
             ${isFirstColumn ? 'disabled' : ''}>Eliminar</button>
     `;
     container.appendChild(newInput);
+
+    // Añadir listener para PK que deshabilite NOT NULL
+    const pkCheckbox = newInput.querySelector('.col-pk');
+    const notNullCheckbox = newInput.querySelector('.col-notnull');
+    pkCheckbox.addEventListener('change', () => {
+        notNullCheckbox.disabled = pkCheckbox.checked;
+        if (pkCheckbox.checked) notNullCheckbox.checked = false;
+    });
 
     // Hacer el contenedor de columnas desplazable
     container.style.maxHeight = '300px';
@@ -122,6 +132,7 @@ function createTableFromForm() {
         const name = input.querySelector('.col-name').value.trim();
         const type = input.querySelector('.col-type').value;
         const pk = input.querySelector('.col-pk').checked;
+        const notNull = input.querySelector('.col-notnull').checked;
 
         if (name) {
             try {
@@ -132,18 +143,21 @@ function createTableFromForm() {
                         throw new Error(`El enum ${type} no tiene valores definidos`);
                     }
                     const enumValuesStr = enumValues.map(val => `'${val}'`).join(', ');
-                    colDef += ` CHECK(${name} IS NULL OR ${name} IN (${enumValuesStr}))`;
+                    // Si es NOT NULL, no incluir IS NULL OR en el CHECK
+                    colDef += notNull ? 
+                        ` CHECK(${name} IN (${enumValuesStr}))` :
+                        ` CHECK(${name} IS NULL OR ${name} IN (${enumValuesStr}))`;
+                } else if (notNull) {
+                    colDef += ' NOT NULL';
                 }
                 if (pk) {
-                    if (colDef.includes('IS NULL')) {
-                        throw new Error('Una clave primaria no puede ser NULL');
-                    }
                     colDef += ' PRIMARY KEY';
                 }
                 columns.push({
                     name,
                     type,
                     pk,
+                    notNull: pk || notNull, // Aquí está una parte del problema
                     definition: colDef
                 });
             } catch (e) {
@@ -164,7 +178,12 @@ function createTableFromForm() {
     try {
         alasql(query);
         schema.tables[tableName] = {
-            columns: columns.map(({name, type, pk}) => ({name, type, pk})),
+            columns: columns.map(({name, type, pk, notNull}) => ({
+                name, 
+                type, 
+                pk,
+                notNull: pk || notNull // Asegurarnos de que se guarda el notNull
+            })),
             data: []
         };
         updateClassMap();

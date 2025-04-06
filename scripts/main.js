@@ -160,14 +160,27 @@ function downloadSQL() {
             sqlContent += `-- TABLE: ${tableName}\n`;
             const columns = table.columns.map(col => {
                 let colDef = `${col.name} ${col.type}`;
-                if (col.pk) colDef += ' PRIMARY KEY';
+                
+                // Añadir PRIMARY KEY si corresponde (siempre incluye NOT NULL implícitamente)
+                if (col.pk) {
+                    colDef += ' PRIMARY KEY';
+                }
+                // Añadir NOT NULL explícito si no es PK pero es obligatorio
+                else if (col.notNull) {
+                    colDef += ' NOT NULL';
+                }
+                
+                // Manejar ENUMs
                 if (schema.tables[col.type]?.isEnum) {
                     const enumValues = schema.tables[col.type].values.map(v => `'${v}'`).join(', ');
-                    colDef += ` CHECK(${col.name} IS NULL OR ${col.name} IN (${enumValues}))`;
-                } else if (col.check && typeof col.check === 'object') {
-                    const enumValues = col.check.values.map(v => `'${v}'`).join(', ');
-                    colDef += ` CHECK(${col.name} IS NULL OR ${col.name} IN (${enumValues}))`;
+                    // Si es NOT NULL o PK, no incluir la opción IS NULL y añadir NOT NULL explícitamente
+                    if (col.notNull || col.pk) {
+                        colDef += ` CHECK(${col.name} IN (${enumValues})) NOT NULL`;
+                    } else if (schema.tables[col.type]?.isEnum) {
+                        colDef += ` CHECK(${col.name} IS NULL OR ${col.name} IN (${enumValues}))`;
+                    }
                 }
+                
                 return colDef;
             }).join(',\n  ');
             sqlContent += `CREATE TABLE ${tableName} (\n  ${columns}\n);\n\n`;
@@ -304,7 +317,6 @@ function processTable(sql) {
     const match = sql.match(/CREATE TABLE (\w+)\s*\(([\s\S]+)\)/i);
     if (match) {
         const tableName = match[1];
-        // Limpiar la definición de la tabla y remover cualquier paréntesis extra
         let columnsPart = match[2].replace(/\)\s*$/g, '').trim();
         
         // Separar las columnas correctamente, teniendo en cuenta los CHECK
@@ -338,25 +350,21 @@ function processTable(sql) {
             const name = parts[0];
             const type = parts[1];
             const pk = def.toLowerCase().includes('primary key');
-            
-            // Verificar si el tipo es un ENUM conocido
+            const notNull = !pk && def.toLowerCase().includes('not null');
             const isEnum = schema.tables[type]?.isEnum;
-            if (isEnum) {
-                return {
-                    name,
-                    type,
-                    pk,
-                    check: {
-                        type: type,
-                        values: schema.tables[type].values
-                    }
-                };
-            }
+
+            // Verificar si es un ENUM sin "IS NULL OR" en el CHECK
+            const hasNotNullEnum = isEnum && !def.toLowerCase().includes('is null or');
             
             return {
                 name,
                 type,
-                pk
+                pk,
+                notNull: pk || notNull || hasNotNullEnum,
+                check: isEnum ? {
+                    type: type,
+                    values: schema.tables[type].values
+                } : undefined
             };
         });
 

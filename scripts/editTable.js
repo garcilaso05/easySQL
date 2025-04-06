@@ -43,8 +43,9 @@ function openEditTableModal() {
                     .map(enumName => `<option value="${enumName}" ${col.type === enumName ? 'selected' : ''}>${enumName}</option>`)
                     .join('')}
             </select>
-            <label><input type="checkbox" class="col-pk" ${col.pk ? 'checked' : ''} disabled title="No se puede modificar la clave primaria"> Clave Primaria</label>
-            <button onclick="removeColumnInput(this)" class="remove-column" ${col.pk ? 'disabled title="No se puede eliminar una clave primaria"' : ''}>Eliminar</button>
+            <label><input type="checkbox" class="col-pk" ${col.pk ? 'checked' : ''} disabled> Clave Primaria</label>
+            <label><input type="checkbox" class="col-notnull" ${col.notNull ? 'checked' : ''} ${col.pk ? 'disabled' : ''}> NOT NULL</label>
+            <button onclick="removeColumnInput(this)" class="remove-column" ${col.pk ? 'disabled' : ''}>Eliminar</button>
         `;
         container.appendChild(newInput);
     });
