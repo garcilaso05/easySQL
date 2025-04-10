@@ -117,6 +117,10 @@
             <select id="excelTableSelect" onchange="setupExcelGrid()">
                 <option value="">Selecciona una tabla</option>
             </select>
+            <input type="number" id="rowCount" min="10" max="1000" value="100" 
+                title="Número de filas (10-1000)"
+                style="width: 100px;"
+                onchange="setupExcelGrid()">
             <button onclick="validateAndImportData()">Cargar Datos</button>
             <button onclick="clearGrid()">Limpiar Todo</button>
         </div>

@@ -5,82 +5,244 @@ function setupExcelGrid() {
     const table = schema.tables[tableName];
     const grid = document.getElementById('excelGrid');
     
-    // Crear tabla HTML
-    let html = '<table><thead><tr>';
-    table.columns.forEach(col => {
-        html += `<th>${col.name} (${col.type})</th>`;
-    });
-    html += '</tr></thead><tbody>';
+    // Obtener el número de filas solicitado (entre 10 y 1000)
+    const rowCount = Math.min(Math.max(
+        parseInt(document.getElementById('rowCount').value) || 100, 
+        10
+    ), 1000);
+    document.getElementById('rowCount').value = rowCount;
 
-    // Crear 100 filas iniciales
-    for (let i = 0; i < 100; i++) {
-        html += '<tr>';
+    // Si no hay tabla, crear una nueva
+    if (!grid.querySelector('table')) {
+        let html = '<table><thead><tr>';
         table.columns.forEach(col => {
-            html += `<td><input type="text" data-type="${col.type}" data-column="${col.name}"></td>`;
+            html += `<th>${col.name} (${col.type})</th>`;
         });
-        html += '</tr>';
-    };
-    html += '</tbody></table>';
-    grid.innerHTML = html;
+        html += '</tr></thead><tbody>';
+
+        // Crear las filas iniciales
+        for (let i = 0; i < rowCount; i++) {
+            html += '<tr>';
+            table.columns.forEach(col => {
+                html += `<td contenteditable="true" data-type="${col.type}" data-column="${col.name}"></td>`;
+            });
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        grid.innerHTML = html;
+    } else {
+        // Ajustar el número de filas manteniendo los datos existentes
+        const tbody = grid.querySelector('tbody');
+        const currentRows = tbody.children.length;
+        
+        if (rowCount > currentRows) {
+            // Añadir filas nuevas
+            for (let i = currentRows; i < rowCount; i++) {
+                const row = document.createElement('tr');
+                table.columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.contentEditable = true;
+                    td.dataset.type = col.type;
+                    td.dataset.column = col.name;
+                    row.appendChild(td);
+                });
+                tbody.appendChild(row);
+            }
+        } else if (rowCount < currentRows) {
+            // Eliminar filas sobrantes desde el final
+            for (let i = currentRows - 1; i >= rowCount; i--) {
+                tbody.removeChild(tbody.children[i]);
+            }
+        }
+    }
 
     // Añadir event listeners
     setupCellValidation();
 }
 
 function setupCellValidation() {
-    const inputs = document.querySelectorAll('#excelGrid input');
-    inputs.forEach(input => {
-        input.addEventListener('paste', handlePaste);
-        input.addEventListener('input', () => validateCell(input));
-        input.addEventListener('focus', () => showSuggestions(input));
+    const cells = document.querySelectorAll('#excelGrid td[contenteditable]');
+    cells.forEach(cell => {
+        cell.addEventListener('paste', handlePaste);
+        cell.addEventListener('input', () => validateCell(cell));
+        cell.addEventListener('focus', () => showSuggestions(cell));
     });
+
+    // Permitir selección múltiple como en Excel
+    const table = document.querySelector('#excelGrid table');
+    let isSelecting = false;
+    let startCell = null;
+
+    table.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'TD') {
+            isSelecting = true;
+            startCell = e.target;
+            clearSelection();
+            e.target.classList.add('selected');
+        }
+    });
+
+    // Modificar el event listener para teclas Delete y Backspace
+    document.addEventListener('keydown', (e) => {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement.tagName === 'TD') {
+            const selectedCells = document.querySelectorAll('#excelGrid td.selected');
+            
+            // Solo prevenir y borrar si hay múltiples celdas seleccionadas
+            if (selectedCells.length > 1) {
+                e.preventDefault();
+                selectedCells.forEach(cell => {
+                    cell.textContent = '';
+                    validateCell(cell);
+                });
+            }
+            // Si solo hay una celda, dejar que el comportamiento sea normal
+        }
+    });
+
+    table.addEventListener('mousemove', (e) => {
+        if (isSelecting && e.target.tagName === 'TD') {
+            clearSelection();
+            const range = getCellRange(startCell, e.target);
+            selectCellRange(range);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isSelecting = false;
+    });
+}
+
+function clearSelection() {
+    document.querySelectorAll('#excelGrid td.selected').forEach(cell => {
+        cell.classList.remove('selected');
+    });
+}
+
+function getCellRange(start, end) {
+    const startRow = start.parentElement.rowIndex;
+    const startCol = start.cellIndex;
+    const endRow = end.parentElement.rowIndex;
+    const endCol = end.cellIndex;
+    
+    return {
+        startRow: Math.min(startRow, endRow),
+        endRow: Math.max(startRow, endRow),
+        startCol: Math.min(startCol, endCol),
+        endCol: Math.max(startCol, endCol)
+    };
+}
+
+function selectCellRange(range) {
+    const rows = document.querySelectorAll('#excelGrid tbody tr');
+    for (let i = range.startRow - 1; i <= range.endRow - 1; i++) { // Restar 1 para corregir el offset
+        if (rows[i]) { // Verificar que la fila existe
+            const cells = rows[i].getElementsByTagName('td');
+            for (let j = range.startCol; j <= range.endCol; j++) {
+                if (cells[j]) { // Verificar que la celda existe
+                    cells[j].classList.add('selected');
+                }
+            }
+        }
+    }
 }
 
 function handlePaste(e) {
     e.preventDefault();
     const text = e.clipboardData.getData('text');
-    const rows = text.split('\n');
+    const rows = text.split(/[\r\n]+/).filter(row => row.trim());
     
-    const startCell = e.target;
-    const startRow = startCell.closest('tr');
-    const startCol = Array.from(startRow.cells).findIndex(cell => cell.contains(startCell));
-    
-    rows.forEach((rowData, i) => {
-        const currentRow = startRow.parentElement.children[startRow.rowIndex + i];
-        if (!currentRow) addNewRow();
+    const selectedCells = document.querySelectorAll('#excelGrid td.selected');
+    if (selectedCells.length > 0) {
+        // Pegar en la selección
+        const startCell = selectedCells[0];
+        const startRow = startCell.parentElement;
+        const startRowIndex = startRow.rowIndex;
+        const startColIndex = startCell.cellIndex;
         
-        const cells = rowData.split('\t');
-        cells.forEach((cellData, j) => {
-            const cell = currentRow.cells[startCol + j];
-            if (cell) {
-                const input = cell.querySelector('input');
-                input.value = cellData.trim();
-                validateCell(input);
+        rows.forEach((rowData, i) => {
+            const cells = rowData.split('\t');
+            const currentRow = document.querySelector(`#excelGrid tbody tr:nth-child(${startRowIndex + i})`);
+            if (currentRow) {
+                cells.forEach((cellData, j) => {
+                    const cell = currentRow.cells[startColIndex + j];
+                    if (cell) {
+                        cell.textContent = cellData.trim();
+                        validateCell(cell);
+                    }
+                });
             }
         });
-    });
+    } else {
+        // Pegar donde está el cursor
+        const target = e.target;
+        const startRow = target.parentElement;
+        const startColIndex = target.cellIndex;
+        
+        rows.forEach((rowData, i) => {
+            const currentRow = startRow.parentElement.children[startRow.rowIndex + i];
+            if (!currentRow) addNewRow();
+            
+            const cells = rowData.split('\t');
+            cells.forEach((cellData, j) => {
+                const cell = currentRow.cells[startColIndex + j];
+                if (cell) {
+                    cell.textContent = cellData.trim();
+                    validateCell(cell);
+                }
+            });
+        });
+    }
 }
 
-function validateCell(input) {
-    const value = input.value.trim();
-    const type = input.dataset.type;
+function validateCell(cell) {
+    const value = cell.textContent.trim();
+    const type = cell.dataset.type;
+    const column = schema.tables[document.getElementById('excelTableSelect').value].columns
+        .find(col => col.name === cell.dataset.column);
     
-    input.parentElement.classList.remove('valid', 'warning', 'error');
+    cell.classList.remove('valid', 'warning', 'error');
     
-    if (!value) return;
+    // Manejar valor null explícito (guion)
+    if (value === '-') {
+        if (column.pk || column.notNull) {
+            cell.classList.add('error'); // No se permite NULL
+        } else {
+            cell.classList.add('valid', 'null-value'); // NULL permitido
+        }
+        return;
+    }
+
+    // Si está vacío
+    if (!value) {
+        if (column.pk) {
+            return; // Las PKs vacías se dejan sin color
+        } else if (column.notNull) {
+            cell.classList.add('warning');
+            return;
+        } else {
+            cell.classList.add('valid');
+            return;
+        }
+    }
 
     try {
         if (schema.tables[type]?.isEnum) {
             // Validación de enumerados
             const enumValues = schema.tables[type].values;
-            if (enumValues.includes(value)) {
-                input.parentElement.classList.add('valid');
+            const exactMatch = findExactEnumValue(value, enumValues);
+            
+            if (exactMatch) {
+                cell.classList.add('valid');
+                // Corregir automáticamente al valor exacto del enum
+                if (value !== exactMatch) {
+                    cell.textContent = exactMatch;
+                }
             } else {
                 const similar = findSimilarValues(value, enumValues);
                 if (similar.length > 0) {
-                    input.parentElement.classList.add('warning');
+                    cell.classList.add('warning');
                 } else {
-                    input.parentElement.classList.add('error');
+                    cell.classList.add('error');
                 }
             }
         } else {
@@ -88,79 +250,100 @@ function validateCell(input) {
             switch (type) {
                 case 'INT':
                     if (/^-?\d+$/.test(value)) {
-                        input.parentElement.classList.add('valid');
+                        cell.classList.add('valid');
                     } else if (/^-?\d*\.?\d+$/.test(value)) {
-                        input.parentElement.classList.add('warning');
+                        cell.classList.add('warning');
                     } else {
-                        input.parentElement.classList.add('error');
+                        cell.classList.add('error');
                     }
                     break;
                 case 'FLOAT':
-                    if (/^-?\d*\.?\d+$/.test(value)) {
-                        input.parentElement.classList.add('valid');
+                    // Aceptar tanto punto como coma como separador decimal
+                    if (/^-?\d*[.,]?\d+$/.test(value)) {
+                        cell.classList.add('valid');
                     } else {
-                        input.parentElement.classList.add('error');
+                        cell.classList.add('error');
                     }
                     break;
                 case 'DATE':
                     if (isValidDate(value)) {
-                        input.parentElement.classList.add('valid');
+                        cell.classList.add('valid');
                     } else {
-                        input.parentElement.classList.add('error');
+                        cell.classList.add('error');
                     }
                     break;
                 case 'BOOLEAN':
                     if (/^(true|false|1|0)$/i.test(value)) {
-                        input.parentElement.classList.add('valid');
+                        cell.classList.add('valid');
                     } else {
-                        input.parentElement.classList.add('error');
+                        cell.classList.add('error');
                     }
                     break;
                 default:
-                    input.parentElement.classList.add('valid');
+                    cell.classList.add('valid');
             }
         }
     } catch (e) {
-        input.parentElement.classList.add('error');
+        cell.classList.add('error');
     }
 }
 
-function showSuggestions(input) {
-    if (!input.parentElement.classList.contains('warning')) return;
-    
-    const type = input.dataset.type;
-    const value = input.value.trim();
+function showSuggestions(cell) {
+    const type = cell.dataset.type;
     
     if (schema.tables[type]?.isEnum) {
-        const similar = findSimilarValues(value, schema.tables[type].values);
-        if (similar.length > 0) {
-            showTooltip(input, similar);
-        }
+        // Siempre mostrar todos los valores válidos del enum al hacer focus
+        showTooltip(cell, schema.tables[type].values, true);
     }
 }
 
-function showTooltip(input, suggestions) {
+function showTooltip(cell, suggestions, isEnumList = false) {
+    // Eliminar tooltip existente si hay uno
+    const existingTooltip = document.querySelector('.suggestion-tooltip');
+    if (existingTooltip) {
+        existingTooltip.remove();
+    }
+
     const tooltip = document.createElement('div');
     tooltip.className = 'suggestion-tooltip';
+    
+    // Añadir un título al tooltip
+    const title = document.createElement('div');
+    title.className = 'suggestion-title';
+    title.textContent = isEnumList ? 'Valores disponibles:' : 'Valores válidos:';
+    tooltip.appendChild(title);
+
     suggestions.forEach(suggestion => {
         const item = document.createElement('div');
         item.className = 'suggestion-item';
         item.textContent = suggestion;
         item.onclick = () => {
-            input.value = suggestion;
-            validateCell(input);
+            cell.textContent = suggestion;
+            validateCell(cell);
             tooltip.remove();
         };
         tooltip.appendChild(item);
     });
     
-    const rect = input.getBoundingClientRect();
+    const rect = cell.getBoundingClientRect();
     tooltip.style.left = `${rect.left}px`;
     tooltip.style.top = `${rect.bottom + 5}px`;
     document.body.appendChild(tooltip);
     
-    input.addEventListener('blur', () => {
-        setTimeout(() => tooltip.remove(), 200);
+    // Mantener tooltip visible al hacer hover
+    tooltip.addEventListener('mouseenter', () => {
+        const existingTimeout = tooltip.dataset.timeout;
+        if (existingTimeout) clearTimeout(existingTimeout);
+    });
+    
+    tooltip.addEventListener('mouseleave', () => {
+        const timeoutId = setTimeout(() => tooltip.remove(), 200);
+        tooltip.dataset.timeout = timeoutId;
+    });
+    
+    cell.addEventListener('blur', () => {
+        const timeoutId = setTimeout(() => tooltip.remove(), 200);
+        tooltip.dataset.timeout = timeoutId;
     });
 }
 
@@ -207,11 +390,9 @@ function addNewRow() {
     
     columns.forEach(col => {
         const td = document.createElement('td');
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.dataset.type = col.type;
-        input.dataset.column = col.name;
-        td.appendChild(input);
+        td.contentEditable = true;
+        td.dataset.type = col.type;
+        td.dataset.column = col.name;
         row.appendChild(td);
     });
     
@@ -229,18 +410,44 @@ function validateAndImportData() {
     let errorCount = 0;
 
     rows.forEach((row, index) => {
-        const inputs = row.querySelectorAll('input');
-        const hasData = Array.from(inputs).some(input => input.value.trim());
+        const cells = row.querySelectorAll('td');
+        const hasData = Array.from(cells).some(cell => cell.textContent.trim());
         if (!hasData) return;
 
         const values = {};
         let isValid = true;
 
-        inputs.forEach(input => {
-            if (!input.parentElement.classList.contains('valid')) {
-                isValid = false;
+        cells.forEach(cell => {
+            const column = table.columns.find(col => col.name === cell.dataset.column);
+            const value = cell.textContent.trim();
+
+            // Validar según las reglas de nulos
+            if (value === '-' || !value) {
+                if (column.pk || column.notNull) {
+                    isValid = false; // No se permiten nulos
+                }
+                values[cell.dataset.column] = null;
+                return;
             }
-            values[input.dataset.column] = input.value.trim() || null;
+
+            if (schema.tables[column.type]?.isEnum) {
+                // Manejo especial para enums
+                const exactMatch = findExactEnumValue(value, schema.tables[column.type].values);
+                if (exactMatch) {
+                    values[cell.dataset.column] = exactMatch; // Usar el valor exacto del enum
+                } else {
+                    isValid = false;
+                }
+            } else if (!cell.classList.contains('valid')) {
+                isValid = false;
+            } else {
+                // Convertir coma a punto para valores float
+                if (cell.dataset.type === 'FLOAT' && value) {
+                    values[cell.dataset.column] = value.replace(',', '.');
+                } else {
+                    values[cell.dataset.column] = value;
+                }
+            }
         });
 
         if (isValid) {
@@ -276,13 +483,41 @@ function validateAndImportData() {
 
 function clearGrid() {
     if (confirm('¿Estás seguro de que deseas limpiar todos los datos?')) {
-        setupExcelGrid();
+        const tableName = document.getElementById('excelTableSelect').value;
+        if (tableName) {
+            setupExcelGrid(); // Esto recreará la tabla limpia
+        }
     }
 }
 
-// Modificar la función de inicialización
+// Añadir después de las funciones existentes y antes de los event listeners
+function normalizeString(str) {
+    return str.normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "") // Eliminar diacríticos
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, ""); // Eliminar caracteres especiales
+}
+
+function findExactEnumValue(value, enumValues) {
+    const normalizedValue = normalizeString(value);
+    return enumValues.find(enumVal => 
+        normalizeString(enumVal) === normalizedValue
+    );
+}
+
+// Modificar la función de inicialización para añadir el listener de cambios en tablas
 document.addEventListener('DOMContentLoaded', () => {
     updateTableSelect();
+    
+    // Añadir listener para cambios en la estructura de tablas
+    document.addEventListener('tableStructureChanged', (e) => {
+        const currentTable = document.getElementById('excelTableSelect').value;
+        if (currentTable === e.detail.tableName) {
+            // Si la tabla que se editó es la que está actualmente mostrada
+            // Forzar una reconstrucción completa de la tabla
+            setupExcelGrid();
+        }
+    });
 });
 
 // Añadir nueva función para actualizar el select
@@ -311,6 +546,80 @@ function updateTableSelect() {
     
     select.disabled = false;
 }
+
+// Actualizar los estilos CSS
+const style = document.createElement('style');
+style.textContent = `
+    #excelGrid td {
+        min-width: 100px;
+        height: 24px;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        outline: none;
+    }
+    #excelGrid td.selected {
+        background-color: rgba(59, 89, 152, 0.1);
+        border: 1px solid var(--color-primary);
+    }
+    #excelGrid td:focus {
+        border: 2px solid var(--color-primary);
+        background-color: #fff;
+    }
+    .suggestion-tooltip {
+        position: absolute;
+        background: white;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        padding: 0.5rem;
+        box-shadow: var(--shadow-md);
+        max-width: 250px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+
+    .suggestion-title {
+        font-weight: bold;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-primary);
+    }
+
+    .suggestion-item {
+        padding: 0.3rem 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .suggestion-item:hover {
+        background-color: var(--color-bg);
+        color: var(--color-primary);
+    }
+
+    #excelGrid td.null-value {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    #excelGrid td.valid {
+        background-color: #e8f5e9;  /* Verde claro */
+    }
+    
+    #excelGrid td.warning {
+        background-color: #fff3e0;  /* Naranja claro */
+    }
+    
+    #excelGrid td.error {
+        background-color: #ffebee;  /* Rojo claro */
+    }
+    
+    #excelGrid td:focus {
+        border: 2px solid var(--color-primary);
+        background-color: #fff !important;  /* Importante para sobreescribir otros estados cuando está en foco */
+    }
+`;
+document.head.appendChild(style);
 
 // Inicializar al cargar
 document.addEventListener('DOMContentLoaded', () => {

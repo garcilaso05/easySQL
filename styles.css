@@ -832,6 +832,15 @@ textarea:focus {
     display: flex;
     gap: 1rem;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.excel-import-controls input[type="number"] {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
 }
 
 .excel-grid {
@@ -840,11 +849,13 @@ textarea:focus {
     box-shadow: var(--shadow-sm);
     overflow: auto;
     max-height: calc(100vh - 300px);
+    position: relative;
 }
 
 .excel-grid table {
-    width: 100%;
+    width: auto;  /* Cambiado de 100% a auto */
     border-collapse: collapse;
+    min-width: 100%; /* Asegura que ocupa al menos el ancho disponible */
 }
 
 .excel-grid th {
@@ -854,31 +865,22 @@ textarea:focus {
     position: sticky;
     top: 0;
     z-index: 1;
+    white-space: nowrap; /* Evita que los encabezados se partan */
 }
 
 .excel-grid td {
     border: 1px solid var(--color-border);
     padding: 0.5rem;
     min-width: 150px;
+    max-width: 300px; /* Limitar el ancho máximo de las celdas */
+    white-space: nowrap; /* Mantener el contenido en una línea */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Mostrar ... si el contenido es muy largo */
 }
 
-.excel-grid input {
-    width: 100%;
-    border: none;
-    padding: 0.3rem;
-    font-family: inherit;
-}
-
-.excel-grid .valid {
-    background-color: #e8f5e9;
-}
-
-.excel-grid .warning {
-    background-color: #fff3e0;
-}
-
-.excel-grid .error {
-    background-color: #ffebee;
+.excel-grid td:focus {
+    white-space: normal; /* Permitir múltiples líneas al editar */
+    overflow: visible;
 }
 
 .suggestion-tooltip {

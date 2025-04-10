@@ -118,6 +118,13 @@ function saveTableChanges() {
         };
         updateClassMap();
         closeEditTableModal();
+        
+        // Añadir este evento personalizado
+        const event = new CustomEvent('tableStructureChanged', { 
+            detail: { tableName: tableName }
+        });
+        document.dispatchEvent(event);
+        
         alert(`Tabla "${tableName}" actualizada exitosamente.`);
     } catch (e) {
         alert('Error al actualizar la tabla: ' + e.message);
