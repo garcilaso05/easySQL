@@ -2,62 +2,77 @@ function setupExcelGrid() {
     const tableName = document.getElementById('excelTableSelect').value;
     if (!tableName) return;
 
-    const table = schema.tables[tableName];
     const grid = document.getElementById('excelGrid');
-    
-    // Obtener el número de filas solicitado (entre 10 y 1000)
-    const rowCount = Math.min(Math.max(
-        parseInt(document.getElementById('rowCount').value) || 100, 
-        10
-    ), 1000);
-    document.getElementById('rowCount').value = rowCount;
+    const existingTable = grid.querySelector('table');
+    const currentColumns = Array.from(grid.querySelectorAll('th')).map(th => {
+        return th.textContent.split(' (')[0]; // Obtener solo el nombre de la columna
+    });
 
-    // Si no hay tabla, crear una nueva
-    if (!grid.querySelector('table')) {
-        let html = '<table><thead><tr>';
-        table.columns.forEach(col => {
-            html += `<th>${col.name} (${col.type})</th>`;
-        });
-        html += '</tr></thead><tbody>';
+    const newColumns = schema.tables[tableName].columns.map(col => col.name);
+    const structureChanged = !currentColumns.length || 
+                           !arraysEqual(currentColumns, newColumns);
 
-        // Crear las filas iniciales
-        for (let i = 0; i < rowCount; i++) {
-            html += '<tr>';
-            table.columns.forEach(col => {
-                html += `<td contenteditable="true" data-type="${col.type}" data-column="${col.name}"></td>`;
-            });
-            html += '</tr>';
-        }
-        html += '</tbody></table>';
-        grid.innerHTML = html;
-    } else {
-        // Ajustar el número de filas manteniendo los datos existentes
-        const tbody = grid.querySelector('tbody');
-        const currentRows = tbody.children.length;
-        
-        if (rowCount > currentRows) {
-            // Añadir filas nuevas
-            for (let i = currentRows; i < rowCount; i++) {
-                const row = document.createElement('tr');
-                table.columns.forEach(col => {
-                    const td = document.createElement('td');
-                    td.contentEditable = true;
-                    td.dataset.type = col.type;
-                    td.dataset.column = col.name;
-                    row.appendChild(td);
-                });
-                tbody.appendChild(row);
-            }
-        } else if (rowCount < currentRows) {
-            // Eliminar filas sobrantes desde el final
-            for (let i = currentRows - 1; i >= rowCount; i--) {
-                tbody.removeChild(tbody.children[i]);
-            }
-        }
+    // Si la estructura cambió, recrear completamente
+    if (structureChanged) {
+        const rowCount = parseInt(document.getElementById('rowCount').value) || 100;
+        createNewGrid(tableName, rowCount);
     }
+    // Si no cambió la estructura, mantener los datos existentes
+}
 
-    // Añadir event listeners
+function createNewGrid(tableName, rowCount) {
+    const grid = document.getElementById('excelGrid');
+    const table = schema.tables[tableName];
+    
+    let html = '<div class="excel-scroll-container">';
+    // Añadir scroll superior
+    html += '<div class="excel-scroll-wrapper top-scroll"></div>';
+    // Contenedor principal con la tabla
+    html += '<div class="excel-scroll-wrapper main-scroll">';
+    html += '<table><thead><tr>';
+    
+    table.columns.forEach(col => {
+        const isPK = col.pk ? 'pk-header' : '';
+        html += `<th class="${isPK}">${col.name} (${col.type})</th>`;
+    });
+    
+    html += '</tr></thead><tbody>';
+
+    for (let i = 0; i < rowCount; i++) {
+        html += '<tr>';
+        table.columns.forEach(col => {
+            html += `<td contenteditable="true" data-type="${col.type}" data-column="${col.name}"></td>`;
+        });
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '</div></div>';
+    grid.innerHTML = html;
+
     setupCellValidation();
+
+    // Sincronizar scrolls
+    const topScroll = grid.querySelector('.top-scroll');
+    const mainScroll = grid.querySelector('.main-scroll');
+
+    // Crear div del mismo ancho que la tabla para el scroll superior
+    const scrollContent = document.createElement('div');
+    scrollContent.style.width = mainScroll.querySelector('table').offsetWidth + 'px';
+    scrollContent.style.height = '1px';
+    topScroll.appendChild(scrollContent);
+
+    // Sincronizar scrolls
+    topScroll.addEventListener('scroll', () => {
+        mainScroll.scrollLeft = topScroll.scrollLeft;
+    });
+    mainScroll.addEventListener('scroll', () => {
+        topScroll.scrollLeft = mainScroll.scrollLeft;
+    });
+}
+
+function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    return a.every((val, index) => val === b[index]);
 }
 
 function setupCellValidation() {
@@ -66,9 +81,9 @@ function setupCellValidation() {
         cell.addEventListener('paste', handlePaste);
         cell.addEventListener('input', () => validateCell(cell));
         cell.addEventListener('focus', () => showSuggestions(cell));
+        cell.addEventListener('keydown', handleKeyNavigation);
     });
 
-    // Permitir selección múltiple como en Excel
     const table = document.querySelector('#excelGrid table');
     let isSelecting = false;
     let startCell = null;
@@ -82,12 +97,10 @@ function setupCellValidation() {
         }
     });
 
-    // Modificar el event listener para teclas Delete y Backspace
     document.addEventListener('keydown', (e) => {
         if ((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement.tagName === 'TD') {
             const selectedCells = document.querySelectorAll('#excelGrid td.selected');
             
-            // Solo prevenir y borrar si hay múltiples celdas seleccionadas
             if (selectedCells.length > 1) {
                 e.preventDefault();
                 selectedCells.forEach(cell => {
@@ -95,7 +108,6 @@ function setupCellValidation() {
                     validateCell(cell);
                 });
             }
-            // Si solo hay una celda, dejar que el comportamiento sea normal
         }
     });
 
@@ -110,6 +122,67 @@ function setupCellValidation() {
     document.addEventListener('mouseup', () => {
         isSelecting = false;
     });
+}
+
+function handleKeyNavigation(e) {
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    
+    e.preventDefault();
+    const currentCell = e.target;
+    const currentRow = currentCell.parentElement;
+    const currentIndex = Array.from(currentRow.cells).indexOf(currentCell);
+    let nextCell;
+
+    switch(e.key) {
+        case 'ArrowRight':
+            if (currentIndex < currentRow.cells.length - 1) {
+                nextCell = currentRow.cells[currentIndex + 1];
+            }
+            break;
+        case 'ArrowLeft':
+            if (currentIndex > 0) {
+                nextCell = currentRow.cells[currentIndex - 1];
+            }
+            break;
+        case 'ArrowUp':
+            if (currentRow.previousElementSibling) {
+                nextCell = currentRow.previousElementSibling.cells[currentIndex];
+            }
+            break;
+        case 'ArrowDown':
+            if (currentRow.nextElementSibling) {
+                nextCell = currentRow.nextElementSibling.cells[currentIndex];
+            }
+            break;
+    }
+
+    if (nextCell) {
+        // Añadir transición suave
+        nextCell.style.transition = 'background-color 0.2s ease';
+        nextCell.focus();
+        // Resaltar brevemente la celda seleccionada
+        nextCell.style.backgroundColor = 'rgba(59, 89, 152, 0.1)';
+        setTimeout(() => {
+            nextCell.style.backgroundColor = '';
+        }, 200);
+        
+        // Asegurar que la celda es visible en el contenedor
+        const container = document.querySelector('.excel-scroll-wrapper');
+        const cellRect = nextCell.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        if (cellRect.bottom > containerRect.bottom) {
+            container.scrollBy({ top: cellRect.bottom - containerRect.bottom, behavior: 'smooth' });
+        } else if (cellRect.top < containerRect.top) {
+            container.scrollBy({ top: cellRect.top - containerRect.top, behavior: 'smooth' });
+        }
+        
+        if (cellRect.right > containerRect.right) {
+            container.scrollBy({ left: cellRect.right - containerRect.right, behavior: 'smooth' });
+        } else if (cellRect.left < containerRect.left) {
+            container.scrollBy({ left: cellRect.left - containerRect.left, behavior: 'smooth' });
+        }
+    }
 }
 
 function clearSelection() {
@@ -134,11 +207,11 @@ function getCellRange(start, end) {
 
 function selectCellRange(range) {
     const rows = document.querySelectorAll('#excelGrid tbody tr');
-    for (let i = range.startRow - 1; i <= range.endRow - 1; i++) { // Restar 1 para corregir el offset
-        if (rows[i]) { // Verificar que la fila existe
+    for (let i = range.startRow - 1; i <= range.endRow - 1; i++) {
+        if (rows[i]) {
             const cells = rows[i].getElementsByTagName('td');
             for (let j = range.startCol; j <= range.endCol; j++) {
-                if (cells[j]) { // Verificar que la celda existe
+                if (cells[j]) {
                     cells[j].classList.add('selected');
                 }
             }
@@ -153,7 +226,6 @@ function handlePaste(e) {
     
     const selectedCells = document.querySelectorAll('#excelGrid td.selected');
     if (selectedCells.length > 0) {
-        // Pegar en la selección
         const startCell = selectedCells[0];
         const startRow = startCell.parentElement;
         const startRowIndex = startRow.rowIndex;
@@ -173,7 +245,6 @@ function handlePaste(e) {
             }
         });
     } else {
-        // Pegar donde está el cursor
         const target = e.target;
         const startRow = target.parentElement;
         const startColIndex = target.cellIndex;
@@ -200,22 +271,22 @@ function validateCell(cell) {
     const column = schema.tables[document.getElementById('excelTableSelect').value].columns
         .find(col => col.name === cell.dataset.column);
     
-    cell.classList.remove('valid', 'warning', 'error');
+    cell.classList.remove('valid', 'warning', 'error', 'null-value');
     
-    // Manejar valor null explícito (guion)
     if (value === '-') {
         if (column.pk || column.notNull) {
-            cell.classList.add('error'); // No se permite NULL
+            cell.classList.add('error');
+            cell.classList.add('null-value');
         } else {
-            cell.classList.add('valid', 'null-value'); // NULL permitido
+            cell.classList.add('valid');
+            cell.classList.add('null-value');
         }
         return;
     }
 
-    // Si está vacío
     if (!value) {
         if (column.pk) {
-            return; // Las PKs vacías se dejan sin color
+            return;
         } else if (column.notNull) {
             cell.classList.add('warning');
             return;
@@ -227,13 +298,11 @@ function validateCell(cell) {
 
     try {
         if (schema.tables[type]?.isEnum) {
-            // Validación de enumerados
             const enumValues = schema.tables[type].values;
             const exactMatch = findExactEnumValue(value, enumValues);
             
             if (exactMatch) {
                 cell.classList.add('valid');
-                // Corregir automáticamente al valor exacto del enum
                 if (value !== exactMatch) {
                     cell.textContent = exactMatch;
                 }
@@ -246,7 +315,6 @@ function validateCell(cell) {
                 }
             }
         } else {
-            // Validación de tipos básicos
             switch (type) {
                 case 'INT':
                     if (/^-?\d+$/.test(value)) {
@@ -258,7 +326,6 @@ function validateCell(cell) {
                     }
                     break;
                 case 'FLOAT':
-                    // Aceptar tanto punto como coma como separador decimal
                     if (/^-?\d*[.,]?\d+$/.test(value)) {
                         cell.classList.add('valid');
                     } else {
@@ -292,13 +359,11 @@ function showSuggestions(cell) {
     const type = cell.dataset.type;
     
     if (schema.tables[type]?.isEnum) {
-        // Siempre mostrar todos los valores válidos del enum al hacer focus
         showTooltip(cell, schema.tables[type].values, true);
     }
 }
 
 function showTooltip(cell, suggestions, isEnumList = false) {
-    // Eliminar tooltip existente si hay uno
     const existingTooltip = document.querySelector('.suggestion-tooltip');
     if (existingTooltip) {
         existingTooltip.remove();
@@ -307,7 +372,6 @@ function showTooltip(cell, suggestions, isEnumList = false) {
     const tooltip = document.createElement('div');
     tooltip.className = 'suggestion-tooltip';
     
-    // Añadir un título al tooltip
     const title = document.createElement('div');
     title.className = 'suggestion-title';
     title.textContent = isEnumList ? 'Valores disponibles:' : 'Valores válidos:';
@@ -330,7 +394,6 @@ function showTooltip(cell, suggestions, isEnumList = false) {
     tooltip.style.top = `${rect.bottom + 5}px`;
     document.body.appendChild(tooltip);
     
-    // Mantener tooltip visible al hacer hover
     tooltip.addEventListener('mouseenter', () => {
         const existingTimeout = tooltip.dataset.timeout;
         if (existingTimeout) clearTimeout(existingTimeout);
@@ -421,27 +484,24 @@ function validateAndImportData() {
             const column = table.columns.find(col => col.name === cell.dataset.column);
             const value = cell.textContent.trim();
 
-            // Validar según las reglas de nulos
             if (value === '-' || !value) {
                 if (column.pk || column.notNull) {
-                    isValid = false; // No se permiten nulos
+                    isValid = false;
                 }
                 values[cell.dataset.column] = null;
                 return;
             }
 
             if (schema.tables[column.type]?.isEnum) {
-                // Manejo especial para enums
                 const exactMatch = findExactEnumValue(value, schema.tables[column.type].values);
                 if (exactMatch) {
-                    values[cell.dataset.column] = exactMatch; // Usar el valor exacto del enum
+                    values[cell.dataset.column] = exactMatch;
                 } else {
                     isValid = false;
                 }
             } else if (!cell.classList.contains('valid')) {
                 isValid = false;
             } else {
-                // Convertir coma a punto para valores float
                 if (cell.dataset.type === 'FLOAT' && value) {
                     values[cell.dataset.column] = value.replace(',', '.');
                 } else {
@@ -485,17 +545,16 @@ function clearGrid() {
     if (confirm('¿Estás seguro de que deseas limpiar todos los datos?')) {
         const tableName = document.getElementById('excelTableSelect').value;
         if (tableName) {
-            setupExcelGrid(); // Esto recreará la tabla limpia
+            setupExcelGrid();
         }
     }
 }
 
-// Añadir después de las funciones existentes y antes de los event listeners
 function normalizeString(str) {
     return str.normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "") // Eliminar diacríticos
+              .replace(/[\u0300-\u036f]/g, "")
               .toLowerCase()
-              .replace(/[^a-z0-9]/g, ""); // Eliminar caracteres especiales
+              .replace(/[^a-z0-9]/g, "");
 }
 
 function findExactEnumValue(value, enumValues) {
@@ -505,29 +564,28 @@ function findExactEnumValue(value, enumValues) {
     );
 }
 
-// Modificar la función de inicialización para añadir el listener de cambios en tablas
 document.addEventListener('DOMContentLoaded', () => {
     updateTableSelect();
     
-    // Añadir listener para cambios en la estructura de tablas
     document.addEventListener('tableStructureChanged', (e) => {
         const currentTable = document.getElementById('excelTableSelect').value;
-        if (currentTable === e.detail.tableName) {
-            // Si la tabla que se editó es la que está actualmente mostrada
-            // Forzar una reconstrucción completa de la tabla
+        const grid = document.getElementById('excelGrid');
+        
+        if (currentTable === e.detail.tableName || 
+            (currentTable && !schema.tables[currentTable])) {
+            grid.innerHTML = '';
+            updateTableSelect();
             setupExcelGrid();
         }
     });
 });
 
-// Añadir nueva función para actualizar el select
 function updateTableSelect() {
     const select = document.getElementById('excelTableSelect');
     if (!select) return;
     
     select.innerHTML = '<option value="">Selecciona una tabla</option>';
     
-    // Filtrar solo las tablas reales (no enums)
     const tables = Object.entries(schema.tables)
         .filter(([_, table]) => !table.isEnum);
     
@@ -547,7 +605,6 @@ function updateTableSelect() {
     select.disabled = false;
 }
 
-// Actualizar los estilos CSS
 const style = document.createElement('style');
 style.textContent = `
     #excelGrid td {
@@ -602,26 +659,70 @@ style.textContent = `
         color: #1976d2;
     }
 
+    #excelGrid td.null-value.error {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+
     #excelGrid td.valid {
-        background-color: #e8f5e9;  /* Verde claro */
+        background-color: #e8f5e9;
     }
     
     #excelGrid td.warning {
-        background-color: #fff3e0;  /* Naranja claro */
+        background-color: #fff3e0;
     }
     
     #excelGrid td.error {
-        background-color: #ffebee;  /* Rojo claro */
+        background-color: #ffebee;
     }
     
     #excelGrid td:focus {
         border: 2px solid var(--color-primary);
-        background-color: #fff !important;  /* Importante para sobreescribir otros estados cuando está en foco */
+        background-color: #fff !important;
+    }
+    
+    .excel-scroll-container {
+        position: relative;
+    }
+    
+    .excel-scroll-wrapper.top-scroll {
+        height: 20px;
+        margin-bottom: 0;
+        border-bottom: 1px solid var(--color-border);
+        overflow-y: hidden;
+    }
+    
+    .excel-scroll-wrapper.main-scroll {
+        overflow-x: auto;
+        max-height: calc(100vh - 350px);
+    }
+    
+    .excel-scroll-wrapper::-webkit-scrollbar {
+        height: 17px;
+    }
+    
+    .excel-scroll-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 8px;
+    }
+    
+    .excel-scroll-wrapper::-webkit-scrollbar-thumb {
+        background: var(--color-primary);
+        border-radius: 8px;
+    }
+    
+    .excel-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+        background: var(--color-primary-hover);
+    }
+    
+    #excelGrid th.pk-header {
+        background: var(--color-accent);
+        color: white;
+        font-weight: bold;
     }
 `;
 document.head.appendChild(style);
 
-// Inicializar al cargar
 document.addEventListener('DOMContentLoaded', () => {
     const select = document.getElementById('excelTableSelect');
     select.innerHTML = '<option value="">Selecciona una tabla</option>';

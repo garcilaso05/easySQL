@@ -21,7 +21,10 @@ function showTab(tabName) {
     } else if (tabName === 'datos') {
         setupDataTab();
     } else if (tabName === 'excelImport') {
-        updateTableSelect();
+        const currentTable = document.getElementById('excelTableSelect').value;
+        if (!currentTable) {
+            updateTableSelect(); // Solo actualizar si no hay tabla seleccionada
+        }
     }
 
     // 👇 Reparar tamaño del mapa si se activa la pestaña del mapa
