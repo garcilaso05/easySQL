@@ -821,3 +821,82 @@ textarea:focus {
     transform: none;
     box-shadow: none;
 }
+
+/* === EXCEL IMPORT === */
+.excel-import-controls {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.excel-grid {
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+    max-height: calc(100vh - 300px);
+}
+
+.excel-grid table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.excel-grid th {
+    background: var(--color-primary);
+    color: white;
+    padding: 0.8rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.excel-grid td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem;
+    min-width: 150px;
+}
+
+.excel-grid input {
+    width: 100%;
+    border: none;
+    padding: 0.3rem;
+    font-family: inherit;
+}
+
+.excel-grid .valid {
+    background-color: #e8f5e9;
+}
+
+.excel-grid .warning {
+    background-color: #fff3e0;
+}
+
+.excel-grid .error {
+    background-color: #ffebee;
+}
+
+.suggestion-tooltip {
+    position: absolute;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.5rem;
+    box-shadow: var(--shadow-md);
+    max-width: 200px;
+    z-index: 1000;
+}
+
+.suggestion-item {
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background: var(--color-bg);
+}

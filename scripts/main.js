@@ -104,6 +104,7 @@ function updateClassMap() {
     });
     populateTableDropdown();
     populateEnumDropdown();
+    updateTableSelect(); // Añadir esta línea
 }
 
 // Ejecutar consultas SQL manuales

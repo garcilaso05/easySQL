@@ -20,6 +20,8 @@ function showTab(tabName) {
         setupInsertionsTab();
     } else if (tabName === 'datos') {
         setupDataTab();
+    } else if (tabName === 'excelImport') {
+        updateTableSelect();
     }
 
     // 👇 Reparar tamaño del mapa si se activa la pestaña del mapa
