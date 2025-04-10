@@ -5,7 +5,7 @@ function setupExcelGrid() {
     const grid = document.getElementById('excelGrid');
     const existingTable = grid.querySelector('table');
     const currentColumns = Array.from(grid.querySelectorAll('th')).map(th => {
-        return th.textContent.split(' (')[0]; // Obtener solo el nombre de la columna
+        return th.textContent.split(' (')[0];
     });
 
     const newColumns = schema.tables[tableName].columns.map(col => col.name);
@@ -16,8 +16,38 @@ function setupExcelGrid() {
     if (structureChanged) {
         const rowCount = parseInt(document.getElementById('rowCount').value) || 100;
         createNewGrid(tableName, rowCount);
+    } else {
+        // Si no cambió la estructura, ajustar el número de filas manteniendo datos
+        adjustRowCount(tableName);
     }
-    // Si no cambió la estructura, mantener los datos existentes
+}
+
+// Añadir nueva función para ajustar filas
+function adjustRowCount(tableName) {
+    const tbody = document.querySelector('#excelGrid tbody');
+    const currentRows = tbody.querySelectorAll('tr');
+    const desiredRowCount = parseInt(document.getElementById('rowCount').value) || 100;
+    const currentRowCount = currentRows.length;
+
+    if (desiredRowCount > currentRowCount) {
+        // Añadir filas
+        for (let i = currentRowCount; i < desiredRowCount; i++) {
+            addNewRow();
+        }
+    } else if (desiredRowCount < currentRowCount) {
+        // Verificar si las últimas filas están vacías antes de eliminarlas
+        for (let i = currentRowCount - 1; i >= desiredRowCount; i--) {
+            const row = currentRows[i];
+            const hasData = Array.from(row.cells).some(cell => cell.textContent.trim());
+            if (!hasData) {
+                row.remove();
+            } else {
+                // Si encontramos datos, mantener el rowCount en el número actual de filas
+                document.getElementById('rowCount').value = i + 1;
+                break;
+            }
+        }
+    }
 }
 
 function createNewGrid(tableName, rowCount) {
@@ -468,9 +498,24 @@ function validateAndImportData() {
     if (!tableName) return;
 
     const table = schema.tables[tableName];
+    const pkColumn = table.columns.find(col => col.pk);
+    if (!pkColumn) {
+        alert('Error: La tabla no tiene clave primaria');
+        return;
+    }
+
+    // Obtener todos los registros existentes por PK para comparar
+    const existingRecords = new Map();
+    const currentData = alasql(`SELECT * FROM ${tableName}`);
+    currentData.forEach(record => {
+        existingRecords.set(record[pkColumn.name], record);
+    });
+
     const rows = document.querySelectorAll('#excelGrid tbody tr');
     let successCount = 0;
     let errorCount = 0;
+    let updatedCount = 0;
+    let ignoredCount = 0;
 
     rows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
@@ -480,6 +525,7 @@ function validateAndImportData() {
         const values = {};
         let isValid = true;
 
+        // Recolectar valores y validar
         cells.forEach(cell => {
             const column = table.columns.find(col => col.name === cell.dataset.column);
             const value = cell.textContent.trim();
@@ -512,17 +558,70 @@ function validateAndImportData() {
 
         if (isValid) {
             try {
-                const columns = Object.keys(values);
-                const vals = columns.map(col => {
-                    const value = values[col];
-                    if (value === null) return 'NULL';
-                    return typeof value === 'string' ? `'${value}'` : value;
-                });
-                
-                const query = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${vals.join(', ')})`;
-                alasql(query);
-                successCount++;
-                row.style.backgroundColor = '#e8f5e9';
+                const pkValue = values[pkColumn.name];
+                const existingRecord = existingRecords.get(pkValue);
+
+                if (existingRecord) {
+                    // Verificar si realmente hay cambios en alguna columna
+                    const changes = [];
+                    let hasChanges = false;
+
+                    // Comparación estricta de valores
+                    for (const [col, val] of Object.entries(values)) {
+                        // Ignorar la clave primaria en la comparación
+                        if (col === pkColumn.name) continue;
+                        
+                        // Convertir valores para comparación consistente
+                        let currentVal = val;
+                        let existingVal = existingRecord[col];
+                        
+                        // Manejar casos especiales
+                        if (currentVal === '') currentVal = null;
+                        if (existingVal === '') existingVal = null;
+                        
+                        // Convertir números si es necesario
+                        if (typeof existingVal === 'number') {
+                            currentVal = currentVal === null ? null : Number(currentVal);
+                        }
+
+                        // Comparar después de normalizar
+                        if (currentVal !== existingVal) {
+                            hasChanges = true;
+                            changes.push([col, val]);
+                        }
+                    }
+
+                    if (!hasChanges) {
+                        // No hay cambios reales, marcar como ignorado
+                        row.style.backgroundColor = '#f5f5f5';
+                        ignoredCount++;
+                        return;
+                    }
+
+                    // Solo actualizar las columnas que realmente cambiaron
+                    const updateCols = changes.map(([col, val]) => 
+                        `${col} = ${val === null ? 'NULL' : typeof val === 'string' ? `'${val}'` : val}`
+                    );
+
+                    if (updateCols.length > 0) {
+                        const updateQuery = `UPDATE ${tableName} SET ${updateCols.join(', ')} WHERE ${pkColumn.name} = ${typeof pkValue === 'string' ? `'${pkValue}'` : pkValue}`;
+                        alasql(updateQuery);
+                        row.style.backgroundColor = '#e3f2fd';
+                        updatedCount++;
+                    }
+                } else {
+                    // Insertar nuevo registro
+                    const columns = Object.keys(values);
+                    const vals = columns.map(col => {
+                        const value = values[col];
+                        return value === null ? 'NULL' : typeof value === 'string' ? `'${value}'` : value;
+                    });
+                    
+                    const query = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${vals.join(', ')})`;
+                    alasql(query);
+                    row.style.backgroundColor = '#e8f5e9';
+                    successCount++;
+                }
             } catch (e) {
                 errorCount++;
                 row.style.backgroundColor = '#ffebee';
@@ -534,8 +633,13 @@ function validateAndImportData() {
         }
     });
 
-    alert(`Importación completada:\n- Éxitos: ${successCount}\n- Errores: ${errorCount}`);
-    if (successCount > 0) {
+    alert(`Importación completada:\n` +
+          `- Nuevas inserciones: ${successCount}\n` +
+          `- Actualizaciones: ${updatedCount}\n` +
+          `- Sin cambios: ${ignoredCount}\n` +
+          `- Errores: ${errorCount}`);
+
+    if (successCount > 0 || updatedCount > 0) {
         showTab('datos');
         showAllData();
     }
@@ -545,8 +649,48 @@ function clearGrid() {
     if (confirm('¿Estás seguro de que deseas limpiar todos los datos?')) {
         const tableName = document.getElementById('excelTableSelect').value;
         if (tableName) {
-            setupExcelGrid();
+            const rowCount = parseInt(document.getElementById('rowCount').value) || 100;
+            createNewGrid(tableName, rowCount);
         }
+    }
+}
+
+function loadExistingData() {
+    const tableName = document.getElementById('excelTableSelect').value;
+    if (!tableName) return;
+
+    try {
+        // Obtener datos existentes
+        const data = alasql(`SELECT * FROM ${tableName}`);
+        if (data.length === 0) {
+            alert('No hay datos insertados en esta tabla.');
+            return;
+        }
+
+        // Crear grid con el número exacto de filas de los datos existentes
+        createNewGrid(tableName, data.length);
+
+        // Rellenar datos
+        const rows = document.querySelectorAll('#excelGrid tbody tr');
+        data.forEach((record, rowIndex) => {
+            const row = rows[rowIndex];
+            if (!row) return;
+
+            const cells = row.querySelectorAll('td');
+            cells.forEach(cell => {
+                const columnName = cell.dataset.column;
+                const value = record[columnName];
+                cell.textContent = value !== null ? value : '';
+                validateCell(cell);
+            });
+        });
+
+        // Actualizar el contador de filas
+        document.getElementById('rowCount').value = data.length;
+
+    } catch (error) {
+        console.error('Error al cargar datos:', error);
+        alert('Error al cargar los datos existentes.');
     }
 }
 
@@ -576,6 +720,15 @@ document.addEventListener('DOMContentLoaded', () => {
             grid.innerHTML = '';
             updateTableSelect();
             setupExcelGrid();
+        }
+    });
+
+    // Añadir listener para cambios en rowCount
+    const rowCountInput = document.getElementById('rowCount');
+    rowCountInput.addEventListener('change', () => {
+        const tableName = document.getElementById('excelTableSelect').value;
+        if (tableName) {
+            adjustRowCount(tableName);
         }
     });
 });
@@ -620,7 +773,7 @@ style.textContent = `
     }
     #excelGrid td:focus {
         border: 2px solid var(--color-primary);
-        background-color: #fff;
+        background-color: #fff !important;
     }
     .suggestion-tooltip {
         position: absolute;
@@ -640,7 +793,6 @@ style.textContent = `
         padding-bottom: 0.5rem;
         margin-bottom: 0.5rem;
         border-bottom: 1px solid var(--color-border);
-        color: var(--color-primary);
     }
 
     .suggestion-item {
@@ -648,91 +800,56 @@ style.textContent = `
         cursor: pointer;
         transition: background-color 0.2s;
     }
-
     .suggestion-item:hover {
-        background-color: var(--color-bg);
+        background-color: var(--color-bg-hover);
         color: var(--color-primary);
     }
-
-    #excelGrid td.null-value {
-        background-color: #e3f2fd;
-        color: #1976d2;
-    }
-
-    #excelGrid td.null-value.error {
-        background-color: #ffebee;
-        color: #d32f2f;
-    }
-
-    #excelGrid td.valid {
-        background-color: #e8f5e9;
-    }
-    
-    #excelGrid td.warning {
-        background-color: #fff3e0;
-    }
-    
-    #excelGrid td.error {
-        background-color: #ffebee;
-    }
-    
-    #excelGrid td:focus {
-        border: 2px solid var(--color-primary);
-        background-color: #fff !important;
-    }
-    
-    .excel-scroll-container {
-        position: relative;
-    }
-    
     .excel-scroll-wrapper.top-scroll {
         height: 20px;
         margin-bottom: 0;
         border-bottom: 1px solid var(--color-border);
         overflow-y: hidden;
     }
-    
     .excel-scroll-wrapper.main-scroll {
         overflow-x: auto;
         max-height: calc(100vh - 350px);
     }
-    
     .excel-scroll-wrapper::-webkit-scrollbar {
         height: 17px;
     }
-    
     .excel-scroll-wrapper::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 8px;
     }
-    
     .excel-scroll-wrapper::-webkit-scrollbar-thumb {
         background: var(--color-primary);
         border-radius: 8px;
     }
-    
     .excel-scroll-wrapper::-webkit-scrollbar-thumb:hover {
         background: var(--color-primary-hover);
     }
-    
     #excelGrid th.pk-header {
         background: var(--color-accent);
-        color: white;
         font-weight: bold;
+        color: white;
+    }
+    #excelGrid td.valid {
+        background-color: #e8f5e9;
+    }
+    #excelGrid td.warning {
+        background-color: #fff3e0;
+    }
+    #excelGrid td.error {
+        background-color: #ffebee;
+    }
+    #excelGrid td.null-value {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+    #excelGrid td.null-value.error {
+        background-color: #ffebee;
+        color: #d32f2f;
     }
 `;
-document.head.appendChild(style);
 
-document.addEventListener('DOMContentLoaded', () => {
-    const select = document.getElementById('excelTableSelect');
-    select.innerHTML = '<option value="">Selecciona una tabla</option>';
-    
-    for (const tableName in schema.tables) {
-        if (!schema.tables[tableName].isEnum) {
-            const option = document.createElement('option');
-            option.value = tableName;
-            option.textContent = tableName;
-            select.appendChild(option);
-        }
-    }
-});
+document.head.appendChild(style);

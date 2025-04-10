@@ -121,7 +121,8 @@
                 title="Número de filas (10-1000)"
                 style="width: 100px;"
                 onchange="setupExcelGrid()">
-            <button onclick="validateAndImportData()">Cargar Datos</button>
+            <button onclick="validateAndImportData()">Guardar Datos</button>
+            <button onclick="loadExistingData()">Modificar Datos Ya Insertados</button>
             <button onclick="clearGrid()">Limpiar Todo</button>
         </div>
         <div id="excelGrid" class="excel-grid"></div>
