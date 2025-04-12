@@ -343,17 +343,18 @@ function formatValue(value, type) {
 }
 
 function downloadInsertions() {
+    let hasData = false;
     let insertionsSQL = '';
-    
-    // Generar inserciones SQL para cada tabla
+
+    // Verificar si hay datos para exportar y generarlos
     for (const tableName in schema.tables) {
         if (!schema.tables[tableName].isEnum) {
             try {
                 const data = alasql(`SELECT * FROM ${tableName}`);
                 if (data.length > 0) {
+                    hasData = true;
                     insertionsSQL += `-- Inserciones para tabla ${tableName}\n`;
                     data.forEach(row => {
-                        // Filtrar columnas que no son null
                         const columns = [];
                         const values = [];
                         
@@ -376,12 +377,23 @@ function downloadInsertions() {
         }
     }
 
+    // Verificar si hay datos para descargar
+    if (!hasData) {
+        alert('No hay datos insertados para exportar. Inserte datos en al menos una tabla antes de descargar.');
+        return;
+    }
+
+    // Pedir nombre del archivo
+    const defaultName = 'inserciones';
+    const fileName = prompt('Nombre para el archivo de inserciones:', defaultName);
+    if (!fileName) return; // Si el usuario cancela
+
     // Crear y descargar el archivo
     const blob = new Blob([insertionsSQL], { type: 'text/sql' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'inserciones.sql';
+    a.download = `${fileName.trim()}.sql`;
     a.click();
     URL.revokeObjectURL(url);
 }

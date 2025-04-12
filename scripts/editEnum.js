@@ -1,7 +1,7 @@
-function openEditEnumModal() {
+async function openEditEnumModal() {
     const enumName = document.getElementById('enumDropdown').value;
     if (!enumName) {
-        alert('Por favor, selecciona un enum para editar.');
+        showNotification('Por favor, selecciona un enum para editar.', 'warning');
         return;
     }
 
@@ -19,21 +19,21 @@ function openEditEnumModal() {
     }
 
     if (enumUsage.length > 0) {
-        const confirmation = confirm(
-            '⚠️ ADVERTENCIA ⚠️\n\n' +
+        const message = 
             `Este enum está siendo utilizado en las siguientes tablas:\n${enumUsage.join(', ')}\n\n` +
             'La modificación de valores puede causar:\n' +
             '- Inconsistencias en los datos existentes\n' +
             '- Errores en las restricciones CHECK\n' +
             '- Problemas con las inserciones existentes\n\n' +
-            '¿Estás seguro de que deseas continuar con la edición?'
-        );
-        if (!confirmation) return;
+            '¿Está seguro de que desea continuar con la edición?';
+
+        const shouldContinue = await showCriticalWarning(message);
+        if (!shouldContinue) return;
     }
 
     const enumData = schema.tables[enumName];
     if (!enumData || !enumData.isEnum) {
-        alert('El elemento seleccionado no es un enum válido.');
+        showNotification('El elemento seleccionado no es un enum válido.', 'error');
         return;
     }
 

@@ -142,7 +142,21 @@ function executeSQL() {
 
 // Descargar el SQL generado
 // Generar archivo .sql con el esquema de la base de datos
-function downloadSQL() {
+async function downloadSQL() {
+    // Verificar si hay tablas
+    if (Object.keys(schema.tables).length === 0) {
+        showNotification('No hay tablas para exportar. Cree al menos una tabla antes de descargar.', 'error');
+        return;
+    }
+
+    // Pedir nombre del archivo usando el nuevo diálogo
+    const fileName = await showInputDialog(
+        'Guardar esquema SQL',
+        'Nombre del archivo',
+        'schema'
+    );
+    if (!fileName) return;
+
     let sqlContent = '';
     
     // Primero los ENUMs
@@ -200,7 +214,49 @@ function downloadSQL() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'schema.sql';
+    a.download = `${fileName.trim()}.sql`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+async function downloadInsertions() {
+    // Verificar si hay datos para exportar
+    let hasData = false;
+    for (const tableName in schema.tables) {
+        if (!schema.tables[tableName].isEnum) {
+            try {
+                const data = alasql(`SELECT * FROM ${tableName}`);
+                if (data.length > 0) {
+                    hasData = true;
+                    break;
+                }
+            } catch (error) {
+                console.error(`Error al verificar datos en tabla ${tableName}:`, error);
+            }
+        }
+    }
+
+    if (!hasData) {
+        showNotification('No hay datos insertados para exportar. Inserte datos en al menos una tabla antes de descargar.', 'error');
+        return;
+    }
+
+    // Pedir nombre del archivo usando el nuevo diálogo
+    const fileName = await showInputDialog(
+        'Guardar archivo de inserciones',
+        'Nombre del archivo',
+        'inserciones'
+    );
+    if (!fileName) return;
+
+    let insertionsSQL = '';
+    // Aquí se puede agregar lógica para generar las inserciones SQL
+
+    const blob = new Blob([insertionsSQL], { type: 'text/sql' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName.trim()}.sql`;
     a.click();
     URL.revokeObjectURL(url);
 }

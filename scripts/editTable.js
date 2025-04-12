@@ -10,7 +10,6 @@ function openEditTableModal() {
         const tableData = alasql(`SELECT * FROM ${tableName}`);
         if (tableData.length > 0) {
             const confirmation = confirm(
-                '⚠️ ADVERTENCIA IMPORTANTE ⚠️\n\n' +
                 'Esta tabla contiene datos insertados. La modificación puede causar:\n\n' +
                 '1. Si marca una columna como NOT NULL:\n' +
                 '   - Se eliminarán TODAS las inserciones que tengan NULL en esa columna\n' +
@@ -83,7 +82,6 @@ function handleNotNullChange(checkbox, tableName, columnName) {
             checkbox.checked = !checkbox.checked;
             
             const continuar = confirm(
-                `⚠️ ADVERTENCIA CRÍTICA ⚠️\n\n` +
                 `Se han encontrado ${nullCount} registros con valor NULL en la columna "${columnName}".\n\n` +
                 `Si marca esta columna como NOT NULL:\n` +
                 `1. Se eliminarán TODOS los registros que contengan NULL en esta columna\n` +

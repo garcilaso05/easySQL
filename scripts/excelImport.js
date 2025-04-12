@@ -633,13 +633,20 @@ function validateAndImportData() {
         }
     });
 
-    alert(`Importación completada:\n` +
-          `- Nuevas inserciones: ${successCount}\n` +
-          `- Actualizaciones: ${updatedCount}\n` +
-          `- Sin cambios: ${ignoredCount}\n` +
-          `- Errores: ${errorCount}`);
-
     if (successCount > 0 || updatedCount > 0) {
+        const message = `Importación completada:\n` +
+              `- Nuevas inserciones: ${successCount}\n` +
+              `- Actualizaciones: ${updatedCount}\n` +
+              `- Sin cambios: ${ignoredCount}\n` +
+              `- Errores: ${errorCount}`;
+        
+        // Cambiar el tipo de mensaje según si hubo errores o no
+        if (errorCount > 0) {
+            showNotification(message, 'warning');
+        } else {
+            showNotification(message, 'success');
+        }
+
         showTab('datos');
         showAllData();
     }
