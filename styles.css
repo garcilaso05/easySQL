@@ -700,6 +700,16 @@ textarea:focus {
     font-size: 0.85rem;    /* Reducido el tamaño de fuente */
     z-index: 1000;
     box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-logo {
+    height: 24px;
+    width: auto;
+    object-fit: contain;
+    margin-left: auto;
 }
 
 #datetime {
@@ -901,4 +911,123 @@ textarea:focus {
 
 .suggestion-item:hover {
     background: var(--color-bg);
+}
+
+/* === SELECTORS === */
+.graficos-selectors {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.graficos-selectors select {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.graficos-selectors select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+/* === GRAFICOS CONTAINER === */
+.graficos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;  /* Reducido de 3rem a 2rem */
+    padding: 1rem;
+}
+
+.grafico-item {
+    background-color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    min-height: 400px;
+    margin-bottom: 2rem; /* Reducido de 3rem a 2rem */
+}
+
+.grafico-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.8rem; /* Aumentado ligeramente el espacio entre botones */
+    z-index: 100; /* Aumentado para asegurar que está por encima */
+}
+
+.grafico-btn {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+    color: white !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+.grafico-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.grafico-btn.download {
+    background-color: #2196F3 !important; /* Azul más suave */
+}
+
+.grafico-btn.download:hover {
+    background-color: #1976D2 !important;
+}
+
+.grafico-btn.delete {
+    background-color: #FF5252 !important; /* Rojo más suave */
+}
+
+.grafico-btn.delete:hover {
+    background-color: #F44336 !important;
+}
+
+.chart-container {
+    width: 100%;
+    height: 100%;
+    min-height: 350px;
+}
+
+.grafico-actions button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background-color: var(--color-primary);
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.grafico-actions button:hover {
+    background-color: var(--color-primary-hover);
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
 }

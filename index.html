@@ -12,6 +12,7 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
+    <link rel="icon" type="image/png" href="styles/eSQL.png">
 </head>
 <body>
     <div class="login-overlay" id="loginOverlay">
@@ -32,6 +33,7 @@
     </div>
     <div class="top-bar">
         <span id="datetime"></span>
+        <img src="styles/eSQL.png" alt="eSQL" class="header-logo">
     </div>
     <div class="background-circles"></div>
     <div class="title-container">
@@ -102,13 +104,25 @@
       </div>
     <!-- Pestaña Gráficos -->
     <div id="graficos" class="tab-content">
-        <div class="graficos-grid">
-            <div id="graficoEdades" class="grafico-container"></div>
-            <div id="graficoMapa" class="grafico-container"></div>
-            <div id="graficoAnual" class="grafico-container"></div>
-            <div id="graficoDenuncias" class="grafico-container"></div>
+        <div class="graficos-selectors">
+            <select id="graficoTableSelect">
+                <option value="">Selecciona una tabla</option>
+            </select>
+            <select id="graficoColumnSelect" disabled>
+                <option value="">Selecciona una columna</option>
+            </select>
+            <select id="graficoTipoSelect">
+                <option value="">Selecciona un tipo de gráfico</option>
+                <option value="pie">Circular</option>
+                <option value="semicircle">Semicírculo</option>
+                <option value="column">Barras</option>
+                <option value="line">Líneas</option>
+            </select>
+            <button onclick="generarGrafico()">Generar Gráfico</button>
         </div>
-        <button onclick="cargarGrafico()">Actualizar Gráficos</button>
+        <div id="graficos-container">
+            <!-- Aquí se insertarán los gráficos dinámicamente -->
+        </div>
     </div>
 
     <!-- Nueva pestaña Excel Import -->
