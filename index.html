@@ -33,7 +33,98 @@
     </div>
     <div class="top-bar">
         <span id="datetime"></span>
-        <img src="styles/eSQL.png" alt="eSQL" class="header-logo">
+        <div class="top-buttons">
+            <button id="colorPickerBtn" class="top-btn">
+                <img src="styles/color.png" alt="Color Theme">
+            </button>
+            <button id="helpBtn" class="top-btn">
+                <img src="styles/eSQL.png" alt="easySQL Guide" class="header-logo">
+            </button>
+        </div>
+        <div id="colorPickerPanel" class="color-picker-panel">
+            <h2 class="settings-title">PERSONALIZACIÓN</h2>
+            <div class="settings-section">
+                <h3 class="section-title">Color de fondo</h3>
+                <div class="color-slider-container">
+                    <input type="range" id="colorSlider" min="0" max="100" value="100">
+                    <div class="color-gradient"></div>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3 class="section-title">Animaciones</h3>
+                <div class="animation-switches">
+                    <div class="switch-container">
+                        <span class="switch-label">Título flotante</span>
+                        <label class="switch">
+                            <input type="checkbox" id="titleAnimation" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">Partículas</span>
+                        <label class="switch">
+                            <input type="checkbox" id="particlesAnimation" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">Fondo</span>
+                        <label class="switch">
+                            <input type="checkbox" id="circlesAnimation" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div id="shapesSection" class="settings-section" style="display: none;">
+                <h3 class="section-title">Formas de fondo</h3>
+                <div class="shapes-selector">
+                    <div class="shape-options">
+                        <label class="shape-option">
+                            <input type="radio" name="bgShape" value="circle" checked>
+                            <span class="shape-icon circle"></span>
+                        </label>
+                        <label class="shape-option">
+                            <input type="radio" name="bgShape" value="square">
+                            <span class="shape-icon square"></span>
+                        </label>
+                        <label class="shape-option">
+                            <input type="radio" name="bgShape" value="triangle">
+                            <span class="shape-icon triangle"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal de Ayuda -->
+    <div id="helpModal" class="help-modal">
+        <div class="help-content">
+            <span class="close" onclick="closeHelpModal()">&times;</span>
+            <div class="help-sidebar">
+                <div class="help-search">
+                    <input type="text" id="helpSearch" placeholder="Buscar ayuda...">
+                </div>
+                <nav class="help-navigation">
+                    <ul>
+                        <li><a href="#inicio" class="active">Inicio Rápido</a></li>
+                        <li><a href="#esquema">Gestión de Esquema</a></li>
+                        <li><a href="#datos">Gestión de Datos</a></li>
+                        <li><a href="#consultas">Consultas SQL</a></li>
+                        <li><a href="#visualizacion">Visualización</a></li>
+                        <li><a href="#importacion">Importación Excel</a></li>
+                        <li><a href="#errores">Solución de Errores</a></li>
+                        <li><a href="#ejemplos">Ejemplos Prácticos</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="help-main">
+                <section id="inicio" class="help-section active">
+                    <!-- ... contenido de ayuda ... -->
+                </section>
+                <!-- ... otras secciones ... -->
+            </div>
+        </div>
     </div>
     <div class="background-circles"></div>
     <div class="title-container">
@@ -45,7 +136,6 @@
         </div>
         <h1 id="titulin">easySQL</h1>
     </div>
-    
     <!-- Menú de pestañas -->
     <div class="tab-menu">
         <button class="tab-button active" onclick="showTab('esquema')">Esquema</button>
@@ -56,7 +146,6 @@
         <button class="tab-button" onclick="showTab('graficos')">Gráficos</button>
         <button class="tab-button" onclick="showTab('excelImport')">Excel Import</button>
     </div>
-
     <!-- Pestaña Esquema -->
     <div id="esquema" class="tab-content active">
         <div id="buttons-container">
@@ -81,12 +170,10 @@
             </div>
         </div>
     </div>
-    
     <!-- Pestaña Inserciones -->
     <div id="inserciones" class="tab-content">
         <!-- El contenido se generará dinámicamente -->
     </div>
-
     <!-- Pestaña Datos -->
     <div id="datos" class="tab-content">
         <h2>Datos Insertados</h2>
@@ -97,7 +184,6 @@
         </div>
         <div id="data-container"></div>
     </div>
-
     <!-- Pestaña Consultas -->
     <div id="consultas" class="tab-content">
         <h2>Consultas SQL</h2>
@@ -105,6 +191,7 @@
         <button onclick="executeSQL()">Ejecutar SQL</button>
         <div id="result"></div>
     </div>
+    <!-- Pestaña Mapa -->
     <div id="mapa" class="tab-content">
         <div class="map-controls">
             <select id="mapaTableSelect">
@@ -139,7 +226,6 @@
             <!-- Aquí se insertarán los gráficos dinámicamente -->
         </div>
     </div>
-
     <!-- Nueva pestaña Excel Import -->
     <div id="excelImport" class="tab-content">
         <div class="excel-import-controls">
@@ -156,7 +242,6 @@
         </div>
         <div id="excelGrid" class="excel-grid"></div>
     </div>
-
     <!-- Modal para crear tabla -->
     <div id="createTableModal" class="modal">
         <div class="modal-content">
@@ -170,7 +255,6 @@
             <button onclick="createTableFromForm()">Crear Tabla</button>
         </div>
     </div>
-
     <!-- Modal para editar tabla -->
     <div id="editTableModal" class="modal">
         <div class="modal-content">
@@ -183,7 +267,6 @@
             <button onclick="deleteTableFromModal()">Borrar Tabla</button>
         </div>
     </div>
-
     <!-- Modal para crear enum -->
     <div id="createEnumModal" class="modal">
         <div class="modal-content">
@@ -197,7 +280,6 @@
             <button onclick="createEnumFromForm()">Crear Enum</button>
         </div>
     </div>
-
     <!-- Modal para editar enums -->
     <div id="editEnumModal" class="modal">
         <div class="modal-content">
@@ -211,7 +293,6 @@
             <button onclick="saveEnumChanges()">Guardar Cambios</button>
         </div>
     </div>
-
     <!-- Modal para relaciones -->
     <div id="relationshipModal" class="modal">
         <div class="modal-content">
@@ -239,7 +320,6 @@
             <button onclick="saveRelationship()">Guardar Relación</button>
         </div>
     </div>
-
     <!-- Scripts -->
     <script src="scripts/notifications.js"></script>
     <script src="scripts/main.js"></script>
@@ -258,10 +338,11 @@
     <script src="scripts/excelImport.js"></script>
     <script src="scripts/predefinedEnums.js"></script>
     <script src="scripts/mapCoordinates.js"></script>
+    <script src="scripts/colorTheme.js"></script>
+    <script src="scripts/help.js"></script>
     <script>
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
-                // Clear all existing circles when page is hidden
                 document.querySelector('.background-circles').innerHTML = '';
             }
         });
