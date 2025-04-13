@@ -1,3 +1,7 @@
+let activeNotifications = [];
+const NOTIFICATION_HEIGHT = 80; // Altura aproximada de cada notificación
+const NOTIFICATION_MARGIN = 10; // Margen entre notificaciones
+
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `custom-notification ${type}`;
@@ -13,14 +17,36 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
+    // Añadir a la lista de notificaciones activas
+    activeNotifications.push(notification);
+    
+    // Reposicionar todas las notificaciones
+    repositionNotifications();
+    
     // Animación de entrada
     setTimeout(() => notification.classList.add('show'), 10);
     
     // Auto-cerrar después de 3 segundos
     setTimeout(() => {
         notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
+        setTimeout(() => {
+            // Remover de la lista de activas
+            activeNotifications = activeNotifications.filter(n => n !== notification);
+            notification.remove();
+            // Reposicionar las restantes
+            repositionNotifications();
+        }, 300);
     }, 3000);
+}
+
+function repositionNotifications() {
+    let currentTop = 60; // Posición inicial desde el top
+    
+    activeNotifications.forEach((notification, index) => {
+        notification.style.transition = 'top 0.3s ease';
+        notification.style.top = `${currentTop}px`;
+        currentTop += NOTIFICATION_HEIGHT + NOTIFICATION_MARGIN;
+    });
 }
 
 function getNotificationIcon(type) {

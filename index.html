@@ -73,7 +73,13 @@
             <input type="file" id="sqlFileInput" style="display: none" accept=".sql" onchange="loadSQL(event)">
         </div>
         <h2 id="mapita">Mapa de Clases</h2>
-        <div id="network"></div>
+        <div class="schema-layout">
+            <div id="network"></div>
+            <div class="predefined-enums-container">
+                <h3>Enums Predefinidos</h3>
+                <div id="predefinedEnumsList"></div>
+            </div>
+        </div>
     </div>
     
     <!-- Pestaña Inserciones -->
@@ -100,8 +106,11 @@
         <div id="result"></div>
     </div>
     <div id="mapa" class="tab-content">
-        <!-- El mapa se cargará aquí -->
-      </div>
+        <div class="map-controls">
+            <button onclick="actualizarMapa()">Actualizar Mapa</button>
+        </div>
+        <div id="mapa" style="height: calc(100vh - 200px);"></div>
+    </div>
     <!-- Pestaña Gráficos -->
     <div id="graficos" class="tab-content">
         <div class="graficos-selectors">
@@ -241,6 +250,7 @@
     <script src="scripts/animations.js"></script>
     <script src="scripts/auth.js"></script>
     <script src="scripts/excelImport.js"></script>
+    <script src="scripts/predefinedEnums.js"></script>
     <script>
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {

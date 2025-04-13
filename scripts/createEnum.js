@@ -53,13 +53,17 @@ function createEnumFromForm() {
         return;
     }
 
-    schema.tables[enumName] = {
-        isEnum: true,
-        values: values
-    };
-
-    populateEnumDropdown(); // Añadido explícitamente
-    updateClassMap();
-    closeCreateEnumModal();
-    alert(`Enum "${enumName}" creado exitosamente.`);
+    try {
+        schema.tables[enumName] = {
+            isEnum: true,
+            values: values
+        };
+        checkForPredefinedEnumMatch(enumName);
+        populateEnumDropdown(); // Añadido explícitamente
+        updateClassMap();
+        closeCreateEnumModal();
+        alert(`Enum "${enumName}" creado exitosamente.`);
+    } catch (e) {
+        alert('Ocurrió un error al crear el Enum.');
+    }
 }

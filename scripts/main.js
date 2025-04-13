@@ -20,6 +20,7 @@ window.addEventListener("load", () => {
         edges: { arrows: 'to' }
     };
     network = new vis.Network(container, data, options);
+    updatePredefinedEnums();
 });
 
 window.addEventListener("resize", () => {
@@ -366,6 +367,7 @@ function processEnum(sql) {
                 isEnum: true,
                 values: values
             };
+            checkForPredefinedEnumMatch(enumName);
         }
     }
 }
@@ -515,6 +517,44 @@ function saveRelationship() {
     updateClassMap();
     closeRelationshipModal();
     alert(`Relación "${name}" creada exitosamente.`);
+}
+
+function updatePredefinedEnums() {
+    const container = document.getElementById('predefinedEnumsList');
+    const enums = getAvailablePredefinedEnums();
+    
+    container.innerHTML = enums.map(enumItem => `
+        <div class="predefined-enum-item">
+            <div class="predefined-enum-info">
+                <div class="predefined-enum-name">${enumItem.name}</div>
+                <div class="predefined-enum-description">${enumItem.description}</div>
+            </div>
+            <div class="predefined-enum-action">
+                <button onclick="togglePredefinedEnum('${enumItem.name}')" 
+                        class="${enumItem.isImported ? 'remove' : 'add'}">
+                    ${enumItem.isImported ? '🗑 Quitar' : '➕ Importar'}
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function togglePredefinedEnum(enumName) {
+    try {
+        if (schema.tables[enumName]) {
+            // Intentar eliminar
+            await removePredefinedEnum(enumName);
+            showNotification(`Enum "${enumName}" eliminado correctamente`, 'success');
+        } else {
+            // Intentar importar
+            importPredefinedEnum(enumName);
+            showNotification(`Enum "${enumName}" importado correctamente`, 'success');
+        }
+        updatePredefinedEnums();
+        updateClassMap();
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
 }
 
 populateEnumDropdown();

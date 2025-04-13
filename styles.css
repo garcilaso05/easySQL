@@ -244,6 +244,7 @@ textarea:focus {
     height: 600px !important; /* Forzar altura fija */
     width: 100% !important; /* Forzar ancho completo */
     min-height: 600px; /* Altura mínima */
+    margin: 0 !important;
 }
 
 /* === BUTTON GROUPS === */
@@ -1027,7 +1028,6 @@ button:hover {
 /* === NOTIFICATIONS === */
 .custom-notification {
     position: fixed;
-    top: 60px;
     right: 20px;
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -1039,6 +1039,7 @@ button:hover {
     z-index: 2000;
     max-width: 400px;
     border-left: 4px solid var(--color-primary);
+    pointer-events: none;
 }
 
 .custom-notification.show {
@@ -1290,4 +1291,124 @@ button:hover {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
+}
+
+/* === PREDEFINED ENUMS === */
+.predefined-enums-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-bg);
+}
+
+.predefined-enums-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.predefined-enums-container::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: 4px;
+}
+
+.predefined-enums-container::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 4px;
+    border: 2px solid var(--color-bg);
+}
+
+.predefined-enums-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.predefined-enums-container h3 {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.predefined-enum-item {
+    padding: 1.2rem;
+    text-align: center;
+    position: relative;
+}
+
+.predefined-enum-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    right: 25%;
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        var(--color-border) 20%,
+        var(--color-border) 80%,
+        transparent
+    );
+}
+
+.predefined-enum-name {
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.predefined-enum-description {
+    font-size: 0.9rem;
+    color: var(--color-text);
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.predefined-enum-action {
+    display: flex;
+    justify-content: center;
+}
+
+.predefined-enum-action button {
+    min-width: 120px;
+    transition: var(--transition);
+}
+
+.predefined-enum-action button.add {
+    background-color: var(--color-primary);
+}
+
+.predefined-enum-action button.remove {
+    background-color: #dc3545;
+}
+
+.predefined-enum-action button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* === SCHEMA LAYOUT === */
+.schema-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .schema-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .predefined-enums-container {
+        height: auto;
+        max-height: 400px;
+    }
 }
