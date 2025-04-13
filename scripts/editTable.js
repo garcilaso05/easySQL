@@ -332,6 +332,7 @@ function closeEditEnumModal() {
 
 function addColumnInputEdit() {
     const container = document.getElementById('editColumnsContainer');
+
     const newInput = document.createElement('div');
     newInput.className = 'column-input';
     newInput.innerHTML = `
@@ -347,11 +348,18 @@ function addColumnInputEdit() {
                 .map(enumName => `<option value="${enumName}">${enumName}</option>`)
                 .join('')}
         </select>
-        <label><input type="checkbox" class="col-pk" disabled title="No se puede modificar la clave primaria"> Clave Primaria</label>
-        <label><input type="checkbox" class="col-notnull" disabled title="Primero debe guardar la columna"> NOT NULL</label>
-        <button onclick="removeColumnInput(this)" class="remove-column">Eliminar</button>
+        <label><input type="checkbox" class="col-pk"> Clave Primaria</label>
+        <label><input type="checkbox" class="col-notnull"> NOT NULL</label>
+        <button onclick="removeColumnInput(this)">Eliminar</button>
     `;
     container.appendChild(newInput);
+
+    // Enfocar el nuevo input
+    const newNameInput = newInput.querySelector('.col-name');
+    newNameInput.focus();
+
+    // Scroll hasta el final
+    container.scrollTop = container.scrollHeight;
 }
 
 // Actualización de la función removeColumnInput para ambos casos

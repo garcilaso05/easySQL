@@ -412,21 +412,14 @@ function loadInsertions(event) {
                 .split('\n')
                 .filter(line => line.trim() && !line.trim().startsWith('--'))
                 .map(query => {
-                    // Procesar cada query para manejar NULL correctamente
                     if (query.trim().toUpperCase().startsWith('INSERT')) {
-                        // Extraer los valores entre paréntesis
                         const valuesMatch = query.match(/VALUES\s*\((.*)\)/i);
                         if (valuesMatch) {
                             const values = valuesMatch[1].split(',').map(val => {
                                 val = val.trim();
-                                // Manejar explícitamente NULL
-                                if (val.toUpperCase() === 'NULL') {
-                                    return 'NULL';
-                                }
-                                return val;
+                                return val.toUpperCase() === 'NULL' ? 'NULL' : val;
                             }).join(', ');
                             
-                            // Reconstruir la query con los valores procesados
                             return query.replace(/VALUES\s*\((.*)\)/i, `VALUES (${values})`);
                         }
                     }
@@ -445,7 +438,6 @@ function loadInsertions(event) {
             for (const query of queries) {
                 try {
                     if (query) {
-                        // Ejecutar la query procesada
                         alasql(query + ';');
                         successCount++;
                     }
@@ -459,13 +451,28 @@ function loadInsertions(event) {
             showTab('datos');
             showAllData();
             
-            // Mostrar resumen
-            alert(`Inserciones completadas:\n` +
-                  `- Exitosas: ${successCount}\n` +
-                  `- Errores: ${errorCount}`);
+            if (successCount > 0 || errorCount > 0) {
+                // Determinar el tipo de notificación basado en los resultados
+                let notificationType;
+                if (errorCount === 0) {
+                    notificationType = 'success';
+                } else if (successCount > 0) {
+                    notificationType = 'warning';
+                } else {
+                    notificationType = 'error';
+                }
+
+                const message = `Inserciones completadas:\n` +
+                              `- Exitosas: ${successCount}\n` +
+                              `- Errores: ${errorCount}`;
+                
+                showNotification(message, notificationType);
+            } else {
+                showNotification('No se encontraron inserciones para procesar', 'warning');
+            }
 
         } catch (error) {
-            alert('Error al procesar el archivo: ' + error.message);
+            showNotification('Error al procesar el archivo: ' + error.message, 'error');
             console.error('Error completo:', error);
         }
         event.target.value = ''; // Limpiar el input

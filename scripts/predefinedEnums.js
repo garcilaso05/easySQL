@@ -2,6 +2,7 @@ const predefinedEnums = {
     PAISES: {
         name: 'PAISES',
         description: 'Listado completo de países del mundo',
+        usableInMaps: true,
         values: [
             'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Argentina', 
             'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés', 
@@ -29,6 +30,7 @@ const predefinedEnums = {
     PROVINCIAS_ESP: {
         name: 'PROVINCIAS_ESP',
         description: 'Provincias de España',
+        usableInMaps: true,
         values: [
             'Álava', 'Albacete', 'Alicante', 'Almería', 'Asturias', 'Ávila', 
             'Badajoz', 'Barcelona', 'Burgos', 'Cáceres', 'Cádiz', 'Cantabria',
@@ -44,10 +46,29 @@ const predefinedEnums = {
     COMUNIDADES_ESP: {
         name: 'COMUNIDADES_ESP',
         description: 'Comunidades Autónomas de España',
+        usableInMaps: true,
         values: ['Andalucía', 'Aragón', 'Asturias', 'Islas Baleares', 'Canarias', 
                 'Cantabria', 'Castilla-La Mancha', 'Castilla y León', 'Cataluña', 
                 'Extremadura', 'Galicia', 'La Rioja', 'Madrid', 'Murcia', 'Navarra', 
-                'País Vasco', 'Comunidad Valenciana', 'Ceuta', 'Melilla']
+                'País Vasco', 'Comunidad Valenciana', 'Ceuta', 'Melilla'],
+        divider: true  // Añadir el divisor aquí en lugar de en ESTADOS_EEUU
+    },
+    ESTADOS_EEUU: {
+        name: 'ESTADOS_EEUU',
+        description: 'Estados de Estados Unidos',
+        usableInMaps: true,
+        values: [
+            'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+            'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
+            'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+            'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
+            'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri',
+            'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+            'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+            'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
+            'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+            'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+        ]
     },
     COLORES: {
         name: 'COLORES',
@@ -97,6 +118,11 @@ const predefinedEnums = {
     }
 };
 
+// Añadir función auxiliar para verificar si un enum es usable en mapas
+function isEnumUsableInMaps(enumName) {
+    return predefinedEnums[enumName]?.usableInMaps || false;
+}
+
 function getAvailablePredefinedEnums() {
     return Object.keys(predefinedEnums).map(key => ({
         name: key,
@@ -110,11 +136,14 @@ function importPredefinedEnum(enumName) {
     if (!enumData) return false;
 
     schema.tables[enumName] = {
-        isEnum: true,
-        values: [...enumData.values]
+        isEnum: true,  // Asegurarnos de que la propiedad isEnum está establecida
+        values: [...enumData.values],
+        description: enumData.description,  // Opcional: mantener la descripción
+        usableInMaps: enumData.usableInMaps  // Opcional: mantener si es usable en mapas
     };
     
     updateClassMap();
+    populateEnumDropdown();  // Actualizar el dropdown de enums
     return true;
 }
 

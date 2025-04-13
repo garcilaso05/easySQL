@@ -39,6 +39,13 @@ function addColumnInput() {
     `;
     container.appendChild(newInput);
 
+    // Enfocar el nuevo input
+    const newNameInput = newInput.querySelector('.col-name');
+    newNameInput.focus();
+
+    // Scroll hasta el final
+    container.scrollTop = container.scrollHeight;
+
     // Añadir listener para PK que deshabilite NOT NULL
     const pkCheckbox = newInput.querySelector('.col-pk');
     const notNullCheckbox = newInput.querySelector('.col-notnull');

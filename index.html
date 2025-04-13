@@ -107,9 +107,15 @@
     </div>
     <div id="mapa" class="tab-content">
         <div class="map-controls">
+            <select id="mapaTableSelect">
+                <option value="">Selecciona una tabla</option>
+            </select>
+            <select id="mapaColumnSelect" disabled>
+                <option value="">Selecciona una columna</option>
+            </select>
             <button onclick="actualizarMapa()">Actualizar Mapa</button>
         </div>
-        <div id="mapa" style="height: calc(100vh - 200px);"></div>
+        <div id="mapaContainer" style="height: calc(100vh - 250px);"></div>
     </div>
     <!-- Pestaña Gráficos -->
     <div id="graficos" class="tab-content">
@@ -251,6 +257,7 @@
     <script src="scripts/auth.js"></script>
     <script src="scripts/excelImport.js"></script>
     <script src="scripts/predefinedEnums.js"></script>
+    <script src="scripts/mapCoordinates.js"></script>
     <script>
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
