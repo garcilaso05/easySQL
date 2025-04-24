@@ -16,8 +16,32 @@ window.addEventListener("load", () => {
     edges = new vis.DataSet([]);
     const data = { nodes: nodes, edges: edges };
     const options = { 
-        nodes: { shape: 'box', font: { size: 12 }, widthConstraint: { maximum: 200 } },
-        edges: { arrows: 'to' }
+        nodes: { 
+            shape: 'box', 
+            font: { size: 12 }, 
+            widthConstraint: { maximum: 200 } 
+        },
+        edges: { 
+            arrows: 'to',
+            color: {
+                color: '#2B7CE9',
+                highlight: '#2B7CE9',
+                hover: '#2B7CE9'
+            },
+            width: 2,
+            smooth: {
+                type: 'continuous',
+                forceDirection: 'none'
+            }
+        },
+        physics: {
+            enabled: true,
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+                gravitationalConstant: -50,
+                springLength: 200
+            }
+        }
     };
     network = new vis.Network(container, data, options);
     updatePredefinedEnums();
@@ -71,7 +95,11 @@ function updateClassMap() {
         const table = schema.tables[tableName];
         if (table.isEnum) {
             const values = table.values.join(', ');
-            nodes.add({ id: tableName, label: `${tableName}\n${values}` });
+            nodes.add({ 
+                id: tableName, 
+                label: `${tableName}\n${values}`,
+                color: '#97C2FC'
+            });
         } else {
             const columns = table.columns.map(col => {
                 let colStr = `${col.name} ${col.type}`;
@@ -80,29 +108,46 @@ function updateClassMap() {
                 if (col.check) colStr += ` CHECK(${col.check})`;
                 return colStr;
             }).join('\n');
-            nodes.add({ id: tableName, label: `${tableName}\n${columns}` });
+            nodes.add({ 
+                id: tableName, 
+                label: `${tableName}\n${columns}`,
+                color: table.isRelationship ? '#FFD700' : '#97C2FC'
+            });
         }
     }
+
     relationships.forEach(rel => {
-        let arrow;
-        switch(rel.direction) {
-            case 'bidirectional':
-                arrow = ''; // Sin flechas para bidireccional
-                break;
-            case 'forward':
-                arrow = 'to';
-                break;
-            case 'backward':
-                arrow = 'from';
-                break;
-        }
         edges.add({
             from: rel.table1,
             to: rel.table2,
             label: `${rel.name} (${rel.type})`,
-            arrows: arrow
+            arrows: 'to'
         });
     });
+
+    for (const tableName in schema.tables) {
+        const table = schema.tables[tableName];
+        if (table.isRelationship && table.references) {
+            edges.add({
+                from: tableName,
+                to: table.references.table1.name,
+                arrows: 'to',
+                dashes: true,
+                width: 2,
+                color: { color: '#2B7CE9' }
+            });
+            edges.add({
+                from: tableName,
+                to: table.references.table2.name,
+                arrows: 'to',
+                dashes: true,
+                width: 2,
+                color: { color: '#2B7CE9' }
+            });
+        }
+    }
+
+    network.stabilize();
     populateTableDropdown();
     populateEnumDropdown();
     updateTableSelect(); // Añadir esta línea
@@ -515,6 +560,7 @@ function openRelationshipModal() {
 
 function closeRelationshipModal() {
     document.getElementById('relationshipModal').style.display = 'none';
+    document.getElementById('relationshipName').value = ''; // Limpiar el campo
 }
 
 function updateRelationshipDropdown() {
@@ -607,6 +653,7 @@ function saveRelationship() {
 
         updateClassMap();
         updateRelationshipDropdown();
+        document.getElementById('relationshipName').value = ''; // Limpiar el campo
         closeRelationshipModal();
         showNotification(`Relación "${name}" creada exitosamente.`, 'success');
     } catch (error) {
