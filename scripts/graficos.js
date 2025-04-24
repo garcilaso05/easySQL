@@ -105,31 +105,45 @@ function generarGrafico() {
                         center: ['50%', '75%'],
                         size: '150%'
                     } : {})
+                },
+                series: {
+                    dataLabels: {
+                        style: {
+                            fontSize: '0.8em',
+                            color: document.body.classList.contains('dark-mode') ? '#FFFFFF' : '#333333'
+                        }
+                    }
                 }
-            }
-        };
-
-        // Ajustes específicos para cada tipo de gráfico
-        if (tipoGrafico !== 'pie' && tipoGrafico !== 'semicircle') {
-            chartOptions.xAxis = {
+            },
+            xAxis: {
                 categories: datos.map(d => d.name),
-                labels: { rotation: -45 }
-            };
-            chartOptions.yAxis = {
-                title: { text: 'Cantidad' }
-            };
-        }
-
-        chartOptions.series = [{
-            name: 'Cantidad',
-            colorByPoint: true,
-            data: datos,
-            ...(tipoGrafico === 'semicircle' ? {
-                innerSize: '50%'
-            } : {})
-        }];
-
-        chartOptions.credits = { enabled: false };
+                labels: {
+                    rotation: -45,
+                    style: {
+                        fontSize: '0.8em',
+                        color: document.body.classList.contains('dark-mode') ? '#FFFFFF' : '#333333'
+                    }
+                }
+            },
+            yAxis: {
+                title: { text: 'Cantidad' },
+                labels: {
+                    style: {
+                        fontSize: '0.8em',
+                        color: document.body.classList.contains('dark-mode') ? '#FFFFFF' : '#333333'
+                    }
+                }
+            },
+            series: [{
+                name: 'Cantidad',
+                colorByPoint: true,
+                data: datos,
+                ...(tipoGrafico === 'semicircle' ? {
+                    innerSize: '50%'
+                } : {})
+            }],
+            credits: { enabled: false }
+        };
 
         Highcharts.chart(chartContainer, chartOptions);
 

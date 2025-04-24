@@ -3,10 +3,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const colorPickerBtn = document.getElementById('colorPickerBtn');
     const colorPickerPanel = document.getElementById('colorPickerPanel');
     const colorSlider = document.getElementById('colorSlider');
+    const darkModeSwitch = document.getElementById('darkModeSwitch');
 
     if (!colorPickerBtn || !colorPickerPanel || !colorSlider) {
         console.error('Color picker elements not found');
         return;
+    }
+
+    // Inicializar modo oscuro según preferencia guardada
+    if (darkModeSwitch) {
+        const darkModePref = localStorage.getItem('darkMode') === 'true';
+        darkModeSwitch.checked = darkModePref;
+        document.body.classList.toggle('dark-mode', darkModePref);
+
+        darkModeSwitch.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode', darkModeSwitch.checked);
+            localStorage.setItem('darkMode', darkModeSwitch.checked);
+            
+            // Actualizar color de fondo de los gráficos existentes
+            const charts = document.querySelectorAll('.highcharts-background');
+            charts.forEach(chart => {
+                chart.setAttribute('fill', darkModeSwitch.checked ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)');
+            });
+        });
     }
 
     // Toggle color picker panel with debug

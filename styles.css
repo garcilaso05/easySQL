@@ -18,6 +18,109 @@
     --transition: all 0.3s ease;
 }
 
+/* === DARK MODE VARIABLES === */
+.dark-mode {
+    --color-bg: #181a1b;
+    --color-text: #e3e6eb;
+    --color-primary: #4b6cb7;
+    --color-primary-hover: #35508a;
+    --color-accent: #1976d2;
+    --color-border: #23272a;
+    --container-bg: #2a2e32;    /* Nuevo - Color de fondo para contenedores */
+    --container-bg-light: #32363a; /* Nuevo - Color de fondo más claro */
+    --container-bg-dark: #222528;  /* Nuevo - Color de fondo más oscuro */
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.dark-mode #buttons-container,
+.dark-mode .table-section,
+.dark-mode .data-actions,
+.dark-mode .search-form,
+.dark-mode #data-container,
+.dark-mode .data-section,
+.dark-mode .data-block,
+.dark-mode .data-details,
+.dark-mode .map-controls,
+.dark-mode .highcharts-background,
+.dark-mode .graficos-container {
+    background-color: var(--container-bg) !important;
+    color: var(--color-text) !important;
+}
+
+.dark-mode .table-header {
+    background-color: var(--container-bg-light) !important;
+}
+
+.dark-mode .insert-form {
+    background-color: var(--container-bg-dark) !important;
+}
+
+.dark-mode .container,
+.dark-mode .graficos-selectors,
+.dark-mode .grafico-container,
+.dark-mode .login-container,
+.dark-mode .predefined-enums-container,
+.dark-mode .excel-import-controls,
+.dark-mode .data-actions,
+.dark-mode .search-form,
+.dark-mode .input-dialog-content,
+.dark-mode .custom-notification,
+.dark-mode .help-section,
+.dark-mode .settings-section,
+.dark-mode .color-picker-panel,
+.dark-mode .data-details,
+.dark-mode .map-legend {
+    background-color: var(--container-bg) !important;
+    color: var(--color-text) !important;
+}
+
+.dark-mode .graficos-container {
+    background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+.dark-mode .highcharts-background {
+    fill: rgba(0, 0, 0, 0.9) !important;
+}
+
+.dark-mode .tab-content {
+    background-color: transparent !important;
+}
+
+.dark-mode canvas {
+    background-color: var(--container-bg) !important;
+}
+
+.dark-mode .data-block,
+.dark-mode .table-section,
+.dark-mode .data-details {
+    border-color: var(--color-border) !important;
+}
+
+/* Quitar bordes blancos en modo oscuro */
+.dark-mode .data-actions,
+.dark-mode .search-form,
+.dark-mode .search-results,
+.dark-mode #data-container {
+    border-color: var(--container-bg) !important;
+}
+
+/* Ajustar gráficos en modo oscuro */
+.dark-mode .grafico-item {
+    background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+.dark-mode .highcharts-text-outline {
+    stroke: var(--container-bg) !important;
+}
+
+.dark-mode .highcharts-axis-labels text,
+.dark-mode .highcharts-data-labels text,
+.dark-mode .highcharts-legend-item text {
+    fill: rgb(255, 255, 255) !important;
+    font-size: 0.8em !important;
+}
+
 /* === BASE STYLES === */
 * {
     font-family: 'Poppins', sans-serif;
@@ -36,10 +139,23 @@ body.login-active {
     overflow: hidden;
 }
 
+.dark-mode,
+.dark-mode body {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text) !important;
+}
+
 h1, h2, h3 {
     font-family: 'Poppins', sans-serif;
     color: var(--color-primary);
     text-shadow: 1px 1px 0 rgba(255, 255, 255, 1);
+}
+
+.dark-mode .section-title,
+.dark-mode h1, 
+.dark-mode h2, 
+.dark-mode h3 {
+    text-shadow: none !important;
 }
 
 h1 {
@@ -62,6 +178,15 @@ h2 {
 }
 
 h3 {
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* Reemplazar .data-table-title por h3 estándar */
+.data-table-title {
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
     text-shadow: 1px 1px 0 rgba(255, 255, 255, 1);
 }
 
@@ -115,6 +240,38 @@ h3 {
     margin: 0 auto;
 }
 
+.table-section {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+.dark-mode .container,
+.dark-mode .graficos-selectors,
+.dark-mode .graficos-container,
+.dark-mode .grafico-container,
+.dark-mode .login-container,
+.dark-mode .predefined-enums-container,
+.dark-mode .excel-import-controls,
+.dark-mode .data-actions,
+.dark-mode .search-form,
+.dark-mode .input-dialog-content,
+.dark-mode .custom-notification,
+.dark-mode .help-section,
+.dark-mode .settings-section,
+.dark-mode .color-picker-panel,
+.dark-mode .table-section,
+.dark-mode .data-details,
+.dark-mode .map-legend {
+    background-color: #23272a !important;
+    color: var(--color-text) !important;
+}
+
 /* === BUTTONS === */
 button {
     padding: 0.8rem 1.5rem;
@@ -134,6 +291,19 @@ button:hover {
     background-color: var(--color-primary-hover);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+.dark-mode button,
+.dark-mode .btn,
+.dark-mode .tab-button {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+}
+
+.dark-mode button:hover,
+.dark-mode .btn:hover,
+.dark-mode .tab-button:hover {
+    background-color: var(--color-primary-hover) !important;
 }
 
 /* === INPUTS & TEXTAREAS === */
@@ -167,6 +337,14 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(155, 79, 150, 0.1);
 }
 
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+    background-color: #23272a !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+}
+
 /* === TABS === */
 .tab-menu {
     display: flex;
@@ -187,6 +365,11 @@ textarea:focus {
 .tab-button.active {
     background-color: var(--color-primary);
     color: white;
+}
+
+.tab-content {
+    background-color: transparent !important;
+    animation: fadeIn 0.3s ease;
 }
 
 /* === DATA GRID === */
@@ -377,10 +560,6 @@ textarea:focus {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.tab-content {
-    animation: fadeIn 0.3s ease;
-}
-
 /* === NETWORK VISUALIZATION === */
 #network {
     border: 2px solid var(--color-border);
@@ -456,8 +635,9 @@ body {
 #sql-input {
     width: 100%;
     height: 150px;
-    margin-bottom: 10px;
+    margin-bottom: 1rem;
     font-family: monospace;
+    padding: 1rem;
 }
 
 #result {
@@ -568,6 +748,17 @@ button:hover {
 
 .tab-content {
     display: none;
+}
+
+#consultas .tab-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#consultas button {
+    margin: 0 auto;
+    display: block;
 }
 
 .tab-content.active {
