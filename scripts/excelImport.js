@@ -385,6 +385,28 @@ function validateCell(cell) {
     }
 }
 
+function updateCellValidation(cell, isValid, type = 'error') {
+    cell.classList.remove('valid', 'invalid', 'warning');
+    
+    if (type === 'warning') {
+        cell.classList.add('warning');
+    } else {
+        cell.classList.add(isValid ? 'valid' : 'invalid');
+    }
+}
+
+function showAvailableValues(cell, values) {
+    const dropdown = document.createElement('select');
+    dropdown.className = 'available-values-dropdown';
+    // ...resto del código existente
+}
+
+function showSuggestion(cell, suggestion) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'suggestion-tooltip';
+    // ...resto del código existente
+}
+
 function showSuggestions(cell) {
     const type = cell.dataset.type;
     

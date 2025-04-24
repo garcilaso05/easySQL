@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.toggle('dark-mode', darkModeSwitch.checked);
             localStorage.setItem('darkMode', darkModeSwitch.checked);
             
+            // Mantener el valor actual del slider
+            const currentValue = colorSlider.value;
+            updateBackgroundColor(currentValue);
+            
             // Actualizar color de fondo de los gráficos existentes
             const charts = document.querySelectorAll('.highcharts-background');
             charts.forEach(chart => {
@@ -71,26 +75,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para actualizar el color de fondo
     function updateBackgroundColor(value) {
         let backgroundColor;
+        const isDarkMode = document.body.classList.contains('dark-mode');
         
-        if (value <= 33) {
-            // Blanco a Azul oscuro
-            const component = Math.round((value / 33) * 255);
-            const blue = 255 - Math.round((value / 33) * 127);
-            backgroundColor = `rgb(${255 - component}, ${255 - component}, ${blue})`;
-        } else if (value <= 66) {
-            // Azul oscuro a Gris
-            const progress = (value - 33) / 33;
-            const r = Math.round(26 + (progress * 102));
-            const g = Math.round(35 + (progress * 93));
-            const b = Math.round(126 + (progress * 2));
-            backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        if (isDarkMode) {
+            // Nueva paleta de colores para modo oscuro (azul oscuro a negro)
+            const numericValue = parseInt(value);
+            if (numericValue <= 33) {
+                // De azul oscuro (rgb(26, 35, 60)) a azul más oscuro
+                const component = 60 - Math.round((numericValue / 33) * 30);
+                backgroundColor = `rgb(26, 35, ${component})`;
+            } else if (numericValue <= 66) {
+                // De azul más oscuro a gris muy oscuro
+                const progress = (numericValue - 33) / 33;
+                const r = Math.round(26 - (progress * 15));
+                const g = Math.round(35 - (progress * 25));
+                const b = Math.round(30 - (progress * 20));
+                backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            } else {
+                // De gris muy oscuro a negro
+                const component = Math.round(10 - ((numericValue - 66) / 34) * 10);
+                backgroundColor = `rgb(${component}, ${component}, ${component})`;
+            }
         } else {
-            // Gris a Negro
-            const component = Math.round(((value - 66) / 34) * 128);
-            backgroundColor = `rgb(${128 - component}, ${128 - component}, ${128 - component})`;
+            // Mantener la paleta original para modo claro
+            if (value <= 33) {
+                const component = Math.round((value / 33) * 255);
+                const blue = 255 - Math.round((value / 33) * 127);
+                backgroundColor = `rgb(${255 - component}, ${255 - component}, ${blue})`;
+            } else if (value <= 66) {
+                const progress = (value - 33) / 33;
+                const r = Math.round(26 + (progress * 102));
+                const g = Math.round(35 + (progress * 93));
+                const b = Math.round(126 + (progress * 2));
+                backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            } else {
+                const component = Math.round(((value - 66) / 34) * 128);
+                backgroundColor = `rgb(${128 - component}, ${128 - component}, ${128 - component})`;
+            }
         }
         
         document.body.style.backgroundColor = backgroundColor;
+        saveColor(value);
     }
 
     // Inicializar con el color guardado
