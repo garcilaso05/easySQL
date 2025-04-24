@@ -172,7 +172,7 @@ async function downloadSQL() {
     // Luego las tablas
     for (const tableName in schema.tables) {
         const table = schema.tables[tableName];
-        if (!table.isEnum) {
+        if (!table.isEnum && !table.isRelationship) {
             sqlContent += `-- TABLE: ${tableName}\n`;
             const columns = table.columns.map(col => {
                 let colDef = `${col.name} ${col.type}`;
@@ -200,6 +200,18 @@ async function downloadSQL() {
                 return colDef;
             }).join(',\n  ');
             sqlContent += `CREATE TABLE ${tableName} (\n  ${columns}\n);\n\n`;
+        } else if (table.isRelationship) {
+            sqlContent += `-- RELATIONSHIP TABLE: ${tableName}\n`;
+            sqlContent += `CREATE TABLE ${tableName} (\n`;
+            const columns = table.columns.map(col => {
+                let def = `  ${col.name} ${col.type}`;
+                return def;
+            }).join(',\n');
+            sqlContent += `${columns},\n`;
+            sqlContent += `  PRIMARY KEY (${table.columns.map(c => c.name).join(', ')}),\n`;
+            sqlContent += `  FOREIGN KEY (${table.columns[0].name}) REFERENCES ${table.references.table1.name}(${table.references.table1.field}) ON DELETE CASCADE,\n`;
+            sqlContent += `  FOREIGN KEY (${table.columns[1].name}) REFERENCES ${table.references.table2.name}(${table.references.table2.field}) ON DELETE CASCADE\n`;
+            sqlContent += `);\n\n`;
         }
     }
 
@@ -433,6 +445,10 @@ function processTable(sql) {
                 data: []
             };
         }
+
+        if (sql.toLowerCase().includes('foreign key')) {
+            schema.tables[tableName].isRelationship = true;
+        }
     }
 }
 
@@ -501,22 +517,123 @@ function closeRelationshipModal() {
     document.getElementById('relationshipModal').style.display = 'none';
 }
 
-function saveRelationship() {
-    const name = document.getElementById('relationshipName').value.trim();
+function updateRelationshipDropdown() {
+    const dropdown = document.getElementById('relationshipDropdown');
+    dropdown.innerHTML = '<option value="">Selecciona una relación</option>';
+    
+    for (const tableName in schema.tables) {
+        if (schema.tables[tableName].isRelationship) {
+            const option = document.createElement('option');
+            option.value = tableName;
+            option.textContent = tableName;
+            dropdown.appendChild(option);
+        }
+    }
+}
+
+function updateRelationshipFields() {
     const table1 = document.getElementById('relationshipTable1').value;
     const table2 = document.getElementById('relationshipTable2').value;
-    const type = document.getElementById('relationshipType').value;
-    const direction = document.getElementById('relationshipDirection').value;
+    const field1 = document.getElementById('relationshipField1');
+    const field2 = document.getElementById('relationshipField2');
+    
+    field1.innerHTML = '<option value="">Selecciona campo</option>';
+    field2.innerHTML = '<option value="">Selecciona campo</option>';
+    
+    if (table1) {
+        const pkColumn1 = schema.tables[table1].columns.find(col => col.pk);
+        if (pkColumn1) {
+            field1.innerHTML = `<option value="${pkColumn1.name}">${pkColumn1.name}</option>`;
+        }
+        field1.disabled = !table1;
+    }
+    
+    if (table2) {
+        const pkColumn2 = schema.tables[table2].columns.find(col => col.pk);
+        if (pkColumn2) {
+            field2.innerHTML = `<option value="${pkColumn2.name}">${pkColumn2.name}</option>`;
+        }
+        field2.disabled = !table2;
+    }
+}
 
-    if (!name || !table1 || !table2 || !type || !direction) {
+function saveRelationship() {
+    const name = document.getElementById('relationshipName').value.trim().toLowerCase();
+    const table1 = document.getElementById('relationshipTable1').value;
+    const table2 = document.getElementById('relationshipTable2').value;
+    const field1 = document.getElementById('relationshipField1').value;
+    const field2 = document.getElementById('relationshipField2').value;
+
+    if (!name || !table1 || !table2 || !field1 || !field2) {
         alert('Por favor, completa todos los campos.');
         return;
     }
 
-    relationships.push({ name, table1, table2, type, direction });
-    updateClassMap();
-    closeRelationshipModal();
-    alert(`Relación "${name}" creada exitosamente.`);
+    if (schema.tables[name]) {
+        alert('Ya existe una tabla o relación con ese nombre.');
+        return;
+    }
+
+    // Usar sintaxis básica sin foreign keys explícitas (AlaSQL las manejará implícitamente)
+    const createTableSQL = `CREATE TABLE ${name} (
+        ${table1.toLowerCase()}_${field1.toLowerCase()} ${schema.tables[table1].columns.find(col => col.pk).type},
+        ${table2.toLowerCase()}_${field2.toLowerCase()} ${schema.tables[table2].columns.find(col => col.pk).type},
+        PRIMARY KEY (${table1.toLowerCase()}_${field1.toLowerCase()}, ${table2.toLowerCase()}_${field2.toLowerCase()})
+    )`;
+
+    try {
+        console.log('SQL a ejecutar:', createTableSQL);
+        alasql(createTableSQL);
+
+        schema.tables[name] = {
+            isRelationship: true,
+            columns: [
+                {
+                    name: `${table1.toLowerCase()}_${field1.toLowerCase()}`,
+                    type: schema.tables[table1].columns.find(col => col.pk).type,
+                    pk: true
+                },
+                {
+                    name: `${table2.toLowerCase()}_${field2.toLowerCase()}`,
+                    type: schema.tables[table2].columns.find(col => col.pk).type,
+                    pk: true
+                }
+            ],
+            references: {
+                table1: { name: table1, field: field1 },
+                table2: { name: table2, field: field2 }
+            }
+        };
+
+        updateClassMap();
+        updateRelationshipDropdown();
+        closeRelationshipModal();
+        showNotification(`Relación "${name}" creada exitosamente.`, 'success');
+    } catch (error) {
+        showNotification(`Error al crear la relación: ${error.message}`, 'error');
+        console.error('Error en SQL:', error);
+    }
+}
+
+function deleteRelationship() {
+    const relationshipName = document.getElementById('relationshipDropdown').value;
+    if (!relationshipName) {
+        showNotification('Por favor, selecciona una relación para borrar.', 'warning');
+        return;
+    }
+
+    if (!schema.tables[relationshipName]?.isRelationship) {
+        showNotification('La tabla seleccionada no es una relación.', 'error');
+        return;
+    }
+
+    if (confirm(`¿Estás seguro de que deseas eliminar la relación "${relationshipName}"?`)) {
+        alasql(`DROP TABLE ${relationshipName}`);
+        delete schema.tables[relationshipName];
+        updateClassMap();
+        updateRelationshipDropdown();
+        showNotification(`Relación "${relationshipName}" eliminada exitosamente.`, 'success');
+    }
 }
 
 function updatePredefinedEnums() {

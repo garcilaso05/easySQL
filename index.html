@@ -177,6 +177,8 @@
             <button onclick="openDeleteEnumModal(document.getElementById('enumDropdown').value)">Borrar Enum</button>
             <button onclick="openEditEnumModal()">Editar Enum</button>
             <button onclick="openRelationshipModal()">Gestionar Relaciones</button>
+            <select id="relationshipDropdown"></select>
+            <button onclick="deleteRelationship()">Borrar Relación</button>
             <button onclick="downloadSQL()">Descargar SQL</button>
             <button onclick="document.getElementById('sqlFileInput').click()">Cargar SQL</button>
             <input type="file" id="sqlFileInput" style="display: none" accept=".sql" onchange="loadSQL(event)">
@@ -317,27 +319,18 @@
     <div id="relationshipModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeRelationshipModal()">×</span>
-            <h2>Crear Relación</h2>
+            <h2>Crear Relación N:M</h2>
             <label for="relationshipName">Nombre de la Relación:</label>
-            <input type="text" id="relationshipName" placeholder="ej. Relación1"><br><br>
-            <label for="relationshipTable1">Tabla 1:</label>
-            <select id="relationshipTable1"></select><br><br>
-            <label for="relationshipTable2">Tabla 2:</label>
-            <select id="relationshipTable2"></select><br><br>
-            <label for="relationshipType">Tipo:</label>
-            <select id="relationshipType">
-                <option value="1:1">1:1</option>
-                <option value="n:1">n:1</option>
-                <option value="1:n">1:n</option>
-                <option value="n:n">n:n</option>
-            </select><br><br>
-            <label for="relationshipDirection">Dirección:</label>
-            <select id="relationshipDirection">
-                <option value="bidirectional">Bidireccional</option>
-                <option value="forward">Hacia adelante</option>
-                <option value="backward">Hacia atrás</option>
-            </select><br><br>
-            <button onclick="saveRelationship()">Guardar Relación</button>
+            <input type="text" id="relationshipName" placeholder="ej. departamentos_empleados"><br><br>
+            <label for="relationshipTable1">Primera Tabla:</label>
+            <select id="relationshipTable1" onchange="updateRelationshipFields()"></select><br><br>
+            <label for="relationshipField1">Clave de Primera Tabla:</label>
+            <select id="relationshipField1" disabled></select><br><br>
+            <label for="relationshipTable2">Segunda Tabla:</label>
+            <select id="relationshipTable2" onchange="updateRelationshipFields()"></select><br><br>
+            <label for="relationshipField2">Clave de Segunda Tabla:</label>
+            <select id="relationshipField2" disabled></select><br><br>
+            <button onclick="saveRelationship()">Crear Relación</button>
         </div>
     </div>
     <!-- Scripts -->
