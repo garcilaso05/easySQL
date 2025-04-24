@@ -297,51 +297,40 @@ function loadSQL(event) {
                 }
             });
 
-            // Separar el contenido en bloques
-            const blocks = content.split('\n\n').filter(block => block.trim());
+            // Separar el contenido en bloques y mantener comentarios
+            const blocks = content.split('\n\n').map(block => block.trim()).filter(block => block);
             
-            // Primer paso: procesar los ENUMs y crear los tipos
+            // Primer paso: procesar los ENUMs
             blocks.forEach(block => {
                 if (block.includes('CREATE TYPE') && block.includes('AS ENUM')) {
                     processEnum(block);
-                    // También ejecutar la creación del enum en alasql
-                    try {
-                        alasql(block);
-                    } catch (e) {
-                        console.warn('Error al crear enum en alasql:', e);
-                    }
+                    try { alasql(block); } catch (e) { console.warn('Error al crear enum:', e); }
                 }
             });
 
-            // Segundo paso: procesar y crear las tablas
+            // Segundo paso: procesar todas las tablas (normales y relaciones)
+            let previousComment = '';
             blocks.forEach(block => {
+                const lines = block.split('\n');
+                // Capturar el comentario si existe
+                if (lines[0].trim().startsWith('--')) {
+                    previousComment = lines[0].trim();
+                }
+                
                 if (block.includes('CREATE TABLE')) {
-                    processTable(block);
-                    // También ejecutar la creación de la tabla en alasql
-                    try {
-                        alasql(block);
-                    } catch (e) {
-                        console.warn('Error al crear tabla en alasql:', e);
-                    }
+                    const isRelationship = previousComment.includes('-- RELATIONSHIP TABLE:');
+                    processTable(block, isRelationship);
+                    try { alasql(block); } catch (e) { console.warn('Error al crear tabla:', e); }
                 }
             });
 
-            // Procesar las relaciones
+            // Procesar las relaciones visuales
             blocks.forEach(block => {
                 if (block.includes('-- RELATIONSHIPS')) {
                     const lines = block.split('\n');
                     lines.forEach(line => {
                         if (line.startsWith('-- ') && !line.startsWith('-- RELATIONSHIPS')) {
-                            const match = line.match(/-- (.*): (.*) (.*) (.*) \((.*)\)/);
-                            if (match) {
-                                relationships.push({
-                                    name: match[1],
-                                    table1: match[2],
-                                    type: match[3],
-                                    table2: match[4],
-                                    direction: match[5]
-                                });
-                            }
+                            processRelationship(line);
                         }
                     });
                 }
@@ -350,9 +339,9 @@ function loadSQL(event) {
             updateClassMap();
             populateTableDropdown();
             populateEnumDropdown();
+            updateRelationshipDropdown(); // Asegurar que se actualice el desplegable de relaciones
             
             alert('SQL cargado exitosamente');
-            
             event.target.value = '';
             
         } catch (error) {
@@ -360,7 +349,6 @@ function loadSQL(event) {
             console.error(error);
         }
     };
-
     reader.readAsText(file);
 }
 
@@ -384,36 +372,44 @@ function processEnum(sql) {
     }
 }
 
-function processTable(sql) {
-    const match = sql.match(/CREATE TABLE (\w+)\s*\(([\s\S]+)\)/i);
+function processTable(sql, isRelationship = false) {
+    const match = sql.match(/CREATE TABLE (\w+)\s*\(([\s\S]*?)\)/i);
     if (match) {
         const tableName = match[1];
-        let columnsPart = match[2].replace(/\)\s*$/g, '').trim();
-        
-        // Separar las columnas correctamente, teniendo en cuenta los CHECK
-        const columnDefinitions = [];
+        const columnsString = match[2];
         let currentColumn = '';
-        let inCheck = false;
-        let parenCount = 0;
+        const columnDefinitions = [];
+        const foreignKeys = [];
 
-        for (let char of columnsPart) {
-            if (char === '(' && !inCheck) {
-                inCheck = true;
-                parenCount++;
-            } else if (char === '(') {
-                parenCount++;
-            } else if (char === ')') {
-                parenCount--;
-                if (parenCount === 0) inCheck = false;
+        // Procesar cada línea
+        columnsString.split('\n').forEach(line => {
+            line = line.trim();
+            if (!line) return;
+
+            if (line.endsWith(',')) {
+                line = line.slice(0, -1);
             }
 
-            if (char === ',' && !inCheck && parenCount === 0) {
-                if (currentColumn.trim()) columnDefinitions.push(currentColumn.trim());
-                currentColumn = '';
+            // Capturar FOREIGN KEYs
+            if (line.toUpperCase().startsWith('FOREIGN KEY')) {
+                foreignKeys.push(line);
+                columnDefinitions.push(line);
+            } else if (line.toUpperCase().startsWith('PRIMARY KEY')) {
+                columnDefinitions.push(line);
+            } else if (currentColumn) {
+                currentColumn += ' ' + line;
+                if (!line.endsWith(',')) {
+                    columnDefinitions.push(currentColumn.trim());
+                    currentColumn = '';
+                }
             } else {
-                currentColumn += char;
+                currentColumn = line;
+                if (!line.endsWith(',')) {
+                    columnDefinitions.push(currentColumn.trim());
+                    currentColumn = '';
+                }
             }
-        }
+        });
         if (currentColumn.trim()) columnDefinitions.push(currentColumn.trim());
 
         const columns = columnDefinitions.map(def => {
@@ -422,32 +418,42 @@ function processTable(sql) {
             const type = parts[1];
             const pk = def.toLowerCase().includes('primary key');
             const notNull = !pk && def.toLowerCase().includes('not null');
-            const isEnum = schema.tables[type]?.isEnum;
-
-            // Verificar si es un ENUM sin "IS NULL OR" en el CHECK
-            const hasNotNullEnum = isEnum && !def.toLowerCase().includes('is null or');
-            
             return {
                 name,
                 type,
                 pk,
-                notNull: pk || notNull || hasNotNullEnum,
-                check: isEnum ? {
-                    type: type,
-                    values: schema.tables[type].values
-                } : undefined
+                notNull: pk || notNull
             };
+        }).filter(col => col.name && col.type); // Filtrar constraints
+
+        // Procesar foreign keys para detectar referencias
+        const references = {};
+        foreignKeys.forEach(fk => {
+            const fkMatch = fk.match(/FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s*([^(]+)\(([^)]+)\)/i);
+            if (fkMatch) {
+                const localColumn = fkMatch[1].trim();
+                const refTable = fkMatch[2].trim();
+                const refColumn = fkMatch[3].trim();
+                references[localColumn] = { table: refTable, column: refColumn };
+            }
         });
 
-        if (columns.length > 0) {
-            schema.tables[tableName] = {
-                columns: columns,
-                data: []
-            };
-        }
+        // Detectar si es una tabla de relación
+        const hasMultipleFKs = foreignKeys.length >= 2;
+        
+        schema.tables[tableName] = {
+            columns: columns,
+            isRelationship: isRelationship || hasMultipleFKs,
+            data: []
+        };
 
-        if (sql.toLowerCase().includes('foreign key')) {
-            schema.tables[tableName].isRelationship = true;
+        // Si es una relación, añadir información de referencias
+        if ((isRelationship || hasMultipleFKs) && Object.keys(references).length >= 2) {
+            const refs = Object.entries(references);
+            schema.tables[tableName].references = {
+                table1: { name: refs[0][1].table, field: refs[0][1].column },
+                table2: { name: refs[1][1].table, field: refs[1][1].column }
+            };
         }
     }
 }
