@@ -320,7 +320,32 @@ function loadSQL(event) {
                 if (block.includes('CREATE TABLE')) {
                     const isRelationship = previousComment.includes('-- RELATIONSHIP TABLE:');
                     processTable(block, isRelationship);
-                    try { alasql(block); } catch (e) { console.warn('Error al crear tabla:', e); }
+                    try { 
+                        alasql(block);
+                        // Disparar evento de cambio después de crear cada tabla
+                        document.dispatchEvent(new Event('dataChanged')); 
+                    } catch (e) { 
+                        console.warn('Error al crear tabla:', e); 
+                    }
+                }
+            });
+
+            // Procesar inserciones si existen
+            blocks.forEach(block => {
+                if (block.includes('INSERT INTO')) {
+                    try {
+                        const inserts = block.split(';')
+                            .map(q => q.trim())
+                            .filter(q => q.length > 0);
+                        
+                        inserts.forEach(insert => {
+                            alasql(insert);
+                        });
+                        // Disparar evento después de las inserciones
+                        document.dispatchEvent(new Event('dataChanged'));
+                    } catch (e) {
+                        console.warn('Error al procesar inserción:', e);
+                    }
                 }
             });
 
@@ -377,6 +402,40 @@ function processTable(sql, isRelationship = false) {
     if (match) {
         const tableName = match[1];
         const columnsString = match[2];
+        
+        // Si es una tabla de relación, procesar las referencias y llamar a saveRelationship
+        if (isRelationship) {
+            const foreignKeys = [];
+            const lines = columnsString.split('\n');
+            
+            // Extraer las FOREIGN KEYs
+            lines.forEach(line => {
+                const fkMatch = line.match(/FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s*([^(]+)\(([^)]+)\)/i);
+                if (fkMatch) {
+                    foreignKeys.push({
+                        localColumn: fkMatch[1].trim(),
+                        refTable: fkMatch[2].trim(),
+                        refColumn: fkMatch[3].trim()
+                    });
+                }
+            });
+
+            if (foreignKeys.length >= 2) {
+                // Simular la creación de la relación usando saveRelationship
+                const relationParams = {
+                    name: tableName,
+                    table1: foreignKeys[0].refTable,
+                    table2: foreignKeys[1].refTable,
+                    field1: foreignKeys[0].refColumn,
+                    field2: foreignKeys[1].refColumn
+                };
+
+                // Llamar a una versión modificada de saveRelationship
+                createRelationshipFromSchema(relationParams);
+                return; // Salir ya que la relación ya está procesada
+            }
+        }
+
         let currentColumn = '';
         const columnDefinitions = [];
         const foreignKeys = [];
@@ -455,6 +514,50 @@ function processTable(sql, isRelationship = false) {
                 table2: { name: refs[1][1].table, field: refs[1][1].column }
             };
         }
+    }
+}
+
+// Nueva función para crear relaciones desde el esquema
+function createRelationshipFromSchema(params) {
+    const { name, table1, table2, field1, field2 } = params;
+
+    // Crear la tabla de relación
+    const createTableSQL = `CREATE TABLE ${name} (
+        ${table1.toLowerCase()}_${field1.toLowerCase()} ${schema.tables[table1].columns.find(col => col.pk).type},
+        ${table2.toLowerCase()}_${field2.toLowerCase()} ${schema.tables[table2].columns.find(col => col.pk).type},
+        PRIMARY KEY (${table1.toLowerCase()}_${field1.toLowerCase()}, ${table2.toLowerCase()}_${field2.toLowerCase()})
+    )`;
+
+    try {
+        alasql(createTableSQL);
+
+        // Configurar la tabla en el schema
+        schema.tables[name] = {
+            isRelationship: true,
+            columns: [
+                {
+                    name: `${table1.toLowerCase()}_${field1.toLowerCase()}`,
+                    type: schema.tables[table1].columns.find(col => col.pk).type,
+                    pk: true
+                },
+                {
+                    name: `${table2.toLowerCase()}_${field2.toLowerCase()}`,
+                    type: schema.tables[table2].columns.find(col => col.pk).type,
+                    pk: true
+                }
+            ],
+            references: {
+                table1: { name: table1, field: field1 },
+                table2: { name: table2, field: field2 }
+            }
+        };
+
+        // Actualizar la interfaz
+        updateClassMap();
+        updateRelationshipDropdown();
+    } catch (error) {
+        console.error('Error creating relationship:', error);
+        throw error;
     }
 }
 
