@@ -165,7 +165,6 @@
         <button class="tab-button" onclick="showTab('mapa')">Mapa</button>
         <button class="tab-button" onclick="showTab('graficos')">Gráficos</button>
         <button class="tab-button" onclick="showTab('excelImport')">Excel Import</button>
-        <button class="tab-button" onclick="showTab('relationManager')">Gestionar Relaciones</button>
     </div>
     <!-- Pestaña Esquema -->
     <div id="esquema" class="tab-content active">
@@ -265,25 +264,6 @@
         </div>
         <div id="excelGrid" class="excel-grid"></div>
     </div>
-    <!-- Nueva pestaña Gestor de Relaciones -->
-    <div id="relationManager" class="tab-content">
-        <div class="relation-controls">
-            <select id="relationSelect">
-                <option value="">Selecciona una relación</option>
-            </select>
-        </div>
-        <div class="relation-container">
-            <div class="table1-container">
-                <h3>Tabla 1</h3>
-                <div id="table1Data" class="table-data"></div>
-            </div>
-            <div class="table2-container">
-                <h3>Tabla 2</h3>
-                <div id="table2Data" class="table-data"></div>
-            </div>
-        </div>
-        <button id="saveRelations" onclick="saveRelationInstances()">Guardar Relaciones</button>
-    </div>
     <!-- Modal para crear tabla -->
     <div id="createTableModal" class="modal">
         <div class="modal-content">
@@ -373,7 +353,6 @@
     <script src="scripts/mapCoordinates.js"></script>
     <script src="scripts/colorTheme.js"></script>
     <script src="scripts/help.js"></script>
-    <script src="scripts/relationManager.js"></script>
     <script>
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
