@@ -69,6 +69,7 @@ function handlePrimaryKeyChange(checkbox, containerId) {
     const container = document.getElementById(containerId);
     const allCheckboxes = container.querySelectorAll('.col-pk');
     const allRemoveButtons = container.querySelectorAll('.remove-column');
+    const allNotNullCheckboxes = container.querySelectorAll('.col-notnull');
     
     // Desmarcar y habilitar todos los checkboxes y botones de eliminar
     allCheckboxes.forEach((cb, index) => {
@@ -76,12 +77,19 @@ function handlePrimaryKeyChange(checkbox, containerId) {
             cb.checked = false;
             cb.disabled = false;
             allRemoveButtons[index].disabled = false;
+            // Habilitar NOT NULL cuando se desmarca PK
+            allNotNullCheckboxes[index].disabled = false;
         }
     });
 
     // Deshabilitar el checkbox y botón de eliminar de la nueva PK
     checkbox.disabled = true;
     checkbox.parentElement.parentElement.querySelector('.remove-column').disabled = true;
+
+    // Deshabilitar y desmarcar NOT NULL para la PK
+    const notNullCheckbox = checkbox.parentElement.parentElement.querySelector('.col-notnull');
+    notNullCheckbox.checked = false;
+    notNullCheckbox.disabled = true;
 }
 
 function removeColumnInput(button) {
