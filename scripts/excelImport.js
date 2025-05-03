@@ -110,8 +110,14 @@ function setupCellValidation() {
     cells.forEach(cell => {
         cell.addEventListener('paste', handlePaste);
         cell.addEventListener('input', () => validateCell(cell));
-        cell.addEventListener('focus', () => showSuggestions(cell));
         cell.addEventListener('keydown', handleKeyNavigation);
+        // Añadir listener para clic derecho
+        cell.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // Prevenir menú contextual por defecto
+            if (cell.dataset.type in schema.tables && schema.tables[cell.dataset.type].isEnum) {
+                showSuggestions(cell);
+            }
+        });
     });
 
     const table = document.querySelector('#excelGrid table');
@@ -295,6 +301,37 @@ function handlePaste(e) {
     }
 }
 
+function isValidDate(dateStr) {
+    // Validar formato (dd-mm-yyyy o dd/mm/yyyy)
+    if (!/(^\d{1,2}[-/]\d{1,2}[-/]\d{1,4}$)/.test(dateStr)) {
+        return { isValid: false };
+    }
+
+    // Obtener día, mes y año
+    const parts = dateStr.split(/[-/]/);
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+
+    // Validar rangos
+    if (year < 0 || year > 2999) return { isValid: false };
+    if (month < 1 || month > 12) return { isValid: false };
+    if (day < 1 || day > 31) return { isValid: false };
+
+    // Meses con 30 días
+    const months30 = [4, 6, 9, 11];
+    if (months30.includes(month) && day > 30) return { isValid: false };
+
+    // Febrero y años bisiestos
+    if (month === 2) {
+        const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        const maxDays = isLeapYear ? 29 : 28;
+        if (day > maxDays) return { isValid: false };
+    }
+
+    return { isValid: true };
+}
+
 function validateCell(cell) {
     const value = cell.textContent.trim();
     const type = cell.dataset.type;
@@ -363,17 +400,30 @@ function validateCell(cell) {
                     }
                     break;
                 case 'DATE':
-                    if (isValidDate(value)) {
+                    const dateValidation = isValidDate(value);
+                    if (dateValidation.isValid) {
                         cell.classList.add('valid');
                     } else {
                         cell.classList.add('error');
                     }
                     break;
                 case 'BOOLEAN':
-                    if (/^(true|false|1|0)$/i.test(value)) {
+                    const boolTrueValues = ['true', '1', 'c', 't', 'cierto', 's', 'si'];
+                    const boolFalseValues = ['false', '0', 'f', 'falso', 'n', 'no'];
+                    const normalizedValue = value.toLowerCase().trim();
+                    
+                    if (boolTrueValues.includes(normalizedValue) || boolFalseValues.includes(normalizedValue)) {
                         cell.classList.add('valid');
+                        // Normalizar el valor a true/false estándar
+                        if (boolTrueValues.includes(normalizedValue)) {
+                            cell.textContent = 'true';
+                        } else {
+                            cell.textContent = 'false';
+                        }
                     } else {
                         cell.classList.add('error');
+                        // Mostrar sugerencias
+                        showTooltip(cell, ['true (t,c,s,si,cierto)', 'false (f,n,no,falso)']);
                     }
                     break;
                 default:
@@ -409,7 +459,6 @@ function showSuggestion(cell, suggestion) {
 
 function showSuggestions(cell) {
     const type = cell.dataset.type;
-    
     if (schema.tables[type]?.isEnum) {
         showTooltip(cell, schema.tables[type].values, true);
     }
@@ -424,39 +473,37 @@ function showTooltip(cell, suggestions, isEnumList = false) {
     const tooltip = document.createElement('div');
     tooltip.className = 'suggestion-tooltip';
     
-    const title = document.createElement('div');
-    title.className = 'suggestion-title';
-    title.textContent = isEnumList ? 'Valores disponibles:' : 'Valores válidos:';
-    tooltip.appendChild(title);
+    if (isEnumList) {
+        // Filtrado simple por inclusión de texto
+        const currentValue = cell.textContent.toLowerCase().trim();
+        const filteredSuggestions = suggestions.filter(s => 
+            s.toLowerCase().includes(currentValue)
+        );
 
-    suggestions.forEach(suggestion => {
-        const item = document.createElement('div');
-        item.className = 'suggestion-item';
-        item.textContent = suggestion;
-        item.onclick = () => {
-            cell.textContent = suggestion;
-            validateCell(cell);
-            tooltip.remove();
-        };
-        tooltip.appendChild(item);
-    });
-    
-    const rect = cell.getBoundingClientRect();
-    tooltip.style.left = `${rect.left}px`;
-    tooltip.style.top = `${rect.bottom + 5}px`;
+        if (filteredSuggestions.length > 0) {
+            filteredSuggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = suggestion;
+                item.onclick = () => {
+                    cell.textContent = suggestion;
+                    validateCell(cell);
+                    tooltip.remove();
+                };
+                tooltip.appendChild(item);
+            });
+        }
+    }
+
+    // Posicionar siempre debajo de la celda
+    const cellRect = cell.getBoundingClientRect();
+    tooltip.style.top = `${cellRect.bottom + 5}px`;
+    tooltip.style.left = `${cellRect.left}px`;
+    tooltip.style.minWidth = `${cellRect.width}px`;
     document.body.appendChild(tooltip);
-    
-    tooltip.addEventListener('mouseenter', () => {
-        const existingTimeout = tooltip.dataset.timeout;
-        if (existingTimeout) clearTimeout(existingTimeout);
-    });
-    
+
+    // Solo mantener el evento mouseleave
     tooltip.addEventListener('mouseleave', () => {
-        const timeoutId = setTimeout(() => tooltip.remove(), 200);
-        tooltip.dataset.timeout = timeoutId;
-    });
-    
-    cell.addEventListener('blur', () => {
         const timeoutId = setTimeout(() => tooltip.remove(), 200);
         tooltip.dataset.timeout = timeoutId;
     });
@@ -491,11 +538,6 @@ function calculateSimilarity(a, b) {
     }
     
     return 1 - (matrix[a.length][b.length] / Math.max(a.length, b.length));
-}
-
-function isValidDate(value) {
-    const date = new Date(value.replace(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/, '$3-$2-$1'));
-    return date instanceof Date && !isNaN(date);
 }
 
 function addNewRow() {
@@ -572,6 +614,14 @@ function validateAndImportData() {
             } else {
                 if (cell.dataset.type === 'FLOAT' && value) {
                     values[cell.dataset.column] = value.replace(',', '.');
+                } else if (cell.dataset.type === 'DATE' && value) {
+                    const parts = value.split(/[-/]/);
+                    if (parts.length === 3) {
+                        const [day, month, year] = parts;
+                        values[cell.dataset.column] = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                    } else {
+                        values[cell.dataset.column] = value;
+                    }
                 } else {
                     values[cell.dataset.column] = value;
                 }

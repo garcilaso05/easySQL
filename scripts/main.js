@@ -557,5 +557,55 @@ async function togglePredefinedEnum(enumName) {
     }
 }
 
+function normalizeInput(input) {
+    if (input.startsWith(' ')) {
+        input = input.trimStart();
+    }
+    // Normalizar las entradas para quitar acentos y caracteres especiales
+    const normalized = input
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
+        .replace(/[^a-zA-Z0-9]/g, '_') // Reemplazar caracteres no alfanuméricos con _
+        .replace(/_+/g, '_') // Reemplazar múltiples _ con uno solo
+        .replace(/^_|_$/g, '') // Eliminar _ al inicio y final
+        .toUpperCase();
+    return normalized;
+}
+
+function setupTableNameInputs() {
+    const inputs = document.querySelectorAll('.table-name-input, .col-name');
+    inputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            const normalized = normalizeInput(this.value);
+            this.value = normalized;
+        });
+    });
+}
+
+// Llamar a esta función cuando se cargue la página y cuando se añadan nuevos inputs
+document.addEventListener('DOMContentLoaded', setupTableNameInputs);
+
+// Observador para detectar nuevos campos añadidos
+const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1) { // Es un elemento
+                const inputs = node.querySelectorAll('.table-name-input, .col-name');
+                inputs.forEach(input => {
+                    input.addEventListener('input', function(e) {
+                        const normalized = normalizeInput(this.value);
+                        this.value = normalized;
+                    });
+                });
+            }
+        });
+    });
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
 populateEnumDropdown();
 cargarTablaOAVD();
