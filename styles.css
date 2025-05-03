@@ -641,6 +641,12 @@ textarea:focus {
     height: 100%;
     background-color: rgba(0,0,0,0.5);
     z-index: 2000;
+    transition: all 0.3s ease;
+}
+
+.help-modal.dark-mode {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
 }
 
 .help-content {
@@ -653,6 +659,7 @@ textarea:focus {
     border-radius: 12px;
     box-shadow: var(--shadow-md);
     overflow: hidden;
+    position: relative;
 }
 
 .help-sidebar {
@@ -662,6 +669,66 @@ textarea:focus {
     border-right: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) #f1f1f1;
+}
+
+.help-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.help-sidebar::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: 4px;
+}
+
+.help-sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 4px;
+}
+
+.help-modal.dark-mode .help-block {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+.help-modal.dark-mode .help-sidebar {
+    background-color: #2d2d2d;
+    border-right: 1px solid #404040;
+}
+
+.help-modal.dark-mode .help-navigation a {
+    color: #e0e0e0;
+}
+
+.help-modal.dark-mode .help-navigation a:hover {
+    background-color: #404040;
+}
+
+.help-modal.dark-mode .help-section h2 {
+    color: #e0e0e0;
+    border-bottom-color: #404040;
+}
+
+.help-modal.dark-mode code {
+    background-color: #404040;
+    color: #e0e0e0;
+}
+
+.help-modal.dark-mode table {
+    border-color: #404040;
+}
+
+.help-modal.dark-mode th,
+.help-modal.dark-mode td {
+    border-color: #404040;
+    background-color: #2d2d2d;
+}
+
+.help-modal.dark-mode .help-block {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .help-search {
@@ -892,15 +959,25 @@ button:hover {
 }
 
 .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s ease;
 }
 
 .close:hover {
-    color: black;
-    cursor: pointer;
+    background: #cc0000;
+    transform: scale(1.1);
 }
 
 .column-input {
@@ -2660,4 +2737,131 @@ input:checked + .slider:before {
 
 .predefined-block strong {
     color: #1976d2;
+}
+
+/* Help Modal Enhanced Styles */
+.help-block {
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+}
+
+.info-block {
+    background-color: #e3f2fd;
+    border-left: 5px solid #1976d2;
+}
+
+.case-block {
+    background-color: #f3e5f5;
+    border-left: 5px solid #7b1fa2;
+}
+
+.tip-block {
+    background-color: #e8f5e9;
+    border-left: 5px solid #388e3c;
+}
+
+.warning-block {
+    background-color: #fff3e0;
+    border-left: 5px solid #f57c00;
+}
+
+.example-block {
+    background-color: #f5f5f5;
+    border-left: 5px solid #616161;
+}
+
+.features-block {
+    background-color: #e0f7fa;
+    border-left: 5px solid #00acc1;
+}
+
+.step-block {
+    background-color: #f3e5f5;
+    border-left: 5px solid #8e24aa;
+    margin: 0.5rem 0;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.validation-block {
+    background-color: #e8eaf6;
+    border-left: 5px solid #3f51b5;
+}
+
+.troubleshooting-block {
+    background-color: #ffebee;
+    border-left: 5px solid #c62828;
+}
+
+.exercise-block {
+    background-color: #e0f2f1;
+    border-left: 5px solid #00897b;
+}
+
+/* Block Headers */
+.help-block h3, .help-block h4 {
+    color: var(--color-primary);
+    margin-top: 0;
+}
+
+/* Block Icons */
+.help-block::before {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+/* Block Transitions */
+.help-block {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-block:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Section Navigation */
+.help-navigation li {
+    transition: all 0.3s ease;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.help-navigation li:hover {
+    background-color: var(--color-bg-hover);
+    transform: translateX(5px);
+}
+
+/* Enhanced Typography */
+.help-section h2 {
+    font-size: 2rem;
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.help-block ul li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+/* Code Examples */
+.code-example {
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 4px;
+    font-family: monospace;
+    margin: 1rem 0;
+}
+
+/* Interactive Elements */
+.interactive-demo {
+    border: 2px dashed var(--color-border);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
 }

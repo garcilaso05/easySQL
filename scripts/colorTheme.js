@@ -29,6 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
             charts.forEach(chart => {
                 chart.setAttribute('fill', darkModeSwitch.checked ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)');
             });
+
+            // Add help modal dark mode
+            const helpModal = document.querySelector('.help-modal');
+            if (helpModal) {
+                if (darkModeSwitch.checked) {
+                    helpModal.classList.add('dark-mode');
+                } else {
+                    helpModal.classList.remove('dark-mode');
+                }
+            }
         });
     }
 

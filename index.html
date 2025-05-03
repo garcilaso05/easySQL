@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1.0">
     <title>easySQL</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.2/dist/alasql.min.js"></script>
@@ -122,29 +122,27 @@
         <div class="help-content">
             <span class="close" onclick="closeHelpModal()">&times;</span>
             <div class="help-sidebar">
-                <div class="help-search">
-                    <input type="text" id="helpSearch" placeholder="Buscar ayuda...">
-                </div>
                 <nav class="help-navigation">
                     <ul>
                         <li><a href="#inicio">Introducción a SQL</a></li>
                         <li><a href="#estructuras">Estructuras y Tipos de Datos</a></li>
+                        <li><a href="#inserciones2">Inserciones de Datos</a></li>
+                        <li><a href="#mostrardatos">Visualización de Datos</a></li>
+                        <li><a href="#mostrargraficos">Gráficos y Estadísticas</a></li>
+                        <li><a href="#mostrarMapas">Mapas Interactivos</a></li>
+                        <li><a href="#excelimport">Importación Excel</a></li>
                         <li><a href="#enumerados">Enumerados (ENUM)</a></li>
-                        <li><a href="#esquema">Gestión de Esquema</a></li>
-                        <li><a href="#datos">Gestión de Datos</a></li>
-                        <li><a href="#consultas">Consultas SQL</a></li>
-                        <li><a href="#visualizacion">Visualización</a></li>
-                        <li><a href="#importacion">Importación Excel</a></li>
-                        <li><a href="#errores">Solución de Errores</a></li>
-                        <li><a href="#ejemplos">Ejemplos Prácticos</a></li>
                     </ul>
                 </nav>
             </div>
             <div class="help-main">
+
+                <!-- Modal de Ayuda -->
+
                 <section id="inicio" class="help-section active">
                     <h2>Introducción a SQL</h2>
                     
-                    <div class="info-block">
+                    <div class="help-block">
                         <h3>¿Qué es SQL y por qué es importante para su empresa? 🏢</h3>
                         <p>SQL es una herramienta que permite gestionar la información de su empresa de forma eficiente, segura y profesional. Es como tener un asistente que:</p>
                         <ul>
@@ -155,7 +153,7 @@
                         </ul>
                     </div>
 
-                    <div class="case-block">
+                    <div class="help-block">
                         <h4>Caso real: Empresa de Distribución 🚚</h4>
                         <p>La empresa "Distribuciones Rápidas S.L." tenía estos problemas:</p>
                         <ul>
@@ -172,7 +170,7 @@
                         </ul>
                     </div>
 
-                    <div class="tip-block">
+                    <div class="tip-block help-block">
                         <h4>Ventajas sobre Excel 📊</h4>
                         <p>¿Por qué las empresas están migrando de Excel a SQL?</p>
                         <ul>
@@ -183,7 +181,7 @@
                         </ul>
                     </div>
 
-                    <div class="roi-block">
+                    <div class="roi-block help-block">
                         <h4>Impacto en su Negocio 💰</h4>
                         <p>Las empresas que implementan SQL reportan:</p>
                         <ul>
@@ -194,7 +192,7 @@
                         </ul>
                     </div>
 
-                    <div class="next-block">
+                    <div class="next-block help-block">
                         <h4>Próximos Pasos 👣</h4>
                         <p>No se preocupe por la complejidad técnica. easySQL está diseñado para que pueda:</p>
                         <ul>
@@ -208,7 +206,7 @@
                 <section id="estructuras" class="help-section">
                     <h2>Estructuras y Tipos de Datos</h2>
 
-                    <div class="info-block">
+                    <div class="info-block help-block">
                         <h3>¿Qué es una tabla? 📋</h3>
                         <p>Imagina una tabla como una agenda de contactos en tu teléfono:</p>
                         <ul>
@@ -217,7 +215,7 @@
                         </ul>
                     </div>
 
-                    <div class="example-block">
+                    <div class="example-block help-block">
                         <h4>Ejemplo Visual: Agenda de Contactos 👥</h4>
                         <div class="table-example">
                             <p>Así se ve una tabla:</p>
@@ -244,7 +242,7 @@
                         </div>
                     </div>
 
-                    <div class="concepts-block">
+                    <div class="concepts-block help-block">
                         <h4>Conceptos Básicos 🎯</h4>
                         
                         <div class="concept-item">
@@ -281,10 +279,489 @@
                     </div>
                 </section>
 
+                <section id="inserciones2" class="help-section">
+                    <h2>Inserciones de Datos 📝</h2>
+                    
+                    <div class="info-block help-block">
+                        <h3>¿Qué es una Inserción? 🎯</h3>
+                        <p>Una inserción es el proceso de añadir nuevos datos a una tabla. Es como escribir una nueva entrada en un diario:</p>
+                        <ul>
+                            <li>Cada inserción es un nuevo registro en la tabla</li>
+                            <li>Debes respetar el tipo de dato de cada columna</li>
+                            <li>La clave primaria (PK) debe ser única para cada inserción</li>
+                        </ul>
+                    </div>
+
+                    <div class="case-block help-block">
+                        <h4>Caso Práctico: Registro de Ventas 🛍️</h4>
+                        <p>En una tienda necesitas registrar cada venta:</p>
+                        <ul>
+                            <li>✅ ID de venta (único para cada transacción)</li>
+                            <li>✅ Producto vendido</li>
+                            <li>✅ Cantidad</li>
+                            <li>✅ Fecha de venta</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-block help-block">
+                        <h4>Consejos para Insertar Datos 💡</h4>
+                        <p>Al insertar datos, recuerda:</p>
+                        <ul>
+                            <li>🔍 Verifica el tipo de dato antes de insertar</li>
+                            <li>⚠️ Respeta las restricciones NOT NULL</li>
+                            <li>🔑 Asegura que la PK sea única</li>
+                            <li>📋 Puedes dejar vacíos los campos opcionales</li>
+                        </ul>
+                    </div>
+
+                    <div class="example-block help-block">
+                        <h4>Ejemplo: Tabla de Productos</h4>
+                        <div class="table-example">
+                            <table>
+                                <tr class="header-row">
+                                    <th>ID (PK)</th>
+                                    <th>Nombre</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Laptop</td>
+                                    <td>999.99</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Mouse</td>
+                                    <td>29.99</td>
+                                    <td>50</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="concepts-block help-block">
+                        <h4>Tipos de Inserción en easySQL 🛠️</h4>
+                        <ul>
+                            <li>✨ Inserción Manual: Usando el formulario</li>
+                            <li>📊 Importación Excel: Carga masiva de datos</li>
+                            <li>📝 SQL Directo: Usando comandos INSERT</li>
+                            <li>📁 Carga de archivo: Importando archivos SQL</li>
+                        </ul>
+                    </div>
+
+                    <div class="next-block help-block">
+                        <h4>Ejercicios Prácticos 👣</h4>
+                        <p>Practica las inserciones con estos ejercicios:</p>
+                        <ul>
+                            <li>1️⃣ Crea una tabla "Empleados" con campos: ID, Nombre, Salario</li>
+                            <li>2️⃣ Inserta 3 empleados diferentes usando el formulario</li>
+                            <li>3️⃣ Intenta insertar un ID duplicado para ver el error</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="mostrardatos" class="help-section">
+                    <h2>Visualización de Datos en Tablas 📊</h2>
+                    
+                    <div class="info-block help-block">
+                        <h3>¿Cómo ver mis datos? 🔍</h3>
+                        <p>La pestaña "Datos" te permite:</p>
+                        <ul>
+                            <li>Ver todos los registros de tus tablas</li>
+                            <li>Filtrar información específica</li>
+                            <li>Ordenar datos por columnas</li>
+                            <li>Exportar datos seleccionados</li>
+                        </ul>
+                    </div>
+
+                    <div class="case-block help-block">
+                        <h4>Panel de Control de Datos 🎛️</h4>
+                        <p>En la parte superior encontrarás:</p>
+                        <ul>
+                            <li>📋 Selector de tabla: Elige qué tabla quieres ver</li>
+                            <li>🔎 Filtros: Reduce los datos mostrados según criterios</li>
+                            <li>⬆️ Ordenación: Organiza los datos ascendente/descendente</li>
+                            <li>💾 Exportación: Guarda los datos filtrados</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-block help-block">
+                        <h4>Consejos para el Filtrado Efectivo 💡</h4>
+                        <ul>
+                            <li>🎯 Usa múltiples filtros para búsquedas precisas</li>
+                            <li>📊 Combina filtros numéricos y de texto</li>
+                            <li>📅 Filtra por rangos de fechas</li>
+                            <li>🔄 Puedes resetear los filtros en cualquier momento</li>
+                        </ul>
+                    </div>
+
+                    <div class="example-block help-block">
+                        <h4>Ejemplo Práctico: Filtrado de Ventas</h4>
+                        <p>Para encontrar ventas específicas:</p>
+                        <ol>
+                            <li>1️⃣ Selecciona la tabla "Ventas"</li>
+                            <li>2️⃣ Filtra por fecha > "01/01/2024"</li>
+                            <li>3️⃣ Filtra por monto > 1000€</li>
+                            <li>4️⃣ Ordena por fecha descendente</li>
+                        </ol>
+                    </div>
+
+                    <div class="warning-block help-block">
+                        <h4>⚠️ Importante</h4>
+                        <p>Ten en cuenta que:</p>
+                        <ul>
+                            <li>Los filtros son acumulativos</li>
+                            <li>Puedes exportar solo los datos filtrados</li>
+                            <li>El rendimiento depende del volumen de datos</li>
+                        </ul>
+                    </div>
+
+                    <div class="next-block help-block">
+                        <h4>Ejercicio Práctico 👣</h4>
+                        <p>Practica con estos pasos:</p>
+                        <ul>
+                            <li>1️⃣ Carga la tabla de ejemplo "Empleados"</li>
+                            <li>2️⃣ Filtra empleados con salario > 30000</li>
+                            <li>3️⃣ Ordena por antigüedad</li>
+                            <li>4️⃣ Exporta los resultados filtrados</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="mostrargraficos" class="help-section">
+                    <h2>Gráficos y Estadísticas 📊</h2>
+                    
+                    <div class="info-block help-block">
+                        <h3>¿Qué son los gráficos en easySQL? 📈</h3>
+                        <p>Los gráficos son representaciones visuales de tus datos que te permiten:</p>
+                        <ul>
+                            <li>🎯 Identificar tendencias rápidamente</li>
+                            <li>📊 Comparar datos de forma visual</li>
+                            <li>📈 Presentar información de manera profesional</li>
+                            <li>🔍 Analizar patrones en tus datos</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-block help-block">
+                        <h4>Tipos de Gráficos Disponibles 🎨</h4>
+                        <ul>
+                            <li>⭕ <strong>Circular:</strong> Ideal para porcentajes y proporciones
+                                <ul>
+                                    <li>Perfecto para categorías</li>
+                                    <li>Muestra distribución de datos</li>
+                                </ul>
+                            </li>
+                            <li>🌗 <strong>Semicírculo:</strong> Similar al circular, pero más compacto
+                                <ul>
+                                    <li>Excelente para dashboards</li>
+                                    <li>Ahorra espacio en pantalla</li>
+                                </ul>
+                            </li>
+                            <li>📊 <strong>Barras:</strong> Perfecto para comparaciones
+                                <ul>
+                                    <li>Compara cantidades fácilmente</li>
+                                    <li>Visualiza rankings y métricas</li>
+                                </ul>
+                            </li>
+                            <li>📈 <strong>Líneas:</strong> Ideal para tendencias temporales
+                                <ul>
+                                    <li>Muestra evolución en el tiempo</li>
+                                    <li>Identifica patrones y ciclos</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="example-block help-block">
+                        <h4>Cómo Crear un Gráfico 🛠️</h4>
+                        <ol>
+                            <li>1️⃣ Selecciona una tabla (ej: "Ventas")</li>
+                            <li>2️⃣ Elige una columna (ej: "Monto")</li>
+                            <li>3️⃣ Escoge el tipo de gráfico</li>
+                            <li>4️⃣ ¡Listo! Tu gráfico se genera automáticamente</li>
+                        </ol>
+                    </div>
+
+                    <div class="benefits-block help-block">
+                        <h4>Ventajas de los Gráficos 🌟</h4>
+                        <ul>
+                            <li>⚡ Visualización instantánea de datos</li>
+                            <li>🎨 Personalización de colores y estilos</li>
+                            <li>💾 Exportación para presentaciones</li>
+                            <li>🔄 Actualización en tiempo real</li>
+                            <li>📱 Responsive en todos los dispositivos</li>
+                        </ul>
+                    </div>
+
+                    <div class="case-block help-block">
+                        <h4>Caso de Uso: Análisis de Ventas 💰</h4>
+                        <p>Una empresa utilizó los gráficos para:</p>
+                        <ul>
+                            <li>📊 Circular: Ver distribución de ventas por producto</li>
+                            <li>📈 Líneas: Analizar tendencias mensuales</li>
+                            <li>📊 Barras: Comparar rendimiento de vendedores</li>
+                            <li>🌗 Semicírculo: Mostrar objetivos cumplidos</li>
+                        </ul>
+                        <p>Resultado: Identificaron productos estrella y optimizaron inventario</p>
+                    </div>
+
+                    <div class="next-block help-block">
+                        <h4>Ejercicio Práctico 👣</h4>
+                        <p>Practica creando estos gráficos:</p>
+                        <ul>
+                            <li>1️⃣ Gráfico circular de categorías de productos</li>
+                            <li>2️⃣ Gráfico de barras de ventas por región</li>
+                            <li>3️⃣ Gráfico de líneas de ventas mensuales</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="mostrarMapas" class="help-section">
+                    <h2>Mapas Interactivos 🗺️</h2>
+                    
+                    <div class="info-block help-block">
+                        <h3>¿Qué puedo hacer con los mapas? 🌍</h3>
+                        <p>La pestaña "Mapa" te permite:</p>
+                        <ul>
+                            <li>🎯 Visualizar datos geográficos</li>
+                            <li>🔍 Explorar diferentes regiones</li>
+                            <li>🎨 Ver distribuciones por colores</li>
+                            <li>📊 Analizar datos por zonas</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-block help-block">
+                        <h4>Ubicaciones Predefinidas Disponibles 📍</h4>
+                        <ul>
+                            <li>🌍 <strong>Países del mundo</strong>: Visualización global</li>
+                            <li>🇪🇸 <strong>Comunidades Autónomas</strong>: División territorial española</li>
+                            <li>📍 <strong>Provincias españolas</strong>: Nivel provincial</li>
+                            <li>🇺🇸 <strong>Estados de EEUU</strong>: División estadounidense</li>
+                        </ul>
+                    </div>
+
+                    <div class="example-block help-block">
+                        <h4>Cómo Usar el Mapa 🎯</h4>
+                        <ol>
+                            <li>1️⃣ Selecciona una tabla con datos geográficos</li>
+                            <li>2️⃣ Elige la columna que contiene las ubicaciones</li>
+                            <li>3️⃣ El mapa se actualizará automáticamente</li>
+                            <li>4️⃣ Usa el zoom para explorar diferentes niveles</li>
+                        </ol>
+                    </div>
+
+                    <div class="features-block help-block">
+                        <h4>Características del Mapa 🛠️</h4>
+                        <ul>
+                            <li>🔄 <strong>Interactividad</strong>: Zoom y desplazamiento</li>
+                            <li>🎨 <strong>Leyenda de colores</strong>: Intensidad por valores</li>
+                            <li>💡 <strong>Tooltips</strong>: Información al pasar el mouse</li>
+                            <li>📱 <strong>Responsive</strong>: Adaptable a cualquier pantalla</li>
+                        </ul>
+                    </div>
+
+                    <div class="case-block help-block">
+                        <h4>Ejemplo Práctico: Análisis de Ventas por Región 📊</h4>
+                        <p>Una empresa analiza sus ventas:</p>
+                        <ol>
+                            <li>1️⃣ Tabla: "Ventas"</li>
+                            <li>2️⃣ Columna: "Comunidad_Autonoma"</li>
+                            <li>3️⃣ Resultado: Mapa con colores según volumen de ventas</li>
+                            <li>4️⃣ Análisis: Identificación de zonas más activas</li>
+                        </ol>
+                    </div>
+
+                    <div class="warning-block help-block">
+                        <h4>⚠️ Consideraciones Importantes</h4>
+                        <ul>
+                            <li>Usa los enums predefinidos para ubicaciones</li>
+                            <li>Los datos deben coincidir exactamente con los nombres oficiales</li>
+                            <li>La intensidad del color refleja la cantidad de registros</li>
+                        </ul>
+                    </div>
+
+                    <div class="next-block help-block">
+                        <h4>Ejercicio Práctico 👣</h4>
+                        <p>Practica con estos pasos:</p>
+                        <ul>
+                            <li>1️⃣ Crea una tabla "Clientes" con columna "Provincia"</li>
+                            <li>2️⃣ Inserta datos usando el enum de provincias</li>
+                            <li>3️⃣ Visualiza la distribución en el mapa</li>
+                            <li>4️⃣ Explora diferentes niveles de zoom</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="excelimport" class="help-section">
+                    <div class="section-header">
+                        <h2>Importación Excel y Gestión Masiva de Datos 📊</h2>
+                    </div>
+                    
+                    <div class="info-block help-block">
+                        <h3>¿Qué es Excel Import? 🔄</h3>
+                        <p>Excel Import es una herramienta potente que te permite:</p>
+                        <ul>
+                            <li>📥 Importar datos masivamente desde Excel</li>
+                            <li>📝 Editar múltiples registros simultáneamente</li>
+                            <li>🔍 Validar datos en tiempo real</li>
+                            <li>📋 Copiar y pegar datos desde hojas de cálculo</li>
+                            <li>⚡ Actualizar registros existentes</li>
+                        </ul>
+                    </div>
+
+                    <div class="features-block help-block">
+                        <h4>Características Principales 🌟</h4>
+                        <ul>
+                            <li>🔄 <strong>Validación en tiempo real:</strong> 
+                                <ul>
+                                    <li>Verifica tipos de datos automáticamente</li>
+                                    <li>Resalta errores y advertencias</li>
+                                    <li>Sugiere correcciones</li>
+                                </ul>
+                            </li>
+                            <li>📋 <strong>Operaciones con el portapapeles:</strong>
+                                <ul>
+                                    <li>Pega datos desde Excel manteniendo el formato</li>
+                                    <li>Copia múltiples celdas</li>
+                                    <li>Selección múltiple de celdas</li>
+                                </ul>
+                            </li>
+                            <li>⌨️ <strong>Atajos de teclado:</strong>
+                                <ul>
+                                    <li>Navegación con flechas entre celdas</li>
+                                    <li>Borrado rápido con Delete/Backspace</li>
+                                    <li>Selección múltiple con ratón</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="usage-block help-block">
+                        <h4>Cómo Usar Excel Import 📝</h4>
+                        
+                        <div class="step-block">
+                            <h5>1. Preparación</h5>
+                            <ul>
+                                <li>Selecciona la tabla destino</li>
+                                <li>Define el número de filas (10-1000)</li>
+                                <li>La cuadrícula se genera automáticamente</li>
+                            </ul>
+                        </div>
+
+                        <div class="step-block">
+                            <h5>2. Importación de Datos</h5>
+                            <ul>
+                                <li>Copia datos desde Excel</li>
+                                <li>Pega directamente en la cuadrícula</li>
+                                <li>Los datos se validan automáticamente</li>
+                            </ul>
+                        </div>
+
+                        <div class="step-block">
+                            <h5>3. Validación y Corrección</h5>
+                            <ul>
+                                <li>🟢 Verde: Dato válido</li>
+                                <li>🟡 Amarillo: Advertencia (requiere atención)</li>
+                                <li>🔴 Rojo: Error (debe corregirse)</li>
+                                <li>🔵 Azul: Valor nulo permitido</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tips-block help-block">
+                        <h4>Consejos y Trucos 💡</h4>
+                        <ul>
+                            <li>✨ <strong>Selección múltiple:</strong> Arrastra el ratón para seleccionar varias celdas</li>
+                            <li>🔄 <strong>Actualización masiva:</strong> Pega valores en múltiples celdas seleccionadas</li>
+                            <li>⌨️ <strong>Navegación rápida:</strong> Usa las flechas del teclado</li>
+                            <li>❌ <strong>Borrado rápido:</strong> Selecciona múltiples celdas y presiona Delete</li>
+                            <li>📝 <strong>Edición inline:</strong> Doble clic para editar una celda</li>
+                        </ul>
+                    </div>
+
+                    <div class="validation-block help-block">
+                        <h4>Sistema de Validación 🔍</h4>
+                        <ul>
+                            <li>🔢 <strong>Números (INT/FLOAT):</strong>
+                                <ul>
+                                    <li>Verifica formato numérico</li>
+                                    <li>Acepta decimales para FLOAT</li>
+                                    <li>Convierte automáticamente comas a puntos</li>
+                                </ul>
+                            </li>
+                            <li>📅 <strong>Fechas (DATE):</strong>
+                                <ul>
+                                    <li>Formato: dd/mm/yyyy o dd-mm-yyyy</li>
+                                    <li>Valida días y meses correctos</li>
+                                    <li>Considera años bisiestos</li>
+                                </ul>
+                            </li>
+                            <li>✅ <strong>Booleanos (BOOLEAN):</strong>
+                                <ul>
+                                    <li>true/1/s/si/cierto</li>
+                                    <li>false/0/n/no/falso</li>
+                                    <li>Normaliza automáticamente</li>
+                                </ul>
+                            </li>
+                            <li>📝 <strong>ENUMs:</strong>
+                                <ul>
+                                    <li>Valores predefinidos</li>
+                                    <li>Sugerencias al hacer clic derecho</li>
+                                    <li>Autocompletado inteligente</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="advanced-block help-block">
+                        <h4>Funciones Avanzadas 🚀</h4>
+                        <ul>
+                            <li>🔄 <strong>Actualización de registros existentes:</strong>
+                                <ul>
+                                    <li>Detecta cambios automáticamente</li>
+                                    <li>Actualiza solo campos modificados</li>
+                                    <li>Mantiene integridad de datos</li>
+                                </ul>
+                            </li>
+                            <li>📊 <strong>Gestión de claves primarias:</strong>
+                                <ul>
+                                    <li>Validación automática de duplicados</li>
+                                    <li>Prevención de conflictos</li>
+                                    <li>Identificación visual de PKs</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="example-block help-block">
+                        <h4>Ejemplo Práctico: Importar Productos</h4>
+                        <ol>
+                            <li>1️⃣ Selecciona tabla "Productos"</li>
+                            <li>2️⃣ Establece 50 filas</li>
+                            <li>3️⃣ Copia datos desde Excel</li>
+                            <li>4️⃣ Pega en la cuadrícula</li>
+                            <li>5️⃣ Verifica las validaciones</li>
+                            <li>6️⃣ Corrige errores si los hay</li>
+                            <li>7️⃣ Guarda los cambios</li>
+                        </ol>
+                    </div>
+
+                    <div class="troubleshooting-block help-block">
+                        <h4>Solución de Problemas ⚠️</h4>
+                        <ul>
+                            <li>❌ <strong>Datos no se pegan:</strong> Verifica formato del portapapeles</li>
+                            <li>⚠️ <strong>Validaciones en rojo:</strong> Revisa el tipo de dato esperado</li>
+                            <li>🔄 <strong>Actualizaciones no se aplican:</strong> Verifica la clave primaria</li>
+                            <li>📊 <strong>Formato incorrecto:</strong> Asegura compatibilidad de tipos</li>
+                        </ul>
+                    </div>
+                </section>
+
                 <section id="enumerados" class="help-section">
                     <h2>Trabajando con Enumerados (ENUM)</h2>
 
-                    <div class="info-block">
+                    <div class="info-block help-block">
                         <h3>¿Qué es un ENUM? 🎯</h3>
                         <p>Un ENUM es como una lista cerrada de opciones válidas. Por ejemplo:</p>
                         <ul>
@@ -294,7 +771,7 @@
                         </ul>
                     </div>
 
-                    <div class="benefits-block">
+                    <div class="benefits-block help-block">
                         <h4>Ventajas de usar ENUM ✨</h4>
                         <ul>
                             <li>✅ Evita errores de escritura</li>
@@ -304,7 +781,7 @@
                         </ul>
                     </div>
 
-                    <div class="warning-block">
+                    <div class="warning-block help-block">
                         <h4>⚠️ ¡Cuidado al Editar!</h4>
                         <p>Modificar un ENUM existente puede ser peligroso porque:</p>
                         <ul>
@@ -314,7 +791,7 @@
                         </ul>
                     </div>
 
-                    <div class="predefined-block">
+                    <div class="predefined-block help-block">
                         <h4>ENUMs Predefinidos en easySQL 📚</h4>
                         <p>easySQL incluye algunos ENUMs listos para usar:</p>
                         <ul>
@@ -325,7 +802,7 @@
                         <p>Para usarlos, simplemente selecciónalos al crear una columna.</p>
                     </div>
 
-                    <div class="exercise-block">
+                    <div class="exercise-block help-block">
                         <h5>Ejercicio 1: Crear un ENUM de Categorías 🏷️</h5>
                         <ol>
                             <li>Haz clic en "Crear Enum" en easySQL</li>
@@ -341,7 +818,7 @@
                         </ol>
                     </div>
 
-                    <div class="exercise-block">
+                    <div class="exercise-block help-block">
                         <h5>Ejercicio 2: Usar el ENUM creado 🛠️</h5>
                         <ol>
                             <li>Crea una nueva tabla llamada "Productos"</li>
