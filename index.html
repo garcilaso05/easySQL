@@ -127,7 +127,9 @@
                 </div>
                 <nav class="help-navigation">
                     <ul>
-                        <li><a href="#inicio" class="active">Inicio Rápido</a></li>
+                        <li><a href="#inicio">Introducción a SQL</a></li>
+                        <li><a href="#estructuras">Estructuras y Tipos de Datos</a></li>
+                        <li><a href="#enumerados">Enumerados (ENUM)</a></li>
                         <li><a href="#esquema">Gestión de Esquema</a></li>
                         <li><a href="#datos">Gestión de Datos</a></li>
                         <li><a href="#consultas">Consultas SQL</a></li>
@@ -140,9 +142,214 @@
             </div>
             <div class="help-main">
                 <section id="inicio" class="help-section active">
-                    <!-- ... contenido de ayuda ... -->
+                    <h2>Introducción a SQL</h2>
+                    
+                    <div class="info-block">
+                        <h3>¿Qué es SQL y por qué es importante para su empresa? 🏢</h3>
+                        <p>SQL es una herramienta que permite gestionar la información de su empresa de forma eficiente, segura y profesional. Es como tener un asistente que:</p>
+                        <ul>
+                            <li>Organiza toda su información empresarial automáticamente 📊</li>
+                            <li>Permite acceder a los datos de forma instantánea ⚡</li>
+                            <li>Mantiene la información segura y respaldada 🔒</li>
+                            <li>Crece con su empresa sin perder eficiencia 📈</li>
+                        </ul>
+                    </div>
+
+                    <div class="case-block">
+                        <h4>Caso real: Empresa de Distribución 🚚</h4>
+                        <p>La empresa "Distribuciones Rápidas S.L." tenía estos problemas:</p>
+                        <ul>
+                            <li>❌ 3 horas diarias perdidas buscando información en Excel</li>
+                            <li>❌ Errores frecuentes en el inventario</li>
+                            <li>❌ Pérdida de ventas por datos desactualizados</li>
+                        </ul>
+                        <p>Después de implementar SQL:</p>
+                        <ul>
+                            <li>✅ Búsqueda de información en segundos</li>
+                            <li>✅ Control de inventario en tiempo real</li>
+                            <li>✅ Aumento del 25% en eficiencia operativa</li>
+                            <li>✅ ROI positivo en menos de 6 meses</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-block">
+                        <h4>Ventajas sobre Excel 📊</h4>
+                        <p>¿Por qué las empresas están migrando de Excel a SQL?</p>
+                        <ul>
+                            <li>💼 <strong>Profesionalidad:</strong> Estándar en empresas Fortune 500</li>
+                            <li>🔐 <strong>Seguridad:</strong> Control total sobre quién accede a qué información</li>
+                            <li>📱 <strong>Accesibilidad:</strong> Múltiples empleados pueden trabajar simultáneamente</li>
+                            <li>💪 <strong>Escalabilidad:</strong> Gestiona millones de registros sin pérdida de rendimiento</li>
+                        </ul>
+                    </div>
+
+                    <div class="roi-block">
+                        <h4>Impacto en su Negocio 💰</h4>
+                        <p>Las empresas que implementan SQL reportan:</p>
+                        <ul>
+                            <li>📈 Reducción del 70% en tiempo de generación de informes</li>
+                            <li>🎯 Disminución del 90% en errores de datos</li>
+                            <li>💡 Mejor toma de decisiones basada en datos precisos</li>
+                            <li>🚀 Ventaja competitiva en su sector</li>
+                        </ul>
+                    </div>
+
+                    <div class="next-block">
+                        <h4>Próximos Pasos 👣</h4>
+                        <p>No se preocupe por la complejidad técnica. easySQL está diseñado para que pueda:</p>
+                        <ul>
+                            <li>1️⃣ Empezar de forma gradual</li>
+                            <li>2️⃣ Ver resultados inmediatos</li>
+                            <li>3️⃣ Crecer según sus necesidades</li>
+                        </ul>
+                    </div>
                 </section>
-                <!-- ... otras secciones ... -->
+
+                <section id="estructuras" class="help-section">
+                    <h2>Estructuras y Tipos de Datos</h2>
+
+                    <div class="info-block">
+                        <h3>¿Qué es una tabla? 📋</h3>
+                        <p>Imagina una tabla como una agenda de contactos en tu teléfono:</p>
+                        <ul>
+                            <li>Cada CONTACTO es una FILA (un amigo diferente)</li>
+                            <li>Cada DATO del contacto es una COLUMNA (nombre, teléfono, email...)</li>
+                        </ul>
+                    </div>
+
+                    <div class="example-block">
+                        <h4>Ejemplo Visual: Agenda de Contactos 👥</h4>
+                        <div class="table-example">
+                            <p>Así se ve una tabla:</p>
+                            <table>
+                                <tr class="header-row">
+                                    <th>ID (PK)</th>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Email</th>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Ana</td>
+                                    <td>555-123</td>
+                                    <td>ana@email.com</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Juan</td>
+                                    <td>555-456</td>
+                                    <td>null</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="concepts-block">
+                        <h4>Conceptos Básicos 🎯</h4>
+                        
+                        <div class="concept-item">
+                            <h5>¿Qué es una FILA? 📄</h5>
+                            <p>Es UN registro completo. Por ejemplo:</p>
+                            <p class="highlight">Ana + su teléfono + su email = UNA fila completa</p>
+                        </div>
+
+                        <div class="concept-item">
+                            <h5>¿Qué es una COLUMNA? 📊</h5>
+                            <p>Es UN tipo de información. Por ejemplo:</p>
+                            <p class="highlight">La columna "Teléfono" solo guarda números de teléfono</p>
+                        </div>
+
+                        <div class="concept-item">
+                            <h5>¿Qué significa PK (Primary Key)? 🔑</h5>
+                            <p>Es como el DNI de cada fila: un número ÚNICO que no se repite.</p>
+                            <p class="highlight">Si tienes dos Anas, por su PK sabrás que son diferentes</p>
+                        </div>
+
+                        <div class="concept-item">
+                            <h5>¿Qué significa NULL vs NOT NULL? ❓</h5>
+                            <p><strong>NULL = Puede estar vacío</strong></p>
+                            <ul>
+                                <li>Como Juan, que no tiene email (es NULL)</li>
+                                <li>Es como dejar un espacio en blanco</li>
+                            </ul>
+                            <p><strong>NOT NULL = No puede estar vacío</strong></p>
+                            <ul>
+                                <li>Como el Nombre, que siempre debe existir</li>
+                                <li>Es obligatorio rellenarlo</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="enumerados" class="help-section">
+                    <h2>Trabajando con Enumerados (ENUM)</h2>
+
+                    <div class="info-block">
+                        <h3>¿Qué es un ENUM? 🎯</h3>
+                        <p>Un ENUM es como una lista cerrada de opciones válidas. Por ejemplo:</p>
+                        <ul>
+                            <li>Tallas de ropa: [XS, S, M, L, XL]</li>
+                            <li>Estados de pedido: [Pendiente, Enviado, Entregado, Cancelado]</li>
+                            <li>Días de la semana: [Lunes, Martes, Miércoles...]</li>
+                        </ul>
+                    </div>
+
+                    <div class="benefits-block">
+                        <h4>Ventajas de usar ENUM ✨</h4>
+                        <ul>
+                            <li>✅ Evita errores de escritura</li>
+                            <li>✅ Solo permite valores válidos</li>
+                            <li>✅ Más fácil de mantener</li>
+                            <li>✅ Mejor organización de datos</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-block">
+                        <h4>⚠️ ¡Cuidado al Editar!</h4>
+                        <p>Modificar un ENUM existente puede ser peligroso porque:</p>
+                        <ul>
+                            <li>❌ Podrías invalidar datos existentes</li>
+                            <li>❌ Afecta a todas las tablas que lo usan</li>
+                            <li>❌ Los cambios son permanentes</li>
+                        </ul>
+                    </div>
+
+                    <div class="predefined-block">
+                        <h4>ENUMs Predefinidos en easySQL 📚</h4>
+                        <p>easySQL incluye algunos ENUMs listos para usar:</p>
+                        <ul>
+                            <li><strong>EstadoPedido</strong>: Pendiente, En Proceso, Enviado, Entregado, Cancelado</li>
+                            <li><strong>Prioridad</strong>: Baja, Media, Alta, Urgente</li>
+                            <li><strong>TipoDocumento</strong>: DNI, NIE, Pasaporte</li>
+                        </ul>
+                        <p>Para usarlos, simplemente selecciónalos al crear una columna.</p>
+                    </div>
+
+                    <div class="exercise-block">
+                        <h5>Ejercicio 1: Crear un ENUM de Categorías 🏷️</h5>
+                        <ol>
+                            <li>Haz clic en "Crear Enum" en easySQL</li>
+                            <li>Nombre del ENUM: "Categoria"</li>
+                            <li>Añade estos valores:
+                                <ul>
+                                    <li>Electrónica</li>
+                                    <li>Ropa</li>
+                                    <li>Alimentos</li>
+                                    <li>Hogar</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="exercise-block">
+                        <h5>Ejercicio 2: Usar el ENUM creado 🛠️</h5>
+                        <ol>
+                            <li>Crea una nueva tabla llamada "Productos"</li>
+                            <li>Añade una columna "categoria" de tipo "Categoria" (el ENUM que creaste)</li>
+                            <li>Intenta añadir un valor que no esté en la lista para ver cómo easySQL lo impide</li>
+                        </ol>
+                    </div>
+                </section>
             </div>
         </div>
     </div>

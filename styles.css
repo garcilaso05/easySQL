@@ -2432,3 +2432,232 @@ input:checked + .slider:before {
     width: 320px;
     border: 1px solid rgba(0, 0, 0, 0.1); /* Borde sutil */
 }
+
+/* Estilos para los bloques de ayuda */
+.info-block, .example-block, .tip-block, .case-block, .fun-fact-block, .roi-block, .next-block {
+    padding: 1.8rem;
+    margin: 2rem 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.info-block {
+    background-color: #e3f2fd;
+    border-left: 5px solid #2196f3;
+}
+
+.example-block {
+    background-color: #f3e5f5;
+    border-left: 5px solid #9c27b0;
+}
+
+.example-block pre {
+    background: rgba(255,255,255,0.5);
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+}
+
+.tip-block {
+    background-color: #e8f5e9;
+    border-left: 5px solid #4caf50;
+}
+
+.case-block {
+    background-color: #fff3e0;
+    border-left: 5px solid #ff9800;
+}
+
+.fun-fact-block {
+    background-color: #fce4ec;
+    border-left: 5px solid #e91e63;
+}
+
+.roi-block {
+    background-color: #e8eaf6;
+    border-left: 5px solid #3f51b5;
+}
+
+.next-block {
+    background-color: #f1f8e9;
+    border-left: 5px solid #689f38;
+}
+
+.help-section h3, .help-section h4 {
+    color: #2c3e50;
+    margin-bottom: 1.2rem;
+}
+
+.help-section ul {
+    list-style: none;
+    padding-left: 1.5rem;
+}
+
+.help-section ul li {
+    margin: 0.8rem 0;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+/* Estilos para los nuevos bloques */
+.type-block {
+    background-color: #e0f2f1;
+    border-left: 5px solid #009688;
+}
+
+.key-block {
+    background-color: #fff8e1;
+    border-left: 5px solid #ffc107;
+}
+
+.practice-block {
+    background-color: #f3e5f5;
+    border-left: 5px solid #9c27b0;
+}
+
+.type-block li, .key-block li {
+    margin: 1.5rem 0;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.5);
+    border-radius: 8px;
+}
+
+.practice-block ol {
+    counter-reset: exercise;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.practice-block ol > li {
+    counter-increment: exercise;
+    margin: 1rem 0;
+}
+
+.practice-block ol > li::before {
+    content: counter(exercise) "➜ ";
+    color: #9c27b0;
+    font-weight: bold;
+}
+
+/* Estilos para los bloques de ejercicios */
+.info-block, .type-block, .key-block, .practice-block, .exercise-block {
+    margin: 2rem 0;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.info-block:hover, .type-block:hover, .key-block:hover, 
+.practice-block:hover, .exercise-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.exercise-block {
+    background-color: #e3f2fd;
+    border-left: 5px solid #1976d2;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.exercise-block h5 {
+    color: #1976d2;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.exercise-block ol > li {
+    background: rgba(255,255,255,0.5);
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+}
+
+.exercise-block ul {
+    background: rgba(255,255,255,0.3);
+    padding: 1rem 1rem 1rem 2rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+/* === NEW PRESENTATION STYLES === */
+.table-example {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
+.table-example table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.table-example th, .table-example td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: left;
+}
+
+.table-example .header-row {
+    background: #f5f5f5;
+}
+
+.concept-item {
+    background: white;
+    padding: 1.2rem;
+    margin: 1rem 0;
+    border-radius: 12px;
+    border-left: 4px solid #2196f3;
+}
+
+.concept-item h5 {
+    color: #2196f3;
+    margin-bottom: 0.8rem;
+}
+
+.highlight {
+    background: #e3f2fd;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+.concepts-block {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin: 2rem 0;
+}
+
+/* === NEW BLOCKS === */
+.benefits-block {
+    background-color: #e8f5e9;
+    border-left: 5px solid #4caf50;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.warning-block {
+    background-color: #fff3e0;
+    border-left: 5px solid #ff9800;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.predefined-block {
+    background-color: #e3f2fd;
+    border-left: 5px solid #2196f3;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.predefined-block strong {
+    color: #1976d2;
+}

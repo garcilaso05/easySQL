@@ -46,15 +46,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const searchTerm = e.target.value.toLowerCase();
         
         helpSections.forEach(section => {
+            // Preservar el contenido original si no hay término de búsqueda
+            if (!searchTerm) {
+                section.innerHTML = section.dataset.originalContent || section.innerHTML;
+                return;
+            }
+
+            // Guardar contenido original si aún no se ha guardado
+            if (!section.dataset.originalContent) {
+                section.dataset.originalContent = section.innerHTML;
+            }
+
             const content = section.textContent.toLowerCase();
             const match = content.includes(searchTerm);
             
-            // Resaltar coincidencias si hay texto de búsqueda
-            if (searchTerm) {
-                const regex = new RegExp(searchTerm, 'gi');
-                section.innerHTML = section.innerHTML.replace(regex, match => 
-                    `<mark>${match}</mark>`
-                );
+            if (match) {
+                // Restaurar contenido original antes de hacer el highlight
+                section.innerHTML = section.dataset.originalContent;
+                
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                section.innerHTML = section.innerHTML.replace(regex, '<mark>$1</mark>');
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
             }
         });
     });
