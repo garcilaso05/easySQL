@@ -9,7 +9,7 @@ function openEditTableModal() {
     try {
         const tableData = alasql(`SELECT * FROM ${tableName}`);
         if (tableData.length > 0) {
-            const confirmation = confirm(
+            const message = 
                 'Esta tabla contiene datos insertados. La modificación puede causar:\n\n' +
                 '1. Si marca una columna como NOT NULL:\n' +
                 '   - Se eliminarán TODAS las inserciones que tengan NULL en esa columna\n' +
@@ -20,15 +20,27 @@ function openEditTableModal() {
                 '3. Se recomienda:\n' +
                 '   - Tener la pestaña de datos abierta con las inserciones cargadas\n' +
                 '   - Revisar los valores NULL antes de marcar columnas como NOT NULL\n' +
-                '   - Asignar valores a las nuevas columnas antes de marcarlas NOT NULL\n\n' +
-                '¿Está seguro de que desea continuar con la edición?'
+                '   - Asignar valores a las nuevas columnas antes de marcarlas NOT NULL';
+
+            showWarningDialog(
+                'Advertencia: Tabla con Datos',
+                message,
+                () => {
+                    // Continuar con la apertura del modal de edición
+                    openEditTableModalContent(tableName);
+                }
             );
-            if (!confirmation) return;
+            return;
         }
     } catch (error) {
         console.error('Error al verificar datos de la tabla:', error);
     }
 
+    // Si no hay advertencias, abrir directamente
+    openEditTableModalContent(tableName);
+}
+
+function openEditTableModalContent(tableName) {
     const table = schema.tables[tableName];
     const container = document.getElementById('editColumnsContainer');
     container.innerHTML = ''; // Reiniciar el contenedor
@@ -55,6 +67,10 @@ function openEditTableModal() {
                 ${col.notNull ? 'checked' : ''} 
                 ${col.pk ? 'disabled' : ''}> NOT NULL</label>
             <button onclick="removeColumnInput(this)" class="remove-column" ${col.pk ? 'disabled' : ''}>Eliminar</button>
+            <div class="column-order-buttons">
+                <button onclick="moveColumn(this, 'up')" class="move-col-btn up-btn">▲</button>
+                <button onclick="moveColumn(this, 'down')" class="move-col-btn down-btn">▼</button>
+            </div>
         `;
         container.appendChild(newInput);
 
@@ -68,6 +84,7 @@ function openEditTableModal() {
     container.style.overflowY = 'auto';
 
     document.getElementById('editTableModal').style.display = 'block';
+    updateColumnOrderButtons(container);
 }
 
 function handleNotNullChange(checkbox, tableName, columnName) {
@@ -123,8 +140,8 @@ function saveTableChanges() {
         return;
     }
 
-    // Obtener las columnas actuales antes de los cambios
-    const currentColumns = schema.tables[tableName].columns.map(col => col.name);
+    // Store old structure before changes
+    const oldStructure = [...schema.tables[tableName].columns];
 
     columnInputs.forEach(input => {
         const name = input.querySelector('.col-name').value.trim();
@@ -135,33 +152,16 @@ function saveTableChanges() {
         if (name) {
             try {
                 let colDef = `${name} ${type}`;
-                
-                // Manejo especial para enums
-                if (schema.tables[type]?.isEnum) {
-                    const enumValues = schema.tables[type].values;
-                    if (!enumValues || enumValues.length === 0) {
-                        throw new Error(`El enum ${type} no tiene valores definidos`);
-                    }
-                    const enumValuesStr = enumValues.map(val => `'${val}'`).join(', ');
-                    if (pk || notNull) {
-                        colDef += ` CHECK(${name} IN (${enumValuesStr}))`;
-                    } else {
-                        colDef += ` CHECK(${name} IS NULL OR ${name} IN (${enumValuesStr}))`;
-                    }
-                }
-
-                // Añadir PRIMARY KEY o NOT NULL según corresponda
                 if (pk) {
                     colDef += ' PRIMARY KEY';
                 } else if (notNull) {
                     colDef += ' NOT NULL';
                 }
-
                 columns.push({
-                    name,
-                    type,
-                    pk,
-                    notNull: pk || notNull,
+                    name: name,
+                    type: type,
+                    pk: pk,
+                    notNull: notNull,
                     definition: colDef
                 });
             } catch (e) {
@@ -178,81 +178,61 @@ function saveTableChanges() {
     }
 
     try {
-        // Guardar datos existentes
-        let existingData = [];
-        const newColumns = columns.map(col => col.name);
-        const notNullColumns = columns.filter(col => col.notNull).map(col => col.name);
-        
-        try {
-            existingData = alasql(`SELECT * FROM ${tableName}`);
-            
-            // Filtrar los registros que tendrían que eliminarse por NOT NULL
-            existingData = existingData.filter(record => {
-                return notNullColumns.every(colName => record[colName] !== null);
-            });
+        // Use the new migration system
+        const migrator = new TableDataMigrator();
+        const newStructure = columns.map(({name, type, pk, notNull}) => ({
+            name, type, pk, notNull
+        }));
 
-            // Crear un historial de inserciones modificadas
-            const insertHistory = existingData.map(record => {
-                const insertColumns = [];
-                const insertValues = [];
-                
-                // Solo incluir columnas que existen en la nueva estructura
-                newColumns.forEach(colName => {
-                    if (currentColumns.includes(colName)) {
-                        insertColumns.push(colName);
-                        const value = record[colName];
-                        insertValues.push(value === null ? 'NULL' : 
-                            typeof value === 'string' ? `'${value}'` : value);
-                    }
-                });
+        // Execute migration
+        const migrationResult = migrator.executeMigration(tableName, oldStructure, newStructure);
 
-                return `INSERT INTO ${tableName} (${insertColumns.join(', ')}) VALUES (${insertValues.join(', ')});`;
-            });
-
-            // Guardar historial de inserciones en el schema
-            if (!schema.insertHistory) schema.insertHistory = {};
-            schema.insertHistory[tableName] = insertHistory;
-            
-        } catch (e) {
-            console.log('No hay datos existentes para preservar');
-        }
-
-        // Crear la nueva tabla
-        const query = `CREATE TABLE ${tableName} (${columns.map(col => col.definition).join(', ')})`;
-        alasql(`DROP TABLE IF EXISTS ${tableName}`);
-        alasql(query);
-
-        // Reinsertar los datos con la nueva estructura
-        if (existingData.length > 0) {
-            schema.insertHistory[tableName].forEach(insertQuery => {
-                try {
-                    alasql(insertQuery);
-                } catch (e) {
-                    console.error('Error al reinsertar:', e);
-                }
-            });
-        }
-
-        // Actualizar el esquema
+        // Update schema
         schema.tables[tableName] = {
-            columns: columns.map(({name, type, pk, notNull}) => ({
-                name, type, pk, notNull
-            })),
+            columns: newStructure,
             data: []
         };
 
-        // Notificar el cambio y actualizar la interfaz
+        // Clear old insert history since we've migrated the data
+        if (schema.insertHistory && schema.insertHistory[tableName]) {
+            delete schema.insertHistory[tableName];
+        }
+
+        // Notify of successful migration
+        let message = `Tabla "${tableName}" actualizada exitosamente.`;
+        if (migrationResult.recordsMigrated > 0) {
+            message += `\n${migrationResult.recordsMigrated} registros migrados automáticamente.`;
+            if (migrationResult.changes.length > 0) {
+                message += `\nCambios aplicados: ${migrationResult.changes.map(c => c.type).join(', ')}`;
+            }
+        }
+
+        // Notify the change and update interface
         const event = new CustomEvent('tableStructureChanged', {
-            detail: { tableName: tableName }
+            detail: { 
+                tableName: tableName,
+                migrationResult: migrationResult
+            }
         });
         document.dispatchEvent(event);
 
         updateClassMap();
         closeEditTableModal();
-        alert(`Tabla "${tableName}" actualizada exitosamente.`);
+        
+        // Show success notification instead of alert
+        if (window.showNotification) {
+            showNotification(message, 'success');
+        } else {
+            alert(message);
+        }
         
     } catch (e) {
-        alert('Error al actualizar la tabla: ' + e.message);
+        const errorMessage = `Error al actualizar la tabla: ${e.message}`;
+        if (window.showNotification) {
+            showNotification(errorMessage, 'error');
+        } else {
+            alert(errorMessage);
+        }
         console.error(e);
     }
 }
@@ -348,9 +328,13 @@ function addColumnInputEdit() {
                 .map(enumName => `<option value="${enumName}">${enumName}</option>`)
                 .join('')}
         </select>
-        <label><input type="checkbox" class="col-pk"> Clave Primaria</label>
+        <label><input type="checkbox" class="col-pk" disabled> Clave Primaria</label>
         <label><input type="checkbox" class="col-notnull"> NOT NULL</label>
         <button onclick="removeColumnInput(this)">Eliminar</button>
+        <div class="column-order-buttons">
+            <button onclick="moveColumn(this, 'up')" class="move-col-btn up-btn">▲</button>
+            <button onclick="moveColumn(this, 'down')" class="move-col-btn down-btn">▼</button>
+        </div>
     `;
     container.appendChild(newInput);
 
@@ -360,11 +344,12 @@ function addColumnInputEdit() {
 
     // Scroll hasta el final
     container.scrollTop = container.scrollHeight;
+    updateColumnOrderButtons(container);
 }
 
 // Actualización de la función removeColumnInput para ambos casos
 function removeColumnInput(button) {
-    const columnDiv = button.parentElement;
+    const columnDiv = button.closest('.column-input');
     const isPK = columnDiv.querySelector('.col-pk').checked;
     
     if (isPK && document.getElementById('editTableModal').style.display === 'block') {
@@ -374,4 +359,5 @@ function removeColumnInput(button) {
     
     const container = columnDiv.parentElement;
     container.removeChild(columnDiv);
+    updateColumnOrderButtons(container);
 }

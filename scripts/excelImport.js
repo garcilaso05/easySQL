@@ -111,10 +111,20 @@ function setupCellValidation() {
         cell.addEventListener('paste', handlePaste);
         cell.addEventListener('input', () => validateCell(cell));
         cell.addEventListener('keydown', handleKeyNavigation);
-        // Añadir listener para clic derecho
-        cell.addEventListener('contextmenu', (e) => {
-            e.preventDefault(); // Prevenir menú contextual por defecto
-            if (cell.dataset.type in schema.tables && schema.tables[cell.dataset.type].isEnum) {
+        
+        // Validación numérica en tiempo real
+        if (cell.dataset.type === 'INT' || cell.dataset.type === 'FLOAT') {
+            setupNumericCellValidation(cell);
+        }
+        
+        // Mostrar sugerencias al hacer focus o clic
+        cell.addEventListener('focus', () => {
+            if (schema.tables[cell.dataset.type]?.isEnum) {
+                showSuggestions(cell);
+            }
+        });
+        cell.addEventListener('click', () => {
+            if (schema.tables[cell.dataset.type]?.isEnum) {
                 showSuggestions(cell);
             }
         });
@@ -157,6 +167,83 @@ function setupCellValidation() {
 
     document.addEventListener('mouseup', () => {
         isSelecting = false;
+    });
+}
+
+function setupNumericCellValidation(cell) {
+    const isInteger = cell.dataset.type === 'INT';
+    
+    cell.addEventListener('keypress', function(e) {
+        const char = String.fromCharCode(e.which);
+        
+        // Permitir teclas de control
+        if (e.which < 32) return;
+        
+        // Permitir números
+        if (/[0-9]/.test(char)) return;
+        
+        // Para enteros: solo permitir guión al principio
+        if (isInteger) {
+            if (char === '-' && this.textContent.length === 0) return;
+            e.preventDefault();
+            return;
+        }
+        
+        // Para flotantes: permitir punto/coma decimal y guión
+        if (!isInteger) {
+            if ((char === '.' || char === ',') && !this.textContent.includes('.') && !this.textContent.includes(',')) return;
+            if (char === '-' && this.textContent.length === 0) return;
+        }
+        
+        // Bloquear todo lo demás
+        e.preventDefault();
+    });
+    
+    cell.addEventListener('input', function(e) {
+        let value = this.textContent;
+        
+        if (isInteger) {
+            // Para enteros: solo números y guión al principio
+            value = value.replace(/[^0-9-]/g, '');
+            if (value.includes('-')) {
+                const parts = value.split('-');
+                if (parts[0] === '') {
+                    value = '-' + parts.slice(1).join('');
+                } else {
+                    value = value.replace(/-/g, '');
+                }
+            }
+        } else {
+            // Para flotantes: números, punto/coma y guión
+            value = value.replace(/[^0-9.,-]/g, '');
+            value = value.replace(/,/g, '.');
+            
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            if (value.includes('-')) {
+                const minusParts = value.split('-');
+                if (minusParts[0] === '') {
+                    value = '-' + minusParts.slice(1).join('');
+                } else {
+                    value = value.replace(/-/g, '');
+                }
+            }
+        }
+        
+        if (this.textContent !== value) {
+            this.textContent = value;
+            
+            // Mantener el cursor al final
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(this);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
     });
 }
 
@@ -335,15 +422,25 @@ function isValidDate(dateStr) {
 function validateCell(cell) {
     const value = cell.textContent.trim();
     const type = cell.dataset.type;
+    const columnName = cell.dataset.column;
     const column = schema.tables[document.getElementById('excelTableSelect').value].columns
-        .find(col => col.name === cell.dataset.column);
+        .find(col => col.name === columnName);
     
     cell.classList.remove('valid', 'warning', 'error', 'null-value');
+    
+    // Limpiar tooltips anteriores
+    const existingTooltip = cell.querySelector('.validation-error');
+    if (existingTooltip) {
+        existingTooltip.remove();
+    }
     
     if (value === '-') {
         if (column.pk || column.notNull) {
             cell.classList.add('error');
             cell.classList.add('null-value');
+            showValidationError(cell, column.pk ? 
+                'La clave primaria no puede estar vacía' : 
+                'Este campo es obligatorio y no puede estar vacío');
         } else {
             cell.classList.add('valid');
             cell.classList.add('null-value');
@@ -353,9 +450,12 @@ function validateCell(cell) {
 
     if (!value) {
         if (column.pk) {
+            cell.classList.add('error');
+            showValidationError(cell, 'La clave primaria debe tener un valor único');
             return;
         } else if (column.notNull) {
             cell.classList.add('warning');
+            showValidationError(cell, 'Este campo es obligatorio');
             return;
         } else {
             cell.classList.add('valid');
@@ -364,6 +464,7 @@ function validateCell(cell) {
     }
 
     try {
+        // Usar nuestra función de validación mejorada
         if (schema.tables[type]?.isEnum) {
             const enumValues = schema.tables[type].values;
             const exactMatch = findExactEnumValue(value, enumValues);
@@ -374,65 +475,57 @@ function validateCell(cell) {
                     cell.textContent = exactMatch;
                 }
             } else {
+                cell.classList.add('error');
                 const similar = findSimilarValues(value, enumValues);
                 if (similar.length > 0) {
-                    cell.classList.add('warning');
+                    showValidationError(cell, `Valor no válido. ¿Quiso decir: ${similar.join(', ')}?`);
                 } else {
-                    cell.classList.add('error');
+                    showValidationError(cell, `Debe ser uno de: ${enumValues.join(', ')}`);
                 }
             }
         } else {
-            switch (type) {
-                case 'INT':
-                    if (/^-?\d+$/.test(value)) {
-                        cell.classList.add('valid');
-                    } else if (/^-?\d*\.?\d+$/.test(value)) {
-                        cell.classList.add('warning');
-                    } else {
-                        cell.classList.add('error');
-                    }
-                    break;
-                case 'FLOAT':
-                    if (/^-?\d*[.,]?\d+$/.test(value)) {
-                        cell.classList.add('valid');
-                    } else {
-                        cell.classList.add('error');
-                    }
-                    break;
-                case 'DATE':
-                    const dateValidation = isValidDate(value);
-                    if (dateValidation.isValid) {
-                        cell.classList.add('valid');
-                    } else {
-                        cell.classList.add('error');
-                    }
-                    break;
-                case 'BOOLEAN':
-                    const boolTrueValues = ['true', '1', 'c', 't', 'cierto', 's', 'si'];
-                    const boolFalseValues = ['false', '0', 'f', 'falso', 'n', 'no'];
-                    const normalizedValue = value.toLowerCase().trim();
-                    
-                    if (boolTrueValues.includes(normalizedValue) || boolFalseValues.includes(normalizedValue)) {
-                        cell.classList.add('valid');
-                        // Normalizar el valor a true/false estándar
-                        if (boolTrueValues.includes(normalizedValue)) {
-                            cell.textContent = 'true';
-                        } else {
-                            cell.textContent = 'false';
-                        }
-                    } else {
-                        cell.classList.add('error');
-                        // Mostrar sugerencias
-                        showTooltip(cell, ['true (t,c,s,si,cierto)', 'false (f,n,no,falso)']);
-                    }
-                    break;
-                default:
-                    cell.classList.add('valid');
+            // Usar la función de validación mejorada
+            try {
+                validateAndFormatValue(value, type, columnName, column.pk);
+                cell.classList.add('valid');
+            } catch (validationError) {
+                cell.classList.add('error');
+                showValidationError(cell, validationError.message.replace(`El campo "${columnName}" `, ''));
             }
         }
     } catch (e) {
         cell.classList.add('error');
+        showValidationError(cell, 'Valor no válido');
     }
+}
+
+function showValidationError(cell, message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'validation-error';
+    errorDiv.textContent = message;
+    errorDiv.style.cssText = `
+        position: absolute;
+        background: #ff4444;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        max-width: 200px;
+        word-wrap: break-word;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        pointer-events: none;
+    `;
+    
+    cell.style.position = 'relative';
+    cell.appendChild(errorDiv);
+    
+    // Auto-ocultar después de 3 segundos
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 3000);
 }
 
 function updateCellValidation(cell, isValid, type = 'error') {
@@ -459,12 +552,18 @@ function showSuggestion(cell, suggestion) {
 
 function showSuggestions(cell) {
     const type = cell.dataset.type;
+    
     if (schema.tables[type]?.isEnum) {
-        showTooltip(cell, schema.tables[type].values, true);
+        // Asegurar que el tooltip se muestra después de un pequeño retraso
+        // para evitar conflictos con otros eventos
+        setTimeout(() => {
+            showTooltip(cell, schema.tables[type].values, true);
+        }, 50);
     }
 }
 
 function showTooltip(cell, suggestions, isEnumList = false) {
+    // Eliminar tooltips existentes
     const existingTooltip = document.querySelector('.suggestion-tooltip');
     if (existingTooltip) {
         existingTooltip.remove();
@@ -473,40 +572,126 @@ function showTooltip(cell, suggestions, isEnumList = false) {
     const tooltip = document.createElement('div');
     tooltip.className = 'suggestion-tooltip';
     
-    if (isEnumList) {
-        // Filtrado simple por inclusión de texto
-        const currentValue = cell.textContent.toLowerCase().trim();
-        const filteredSuggestions = suggestions.filter(s => 
-            s.toLowerCase().includes(currentValue)
+    // Agregar título
+    const title = document.createElement('div');
+    title.className = 'suggestion-title';
+    title.textContent = 'Valores disponibles:';
+    tooltip.appendChild(title);
+    
+    // Crear contenedor de sugerencias
+    const suggestionList = document.createElement('div');
+    suggestionList.className = 'suggestion-list';
+    
+    let filteredSuggestions = [...suggestions];
+    const currentValue = cell.textContent.trim().toLowerCase();
+    
+    if (currentValue) {
+        filteredSuggestions = suggestions.filter(suggestion => 
+            suggestion.toLowerCase().includes(currentValue)
         );
-
-        if (filteredSuggestions.length > 0) {
-            filteredSuggestions.forEach(suggestion => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.textContent = suggestion;
-                item.onclick = () => {
-                    cell.textContent = suggestion;
-                    validateCell(cell);
-                    tooltip.remove();
-                };
-                tooltip.appendChild(item);
-            });
-        }
     }
 
-    // Posicionar siempre debajo de la celda
-    const cellRect = cell.getBoundingClientRect();
-    tooltip.style.top = `${cellRect.bottom + 5}px`;
-    tooltip.style.left = `${cellRect.left}px`;
-    tooltip.style.minWidth = `${cellRect.width}px`;
+    if (filteredSuggestions.length === 0) {
+        filteredSuggestions = suggestions;
+    }
+
+    filteredSuggestions.forEach(suggestion => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item';
+        
+        if (currentValue) {
+            const matchIndex = suggestion.toLowerCase().indexOf(currentValue);
+            if (matchIndex !== -1) {
+                const before = suggestion.substring(0, matchIndex);
+                const match = suggestion.substring(matchIndex, matchIndex + currentValue.length);
+                const after = suggestion.substring(matchIndex + currentValue.length);
+                item.innerHTML = `${before}<span class="highlight">${match}</span>${after}`;
+            } else {
+                item.textContent = suggestion;
+            }
+        } else {
+            item.textContent = suggestion;
+        }
+        
+        item.onclick = (e) => {
+            e.stopPropagation(); // Evitar que el click se propague
+            cell.textContent = suggestion;
+            validateCell(cell);
+            tooltip.remove();
+        };
+        suggestionList.appendChild(item);
+    });
+
+    tooltip.appendChild(suggestionList);
+    
+    // Posicionar el tooltip
+    const rect = cell.getBoundingClientRect();
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    
+    tooltip.style.position = 'absolute';
+    tooltip.style.left = `${rect.left}px`;
+    tooltip.style.top = `${rect.bottom + scrollY}px`;
+    tooltip.style.minWidth = `${rect.width}px`;
+    tooltip.style.zIndex = '1000';
+    
     document.body.appendChild(tooltip);
 
-    // Solo mantener el evento mouseleave
-    tooltip.addEventListener('mouseleave', () => {
-        const timeoutId = setTimeout(() => tooltip.remove(), 200);
-        tooltip.dataset.timeout = timeoutId;
+    // Cerrar el tooltip cuando se hace clic fuera
+    document.addEventListener('click', (e) => {
+        if (!tooltip.contains(e.target) && e.target !== cell) {
+            tooltip.remove();
+        }
     });
+
+    // Manejar navegación con teclado
+    cell.addEventListener('keydown', (e) => {
+        const items = tooltip.querySelectorAll('.suggestion-item');
+        const currentIndex = Array.from(items).findIndex(item => item.classList.contains('selected'));
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (currentIndex < items.length - 1) {
+                    items[currentIndex]?.classList.remove('selected');
+                    items[currentIndex + 1]?.classList.add('selected');
+                    items[currentIndex + 1]?.scrollIntoView({ block: 'nearest' });
+                }
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    items[currentIndex]?.classList.remove('selected');
+                    items[currentIndex - 1]?.classList.add('selected');
+                    items[currentIndex - 1]?.scrollIntoView({ block: 'nearest' });
+                }
+                break;
+            case 'Enter':
+                e.preventDefault();
+                const selectedItem = tooltip.querySelector('.suggestion-item.selected');
+                if (selectedItem) {
+                    cell.textContent = selectedItem.textContent;
+                    validateCell(cell);
+                    tooltip.remove();
+                }
+                break;
+            case 'Escape':
+                tooltip.remove();
+                break;
+        }
+    });
+
+    // Cerrar al perder el foco, con un pequeño retraso para permitir clicks
+    const timeoutId = setTimeout(() => {
+        const closeHandler = (e) => {
+            if (!tooltip.contains(e.target) && e.target !== cell) {
+                tooltip.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        document.addEventListener('click', closeHandler);
+    }, 100);
+
+    tooltip.dataset.timeout = timeoutId;
 }
 
 function findSimilarValues(value, validValues) {
@@ -564,16 +749,20 @@ function validateAndImportData() {
     const table = schema.tables[tableName];
     const pkColumn = table.columns.find(col => col.pk);
     if (!pkColumn) {
-        alert('Error: La tabla no tiene clave primaria');
+        showNotification('Error: La tabla no tiene clave primaria definida', 'error');
         return;
     }
 
     // Obtener todos los registros existentes por PK para comparar
     const existingRecords = new Map();
-    const currentData = alasql(`SELECT * FROM ${tableName}`);
-    currentData.forEach(record => {
-        existingRecords.set(record[pkColumn.name], record);
-    });
+    try {
+        const currentData = alasql(`SELECT * FROM ${tableName}`);
+        currentData.forEach(record => {
+            existingRecords.set(record[pkColumn.name], record);
+        });
+    } catch (error) {
+        console.error('Error al obtener datos existentes:', error);
+    }
 
     const rows = document.querySelectorAll('#excelGrid tbody tr');
     let successCount = 0;
@@ -587,44 +776,52 @@ function validateAndImportData() {
         if (!hasData) return;
 
         const values = {};
+        const errors = [];
         let isValid = true;
 
         // Recolectar valores y validar
         cells.forEach(cell => {
             const column = table.columns.find(col => col.name === cell.dataset.column);
             const value = cell.textContent.trim();
+            const columnName = cell.dataset.column;
 
-            if (value === '-' || !value) {
-                if (column.pk || column.notNull) {
-                    isValid = false;
+            try {
+                if (value === '-' || !value) {
+                    if (column.pk) {
+                        errors.push(`La clave primaria "${columnName}" no puede estar vacía`);
+                        isValid = false;
+                        return;
+                    }
+                    if (column.notNull) {
+                        errors.push(`El campo obligatorio "${columnName}" no puede estar vacío`);
+                        isValid = false;
+                        return;
+                    }
+                    values[columnName] = null;
+                    return;
                 }
-                values[cell.dataset.column] = null;
-                return;
-            }
 
-            if (schema.tables[column.type]?.isEnum) {
-                const exactMatch = findExactEnumValue(value, schema.tables[column.type].values);
-                if (exactMatch) {
-                    values[cell.dataset.column] = exactMatch;
-                } else {
-                    isValid = false;
-                }
-            } else if (!cell.classList.contains('valid')) {
-                isValid = false;
-            } else {
-                if (cell.dataset.type === 'FLOAT' && value) {
-                    values[cell.dataset.column] = value.replace(',', '.');
-                } else if (cell.dataset.type === 'DATE' && value) {
-                    const parts = value.split(/[-/]/);
-                    if (parts.length === 3) {
-                        const [day, month, year] = parts;
-                        values[cell.dataset.column] = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                // Validar usando nuestra función mejorada
+                if (schema.tables[column.type]?.isEnum) {
+                    const exactMatch = findExactEnumValue(value, schema.tables[column.type].values);
+                    if (exactMatch) {
+                        values[columnName] = exactMatch;
                     } else {
-                        values[cell.dataset.column] = value;
+                        errors.push(`"${value}" no es válido para ${columnName}. Valores permitidos: ${schema.tables[column.type].values.join(', ')}`);
+                        isValid = false;
                     }
                 } else {
-                    values[cell.dataset.column] = value;
+                    try {
+                        const validatedValue = validateAndFormatValue(value, column.type, columnName, column.pk);
+                        values[columnName] = validatedValue;
+                    } catch (validationError) {
+                        errors.push(validationError.message);
+                        isValid = false;
+                    }
                 }
+            } catch (error) {
+                errors.push(`Error en ${columnName}: ${error.message}`);
+                isValid = false;
             }
         });
 
@@ -634,29 +831,23 @@ function validateAndImportData() {
                 const existingRecord = existingRecords.get(pkValue);
 
                 if (existingRecord) {
-                    // Verificar si realmente hay cambios en alguna columna
+                    // Verificar si realmente hay cambios
                     const changes = [];
                     let hasChanges = false;
 
-                    // Comparación estricta de valores
                     for (const [col, val] of Object.entries(values)) {
-                        // Ignorar la clave primaria en la comparación
                         if (col === pkColumn.name) continue;
                         
-                        // Convertir valores para comparación consistente
                         let currentVal = val;
                         let existingVal = existingRecord[col];
                         
-                        // Manejar casos especiales
                         if (currentVal === '') currentVal = null;
                         if (existingVal === '') existingVal = null;
                         
-                        // Convertir números si es necesario
                         if (typeof existingVal === 'number') {
                             currentVal = currentVal === null ? null : Number(currentVal);
                         }
 
-                        // Comparar después de normalizar
                         if (currentVal !== existingVal) {
                             hasChanges = true;
                             changes.push([col, val]);
@@ -664,13 +855,11 @@ function validateAndImportData() {
                     }
 
                     if (!hasChanges) {
-                        // No hay cambios reales, marcar como ignorado
                         row.style.backgroundColor = '#f5f5f5';
                         ignoredCount++;
                         return;
                     }
 
-                    // Solo actualizar las columnas que realmente cambiaron
                     const updateCols = changes.map(([col, val]) => 
                         `${col} = ${val === null ? 'NULL' : typeof val === 'string' ? `'${val}'` : val}`
                     );
@@ -694,33 +883,41 @@ function validateAndImportData() {
                     row.style.backgroundColor = '#e8f5e9';
                     successCount++;
                 }
-            } catch (e) {
-                errorCount++;
+            } catch (sqlError) {
+                console.error('Error SQL:', sqlError);
                 row.style.backgroundColor = '#ffebee';
-                console.error(`Error en fila ${index + 1}:`, e);
+                
+                // Mostrar error específico en la fila
+                let friendlyError = 'Error al procesar';
+                if (sqlError.message.includes('PRIMARY KEY') || sqlError.message.includes('duplicate')) {
+                    friendlyError = 'Clave primaria duplicada';
+                } else if (sqlError.message.includes('CHECK')) {
+                    friendlyError = 'Valor no válido para las restricciones';
+                }
+                
+                row.title = friendlyError;
+                errorCount++;
             }
         } else {
-            errorCount++;
             row.style.backgroundColor = '#ffebee';
+            row.title = errors.join('; ');
+            errorCount++;
         }
     });
 
-    if (successCount > 0 || updatedCount > 0) {
-        const message = `Importación completada:\n` +
-              `- Nuevas inserciones: ${successCount}\n` +
-              `- Actualizaciones: ${updatedCount}\n` +
-              `- Sin cambios: ${ignoredCount}\n` +
-              `- Errores: ${errorCount}`;
+    // Mostrar resumen de resultados
+    const totalProcessed = successCount + updatedCount + errorCount + ignoredCount;
+    if (totalProcessed > 0) {
+        let message = `Procesamiento completado:\n`;
+        if (successCount > 0) message += `• Nuevos registros: ${successCount}\n`;
+        if (updatedCount > 0) message += `• Registros actualizados: ${updatedCount}\n`;
+        if (ignoredCount > 0) message += `• Sin cambios: ${ignoredCount}\n`;
+        if (errorCount > 0) message += `• Errores: ${errorCount}\n`;
         
-        // Cambiar el tipo de mensaje según si hubo errores o no
-        if (errorCount > 0) {
-            showNotification(message, 'warning');
-        } else {
-            showNotification(message, 'success');
-        }
-
-        showTab('datos');
-        showAllData();
+        const notificationType = errorCount === 0 ? 'success' : (successCount > 0 || updatedCount > 0 ? 'warning' : 'error');
+        showNotification(message, notificationType);
+    } else {
+        showNotification('No se encontraron datos para procesar', 'warning');
     }
 }
 

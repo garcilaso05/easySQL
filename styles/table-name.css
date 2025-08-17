@@ -1,0 +1,21 @@
+/* === TABLE NAME INPUTS === */
+.table-name-input,
+.col-name {
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.table-name-input::placeholder,
+.col-name::placeholder {
+    text-transform: none;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: normal;
+}
+
+.dark-mode .table-name-input,
+.dark-mode .col-name {
+    background-color: var(--container-bg-dark) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+}

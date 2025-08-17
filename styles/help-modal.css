@@ -1,0 +1,243 @@
+/* === HELP MODAL === */
+.help-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-modal-overlay);
+    z-index: 2000;
+    transition: all 0.3s ease;
+}
+
+.help-modal.dark-mode {
+    background-color: var(--color-modal-dark);
+    color: var(--color-text-muted);
+}
+
+.help-content {
+    display: flex;
+    background-color: var(--color-white);
+    margin: 2% auto;
+    width: 90%;
+    height: 85vh; /* Reducido de 90vh */
+    margin-bottom: 5vh; /* Añadido margen inferior */
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Estilos para el modo oscuro del tutorial */
+.dark-mode .help-content {
+    background-color: var(--color-modal-dark);
+    color: var(--color-text);
+}
+
+.dark-mode .help-sidebar {
+    background-color: var(--color-bg-secondary);
+    border-right: 1px solid var(--color-border);
+}
+
+.dark-mode .help-navigation ul li a {
+    color: var(--color-text);
+}
+
+.dark-mode .help-navigation ul li a:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.dark-mode .help-block {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.dark-mode .help-section h2,
+.dark-mode .help-section h3,
+.dark-mode .help-section h4,
+.dark-mode .help-section h5 {
+    color: var(--color-text);
+}
+
+.dark-mode .table-example table {
+    border-color: var(--color-border);
+}
+
+.dark-mode .table-example th,
+.dark-mode .table-example td {
+    border-color: var(--color-border);
+    background-color: var(--color-bg-secondary);
+}
+
+.dark-mode .table-example th {
+    background-color: var(--color-bg-hover);
+}
+
+.help-sidebar {
+    width: 250px;
+    background-color: var(--color-bg);
+    padding: 1rem;
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-gray-light);
+}
+
+.help-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.help-sidebar::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: 4px;
+}
+
+.help-sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 4px;
+}
+
+.help-modal.dark-mode .help-block {
+    background-color: var(--color-gray-medium);
+    border-color: var(--color-gray-separator);
+}
+
+.help-modal.dark-mode .help-sidebar {
+    background-color: var(--color-gray-medium);
+    border-right: 1px solid var(--color-gray-separator);
+}
+
+.help-modal.dark-mode .help-navigation a {
+    color: var(--color-text-muted);
+}
+
+.help-modal.dark-mode .help-navigation a:hover {
+    background-color: var(--color-gray-separator);
+}
+
+.help-modal.dark-mode .help-section h2 {
+    color: var(--color-text-muted);
+    border-bottom-color: var(--color-gray-separator);
+}
+
+.help-modal.dark-mode code {
+    background-color: var(--color-gray-separator);
+    color: var(--color-text-muted);
+}
+
+.help-modal.dark-mode table {
+    border-color: var(--color-gray-separator);
+}
+
+.help-modal.dark-mode th,
+.help-modal.dark-mode td {
+    border-color: var(--color-gray-separator);
+    background-color: var(--color-gray-medium);
+}
+
+.help-modal.dark-mode .help-block {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.help-search {
+    margin-bottom: 1rem;
+}
+
+.help-search input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-white);
+}
+
+.help-navigation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.help-navigation a {
+    display: block;
+    padding: 0.8rem;
+    color: var(--color-text);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.help-navigation a:hover,
+.help-navigation a.active {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.help-main {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.help-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-section.active {
+    display: block;
+}
+
+.help-step {
+    position: relative;
+    padding: 1.5rem;
+    background-color: var(--color-bg);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.step-number {
+    position: absolute;
+    top: -15px;
+    left: -15px;
+    width: 30px;
+    height: 30px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.help-tip {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: var(--color-tooltip-bg);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0 4px 4px 0;
+}
+
+/* Ajustes de la barra superior */
+.help-btn {
+    background: var(--color-transparent);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    display: flex; /* Cambiar de none a flex */
+}
+
+.help-btn:hover {
+    transform: scale(1.1);
+}
+
+.header-logo {
+    height: 32px;
+    width: auto;
+    display: flex; /* Cambiar de none a flex */
+}

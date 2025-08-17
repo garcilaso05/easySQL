@@ -1,0 +1,23 @@
+$SOCIS
++Informació de soci
+++Idenitficador del usuari
+-ID
+++Nom del soci
+-NOM
+++Document de identificació
++++Dada opcional
+-DNI
+++Edat del soci
+-EDAT
+++Sexe del soci
++++Dada opcional
+-SEXE
++Temps al club
+++Data de registre com a soci
+-DATA_ALTA
+++La persona segueix sent soci/a?
+-ACTIU
+++Data de baixa com a soci
++++Només si el soci està inactiu
+-DATA_BAIXA
+###

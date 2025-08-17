@@ -1,0 +1,132 @@
+/* === MODERN BUTTONS === */
+button, .btn {
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+    min-height: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Botón primario */
+.btn-primary, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    background: linear-gradient(135deg, var(--color-primary-hover) 0%, #357ABD 100%);
+}
+
+.btn-primary:active, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Botón secundario */
+.btn-secondary {
+    background: var(--color-bg-secondary);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Botón outline */
+.btn-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-outline:hover {
+    background: var(--color-primary);
+    color: var(--color-white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Botón ghost */
+.btn-ghost {
+    background: transparent;
+    color: var(--color-primary);
+    border: none;
+    padding: var(--spacing-sm);
+}
+
+.btn-ghost:hover {
+    background: var(--color-bg-hover);
+    border-radius: var(--border-radius-md);
+}
+
+/* Tamaños de botón */
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    min-height: 32px;
+}
+
+.btn-lg {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--font-size-lg);
+    min-height: 48px;
+}
+
+/* Estados del botón */
+button:disabled, .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Efecto ripple en botones */
+button::before, .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+button:active::before, .btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Grupos de botones */
+.btn-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}

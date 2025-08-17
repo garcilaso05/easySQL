@@ -1,0 +1,125 @@
+/* === PREDEFINED ENUMS === */
+.predefined-enums-container {
+    background: var(--color-white);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-bg);
+}
+
+.predefined-enums-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.predefined-enums-container::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: 4px;
+}
+
+.predefined-enums-container::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 4px;
+    border: 2px solid var(--color-bg);
+}
+
+.predefined-enums-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.predefined-enums-container h3 {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+.predefined-enum-item {
+    padding: 1.2rem;
+    text-align: center;
+    position: relative;
+}
+
+.predefined-enum-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    right: 25%;
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        var(--color-transparent),
+        var(--color-border) 20%,
+        var(--color-border) 80%,
+        var(--color-transparent)
+    );
+}
+
+.predefined-enum-item[data-divider="true"]::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: linear-gradient(
+        to right,
+        var(--color-transparent),
+        var(--color-primary) 20%,
+        var(--color-primary) 80%,
+        var(--color-transparent)
+    );
+}
+
+.predefined-enum-name {
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.predefined-enum-description {
+    font-size: 0.9rem;
+    color: var(--color-text);
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.predefined-enum-action {
+    display: flex;
+    justify-content: center;
+}
+
+.predefined-enum-action button {
+    min-width: 120px;
+    transition: var(--transition);
+}
+
+.predefined-enum-action button.add {
+    background-color: var(--color-primary);
+}
+
+.predefined-enum-action button.remove {
+    background-color: var(--color-error-critical);
+}
+
+/* Asegurar que el color rojo se mantiene en modo oscuro */
+.dark-mode .predefined-enum-action button.remove {
+    background-color: var(--color-error-critical) !important;  /* Color rojo */
+}
+
+.dark-mode .predefined-enum-action button.remove:hover {
+    background-color: var(--color-error-critical-dark) !important;  /* Rojo más oscuro al hover */
+}
+
+.predefined-enum-action button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}

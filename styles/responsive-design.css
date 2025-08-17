@@ -1,0 +1,14 @@
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .tab-menu {
+        flex-direction: column;
+    }
+
+    .modal-content {
+        margin: 2vh 1rem;
+    }
+}

@@ -108,38 +108,132 @@ function updateClassMap() {
     updateTableSelect(); // Añadir esta línea
 }
 
-// Ejecutar consultas SQL manuales
-function executeSQL() {
-    const query = document.getElementById('sql-input').value.trim();
-    const resultDiv = document.getElementById('result');
+// Ejecutar consultas SQL manuales (ahora desde la IA)
+function executeGeneratedSQL() {
+    const query = document.getElementById('generatedSql').value.trim();
+    const resultDiv = document.getElementById('sqlResult');
+    if (!query) {
+        resultDiv.innerText = 'No hay consulta para ejecutar.';
+        return;
+    }
     try {
-        const insertMatch = query.match(/INSERT INTO (\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i);
-        if (insertMatch) {
-            const tableName = insertMatch[1];
-            const columns = insertMatch[2].split(',').map(col => col.trim());
-            const values = insertMatch[3].split(',').map(val => val.trim().replace(/['"]/g, ''));
-
-            if (schema.tables[tableName]) {
-                const table = schema.tables[tableName];
-                for (let i = 0; i < columns.length; i++) {
-                    const column = table.columns.find(col => col.name === columns[i]);
-                    if (column && schema.tables[column.type]?.isEnum) {
-                        const enumValues = schema.tables[column.type].values;
-                        if (!enumValues.includes(values[i])) {
-                            throw new Error(`El valor "${values[i]}" no es válido para el enum "${column.type}". Valores válidos: ${enumValues.join(', ')}`);
-                        }
-                    }
-                }
-            }
+        const res = alasql(query);
+        
+        // Formatear la salida
+        if (Array.isArray(res)) {
+            const formattedResult = res.map(record => {
+                // Convertir cada registro a JSON y quitar las llaves
+                return JSON.stringify(record, null, 2)
+                    .replace(/^{\n/, '')
+                    .replace(/\n}$/, '')
+                    .trim();
+            }).join('\n\n'); // Separar registros con doble salto de línea
+            resultDiv.innerText = formattedResult;
+        } else {
+            resultDiv.innerText = JSON.stringify(res, null, 2);
         }
 
-        const res = alasql(query);
-        resultDiv.innerText = JSON.stringify(res, null, 2);
-        updateClassMap();
+        // Si es una inserción, actualización o borrado, puede que queramos actualizar otras vistas
+        if (query.toUpperCase().startsWith('INSERT') || query.toUpperCase().startsWith('UPDATE') || query.toUpperCase().startsWith('DELETE')) {
+            updateClassMap(); // Actualiza el mapa por si hay cambios estructurales (aunque es raro aquí)
+            // Podríamos llamar a showAllData() si la pestaña de datos está visible, etc.
+        }
     } catch (e) {
         resultDiv.innerText = 'Error: ' + e.message;
     }
 }
+
+// Generar consulta SQL usando IA
+async function generateAIQuery() {
+    const apiKey = document.getElementById('apiKey').value;
+    const naturalQuery = document.getElementById('naturalQuery').value;
+    const generatedSqlTextarea = document.getElementById('generatedSql');
+    const resultDiv = document.getElementById('sqlResult');
+
+    if (!apiKey) {
+        alert('Por favor, introduce tu API Key de Gemini.');
+        return;
+    }
+    if (!naturalQuery) {
+        alert('Por favor, escribe una pregunta.');
+        return;
+    }
+
+    generatedSqlTextarea.value = 'Generando consulta con IA...';
+    resultDiv.innerText = '';
+
+    const schemaDescription = getSchemaForAI();
+    const prompt = `Genera una consulta simple en SQL para obtener los datos de esta pregunta: ${naturalQuery}. Las tablas SQL son las siguientes: ${schemaDescription}`;
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 200
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error?.message || 'Error desconocido de la API.';
+            throw new Error(`Error de la API de IA: ${errorMessage}`);
+        }
+
+        const data = await response.json();
+        // Limpiar la respuesta para obtener solo el SQL
+        let sqlQuery = data.candidates[0]?.content?.parts[0]?.text.trim() || '';
+        if (sqlQuery.startsWith('```sql')) {
+            sqlQuery = sqlQuery.substring(5, sqlQuery.length - 3).trim();
+        } else if (sqlQuery.startsWith('```')) {
+            sqlQuery = sqlQuery.substring(3, sqlQuery.length - 3).trim();
+        }
+        
+        // Eliminar la 'l' solitaria en la primera línea si existe
+        const lines = sqlQuery.split('\n');
+        if (lines.length > 0 && lines[0].trim() === 'l') {
+            lines.shift(); // Elimina la primera línea
+            sqlQuery = lines.join('\n');
+        }
+
+        generatedSqlTextarea.value = sqlQuery;
+
+    } catch (error) {
+        generatedSqlTextarea.value = '';
+        resultDiv.innerText = `Error al generar la consulta: ${error.message}`;
+        console.error(error);
+    }
+}
+
+function getSchemaForAI() {
+    let description = '';
+    for (const tableName in schema.tables) {
+        const table = schema.tables[tableName];
+        if (table.isEnum) {
+            description += `CREATE TYPE ${tableName} AS ENUM (${table.values.map(v => `'${v}'`).join(', ')});\n\n`;
+        } else {
+            const columns = table.columns.map(col => {
+                let colDef = `${col.name} ${col.type}`;
+                if (col.pk) colDef += ' PRIMARY KEY';
+                if (col.notNull && !col.pk) colDef += ' NOT NULL';
+                return `  ${colDef}`;
+            }).join(',\n');
+            description += `CREATE TABLE ${tableName} (\n${columns}\n);\n\n`;
+        }
+    }
+    return description;
+}
+
 
 // Descargar el SQL generado
 // Generar archivo .sql con el esquema de la base de datos
@@ -583,7 +677,9 @@ function setupTableNameInputs() {
 }
 
 // Llamar a esta función cuando se cargue la página y cuando se añadan nuevos inputs
-document.addEventListener('DOMContentLoaded', setupTableNameInputs);
+document.addEventListener('DOMContentLoaded', () => {
+    setupTableNameInputs();
+});
 
 // Observador para detectar nuevos campos añadidos
 const observer = new MutationObserver(mutations => {
@@ -609,3 +705,182 @@ observer.observe(document.body, {
 
 populateEnumDropdown();
 cargarTablaOAVD();
+
+function handleEsqlUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            
+            // Guardar el contenido para uso futuro
+            if (!window.customInsertLayouts) {
+                window.customInsertLayouts = {};
+            }
+            const tableName = content.split('\n')[0].substring(1).trim();
+            if (tableName) {
+                window.customInsertLayouts[tableName] = content;
+            }
+
+            applyCustomInsertLayout(content);
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Limpiar el input para permitir recargar el mismo archivo
+    }
+}
+
+function showTab(tabName) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    contents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+    // Cargar datos específicos si es necesario
+    if (tabName === 'datos') {
+        showAllData();
+    } else if (tabName === 'mapa') {
+        initMap();
+    } else if (tabName === 'inserciones') {
+        // Reaplicar todos los layouts personalizados al volver a la pestaña
+        if (window.customInsertLayouts) {
+            for (const tableName in window.customInsertLayouts) {
+                applyCustomInsertLayout(window.customInsertLayouts[tableName]);
+            }
+        }
+    }
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    // Aquí deberías agregar la lógica para autenticar al usuario
+    // Por ejemplo, enviar una solicitud a tu servidor para verificar las credenciales
+
+    // Simulación de autenticación exitosa
+    if (username === 'admin' && password === 'admin') {
+        // Ocultar el formulario de inicio de sesión
+        document.getElementById('loginForm').style.display = 'none';
+        // Mostrar el contenido protegido
+        document.getElementById('protectedContent').style.display = 'block';
+        // Cargar datos iniciales o realizar acciones necesarias después del login
+        cargarDatosIniciales();
+    } else {
+        alert('Credenciales inválidas. Inténtalo de nuevo.');
+    }
+}
+
+function cargarDatosIniciales() {
+    // Aquí puedes cargar datos iniciales necesarios para el usuario
+    // Por ejemplo, cargar tablas, relaciones, etc.
+    alasql(`
+        CREATE TABLE IF NOT EXISTS usuarios (id INT, nombre STRING, email STRING);
+        INSERT INTO usuarios VALUES (1, 'Juan Pérez', 'juan@example.com');
+    `);
+
+    // Actualizar el mapa de clases y otras UI
+    updateClassMap();
+}
+
+// La función loadInitialCustomLayouts se ha movido a eSQL/custom-insert.js
+// para centralizar la lógica de personalización y resolver problemas de CORS.
+// Se elimina de este archivo.
+
+populateEnumDropdown();
+cargarTablaOAVD();
+
+function handleEsqlUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            
+            // Guardar el contenido para uso futuro
+            if (!window.customInsertLayouts) {
+                window.customInsertLayouts = {};
+            }
+            const tableName = content.split('\n')[0].substring(1).trim();
+            if (tableName) {
+                window.customInsertLayouts[tableName] = content;
+            }
+
+            applyCustomInsertLayout(content);
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Limpiar el input para permitir recargar el mismo archivo
+    }
+}
+
+function showTab(tabName) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    contents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+    // Cargar datos específicos si es necesario
+    if (tabName === 'datos') {
+        showAllData();
+    } else if (tabName === 'mapa') {
+        initMap();
+    } else if (tabName === 'inserciones') {
+        // Reaplicar todos los layouts personalizados al volver a la pestaña
+        if (window.customInsertLayouts) {
+            for (const tableName in window.customInsertLayouts) {
+                applyCustomInsertLayout(window.customInsertLayouts[tableName]);
+            }
+        }
+    }
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    // Aquí deberías agregar la lógica para autenticar al usuario
+    // Por ejemplo, enviar una solicitud a tu servidor para verificar las credenciales
+
+    // Simulación de autenticación exitosa
+    if (username === 'admin' && password === 'admin') {
+        // Ocultar el formulario de inicio de sesión
+        document.getElementById('loginForm').style.display = 'none';
+        // Mostrar el contenido protegido
+        document.getElementById('protectedContent').style.display = 'block';
+        // Cargar datos iniciales o realizar acciones necesarias después del login
+        cargarDatosIniciales();
+    } else {
+        alert('Credenciales inválidas. Inténtalo de nuevo.');
+    }
+}
+
+function cargarDatosIniciales() {
+    // Aquí puedes cargar datos iniciales necesarios para el usuario
+    // Por ejemplo, cargar tablas, relaciones, etc.
+    alasql(`
+        CREATE TABLE IF NOT EXISTS usuarios (id INT, nombre STRING, email STRING);
+        INSERT INTO usuarios VALUES (1, 'Juan Pérez', 'juan@example.com');
+    `);
+
+    // Actualizar el mapa de clases y otras UI
+    updateClassMap();
+}

@@ -1,0 +1,180 @@
+/* === BASE STYLES === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-family);
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--color-bg-primary) 0%, #F0F8FF 100%);
+    color: var(--color-text);
+    line-height: 1.6;
+    font-size: var(--font-size-base);
+    min-height: 100vh;
+    padding-top: 3rem; /* Ajustar el padding para la barra superior */
+    transition: var(--transition-normal);
+}
+
+body.login-active {
+    overflow: hidden;
+}
+
+.dark-mode,
+.dark-mode body {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text) !important;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg-primary);
+    border-radius: var(--border-radius-md);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-hover);
+}
+
+/* Enlaces */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+/* Tipografía mejorada */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+h1 {
+    position: relative;
+    font-size: var(--font-size-3xl);
+    text-align: center;
+    margin-bottom: 3rem;
+    letter-spacing: 2px;
+    font-weight: 600;
+    color: var(--color-primary);
+    padding: 1rem 0;
+    z-index: 1; /* Reducido para estar por debajo de los modales */
+    text-transform: uppercase;
+    transition: transform 0.3s ease-out;
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+h2 {
+    font-size: var(--font-size-2xl);
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+h3 {
+    font-size: var(--font-size-xl);
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+h4 {
+    font-size: var(--font-size-lg);
+}
+
+p {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-light);
+}
+
+/* Estados de foco mejorados */
+*:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-sm);
+}
+
+/* Utilidades de texto */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: var(--color-primary); }
+.text-secondary { color: var(--color-secondary); }
+.text-muted { color: var(--color-text-muted); }
+
+.font-weight-light { font-weight: 300; }
+.font-weight-normal { font-weight: 400; }
+.font-weight-medium { font-weight: 500; }
+.font-weight-semibold { font-weight: 600; }
+.font-weight-bold { font-weight: 700; }
+
+/* Reemplazar .data-table-title por h3 estándar */
+.data-table-title {
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+.title-container {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin: 2rem 0 3rem 0;  /* Aumentado el margen superior */
+    z-index: 1; /* Reducido para que esté por debajo de los modales */
+}
+
+.bg-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Reducido para estar por debajo de todo */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.shape {
+    position: absolute;
+    background: var(--color-bg-shapes);
+    border-radius: 50%;
+    opacity: 0;
+}
+
+.particle {
+    position: absolute;
+    background: var(--color-particle);  /* Aumentada la opacidad */
+    border-radius: 50%;
+    width: 5px;      /* Aumentado el tamaño */
+    height: 5px;     /* Aumentado el tamaño */
+    pointer-events: none;
+    filter: blur(1px); /* Añadido efecto de desenfoque */
+}

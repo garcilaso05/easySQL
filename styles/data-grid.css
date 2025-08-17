@@ -1,0 +1,20 @@
+/* === DATA GRID === */
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.data-block {
+    background-color: var(--color-white);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.data-block:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}

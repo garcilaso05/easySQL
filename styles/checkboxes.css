@@ -1,0 +1,208 @@
+/* Estilos para los checkboxes personalizados */
+
+/* Estilo para checkboxes normales de HTML */
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 2.2em;
+    height: 2.2em;
+    border: 2px solid #9b4f96;
+    border-radius: 6px;
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    vertical-align: middle;
+}
+
+/* Hover effect para checkboxes normales */
+input[type="checkbox"]:hover {
+    border-color: #7e3f7a;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(155, 79, 150, 0.2);
+}
+
+/* Checkmark para checkboxes normales */
+input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 0.7em;
+    top: 0.3em;
+    width: 0.5em;
+    height: 1em;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+    animation: check-bounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Cuando el checkbox está marcado */
+input[type="checkbox"]:checked {
+    background-color: #9b4f96;
+    border-color: #9b4f96;
+    animation: checkbox-pulse 0.6s ease-out;
+}
+
+/* Efecto de ripple al hacer clic */
+input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background-color: rgba(155, 79, 150, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+    pointer-events: none;
+}
+
+input[type="checkbox"]:active::before {
+    width: 150%;
+    height: 150%;
+}
+
+/* Mantener los estilos existentes para checkboxes personalizados */
+.custom-checkbox {
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox .checkmark {
+    width: 2.2em;
+    height: 2.2em;
+    border: 2px solid #9b4f96;
+    border-radius: 6px;
+    display: inline-block;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: transparent;
+}
+
+/* Hover effect */
+.custom-checkbox:hover .checkmark {
+    border-color: #7e3f7a;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(155, 79, 150, 0.2);
+}
+
+/* Estilo del checkmark (la marca de verificación) */
+.custom-checkbox .checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 0.7em; /* Ajustado para el nuevo tamaño */
+    top: 0.3em; /* Ajustado para el nuevo tamaño */
+    width: 0.5em; /* Ajustado para el nuevo tamaño */
+    height: 1em; /* Ajustado para el nuevo tamaño */
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Cuando el checkbox está marcado */
+.custom-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: #9b4f96; /* Color principal de la interfaz */
+    border-color: #9b4f96;
+    transform: scale(1);
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark::after {
+    display: block;
+    transform: rotate(45deg) scale(1);
+    animation: check-bounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animación para la marca de verificación */
+@keyframes check-bounce {
+    0% {
+        transform: rotate(45deg) scale(0);
+    }
+    50% {
+        transform: rotate(45deg) scale(1.2);
+    }
+    100% {
+        transform: rotate(45deg) scale(1);
+    }
+}
+
+/* Animación para el checkbox completo */
+@keyframes checkbox-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(155, 79, 150, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(155, 79, 150, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(155, 79, 150, 0);
+    }
+}
+
+/* Estilo en modo oscuro para checkboxes normales */
+.dark-mode input[type="checkbox"] {
+    border-color: #b366b0;
+}
+
+.dark-mode input[type="checkbox"]:hover {
+    border-color: #c476c1;
+    box-shadow: 0 2px 8px rgba(179, 102, 176, 0.3);
+}
+
+.dark-mode input[type="checkbox"]:checked {
+    background-color: #b366b0;
+    border-color: #b366b0;
+}
+
+/* Estilo para checkboxes deshabilitados */
+input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #ccc;
+}
+
+input[type="checkbox"]:disabled:checked {
+    background-color: #ccc;
+}
+
+/* Evitar deformación en formularios y campos de entrada */
+.input-field input[type="checkbox"],
+.edit-form input[type="checkbox"],
+.insert-form input[type="checkbox"] {
+    width: 2.2em !important;
+    height: 2.2em !important;
+    min-width: 2.2em;
+    min-height: 2.2em;
+    max-width: 2.2em;
+    max-height: 2.2em;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+/* Añadir padding izquierdo a los checkboxes en input-field para alineación */
+.input-field input[type="checkbox"] {
+    margin-left: 0.5rem;
+}
+
+/* Ajustar el contenedor de los input-field para checkboxes */
+.input-field:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input-field:has(input[type="checkbox"]) label {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}

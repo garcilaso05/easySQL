@@ -1,0 +1,246 @@
+.input-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px; /* Aumentado el margen inferior */
+    width: 100%;
+    gap: 15px;
+}
+
+.input-field label {
+    flex: 0 0 35%;  /* Reducido a 35% */
+    padding: 8px 12px;
+    background: #f5edff;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    white-space: normal;  /* Cambiado de nowrap a normal */
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 40px;  /* Altura mínima para labels de dos líneas */
+    line-height: 1.2;  /* Mejor espaciado entre líneas */
+}
+
+.input-field label .scroll-text {
+    display: inline-block;
+    white-space: normal;  /* Cambiado de nowrap a normal */
+    position: relative;
+    word-break: break-word;  /* Permite romper palabras si es necesario */
+}
+
+.input-field label.scrollable {
+    cursor: pointer;
+}
+
+.input-field label .scroll-text.scrolling {
+    animation: scrollText 10s linear infinite;
+}
+
+@keyframes scrollText {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Modo oscuro */
+.dark-mode .input-field label {
+    background: #3a2950;
+    color: #e4cdff;
+}
+
+.dark-mode .input-field input,
+.dark-mode .input-field select {
+    background: #2a1f2d;
+    border-color: #4a3960;
+    color: #e4cdff;
+}
+
+.search-header {
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.search-header h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.search-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-field {
+    display: flex;
+    align-items: center;  /* Centrado vertical */
+    width: 100%;
+    min-height: 40px;  /* Altura mínima consistente */
+}
+
+.search-field label {
+    flex: 0 0 35%;  /* Mismo ancho que input-field label */
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: normal;  /* Permitir múltiples líneas */
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+}
+
+.search-field input,
+.search-field select {
+    flex: 1;
+    min-width: 0;
+    height: 36px;  /* Altura fija para mejor alineación */
+    margin: auto 0;  /* Centrado vertical */
+}
+
+/* Estilos para data-details */
+.data-row {
+    display: flex;
+    margin-bottom: 8px;
+    padding: 4px 0;
+    min-height: 40px;
+    align-items: flex-start;
+}
+
+.data-label {
+    flex: 0 0 35%;
+    font-weight: 500;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    white-space: normal;
+    line-height: 1.2;
+    color: var(--color-primary);
+}
+
+.data-value {
+    flex: 1;
+    padding: 8px 0;
+    font-size: 0.85rem;
+    white-space: normal;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.data-details {
+    padding: 10px;
+    background-color: var(#fcf9ff);
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Estilos para el formulario de edición */
+.edit-form {
+    margin: 20px 0;
+    width: 100%;  /* Ocupa todo el ancho disponible */
+    max-width: 800px;  /* Aumentado de 600px */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.edit-form .input-field {
+    margin-bottom: 20px;
+}
+
+.edit-form .input-field label {
+    flex: 0 0 45%;  /* Aumentado de 35% a 45% */
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    white-space: normal;
+    line-height: 1.3;
+    min-height: 40px;
+    word-break: break-word;
+}
+
+.edit-form .input-field input,
+.edit-form .input-field select {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+}
+
+/* Estilos para campos numéricos */
+.numeric-input {
+    font-family: inherit; /* Usar la misma fuente que otros campos */
+    text-align: left; /* Cambiar de right a left */
+    background-color: inherit; /* Usar el mismo color de fondo */
+    border: inherit; /* Usar el mismo borde */
+}
+
+.numeric-input:focus {
+    background-color: inherit; /* Mantener el mismo fondo al hacer focus */
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(59, 89, 152, 0.1);
+}
+
+.integer-input::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.float-input::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Modo oscuro */
+.dark-mode .numeric-input {
+    background-color: inherit; /* Usar el mismo color que otros campos en modo oscuro */
+    border-color: inherit;
+    color: inherit;
+}
+
+.dark-mode .numeric-input:focus {
+    background-color: inherit;
+    border-color: #7c5cb3;
+}
+
+/* Nuevos estilos para encabezados de inserción */
+.insertion-subtitle {
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+}
+
+.insertion-header {
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    padding-left: 8px; /* Añadido padding izquierdo */
+    border-bottom: 1px dashed var(--color-border); /* Cambiado a línea discontinua */
+    text-align: left;
+    font-size: 0.95rem; /* Reducido tamaño de fuente */
+    color: var(--color-primary);
+}
+
+.insertion-secondary-header {
+    font-weight: 450;
+    margin-top: 15px; /* Aumentado margen superior */
+    margin-bottom: 15px; /* Aumentado margen inferior */
+    padding-left: 8px; /* Añadido padding izquierdo */
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--color-text);
+}
+
+.insertion-subtitle label,
+.insertion-header label,
+.insertion-secondary-header label {
+    display: block;
+    width: 100%;
+}

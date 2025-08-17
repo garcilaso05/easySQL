@@ -1,0 +1,273 @@
+/* === COLOR PICKER STYLES === */
+.color-picker-container {
+    position: relative;
+    margin-left: 10px;
+}
+
+.color-picker-btn {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    border: none;
+    background: var(--color-transparent);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex; /* Cambiar de none a flex */
+}
+
+.color-picker-btn:hover {
+    background-color: var(--color-primary-light);
+}
+
+.color-picker-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.color-picker-panel {
+    position: absolute;
+    top: 100%;
+    right: 10px; /* Añadir margen derecho */
+    margin-top: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.98); /* Aumentado la opacidad */
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+    display: none;
+    z-index: 1001;
+    width: 320px;
+    border: 1px solid rgba(0, 0, 0, 0.1); /* Borde sutil */
+}
+
+/* Animation Switches */
+.animation-switches {
+    margin-top: 0.5rem;
+    padding-top: 0;
+    border-top: none;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 20px;
+}
+
+.switch-label {
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-gray-medium);
+    transition: .3s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--color-white);
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.esql-upload-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.btn-upload-esql {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 2px dashed var(--color-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 80%;
+    text-align: center;
+    background-color: var(--color-bg-hover);
+}
+
+.btn-upload-esql:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+
+.btn-upload-esql img {
+    width: 32px;
+    height: 32px;
+    opacity: 0.7;
+}
+
+.btn-upload-esql span {
+    font-size: 0.9rem;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+input:checked + .slider {
+    background-color: var(--color-primary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Eliminar el borde de foco */
+#colorSlider:focus {
+    outline: none;
+}
+
+.settings-title {
+    text-align: center;
+    color: var(--color-primary);
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+.settings-section {
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    color: var(--color-primary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    text-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+.shapes-selector {
+    padding: 0 20px;
+}
+
+.shape-options {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+}
+
+.shape-option {
+    cursor: pointer;
+    position: relative;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shape-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.shape-icon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-bg-circles);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shape-icon.circle {
+    border-radius: 50%;
+}
+
+.shape-icon.square {
+    border-radius: 4px;
+}
+
+.shape-icon.triangle {
+    clip-path: polygon(50% 5%, 5% 95%, 95% 95%);
+    border: 2px solid var(--color-primary);
+}
+
+/* Estados activos y hover */
+.shape-option:hover .shape-icon {
+    background-color: var(--color-bg-circles-mid);
+    transform: scale(1.1);
+}
+
+.shape-option input[type="radio"]:checked + .shape-icon {
+    background-color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+/* Solo el triángulo mantiene el efecto blur cuando está seleccionado */
+.shape-option input[type="radio"]:checked + .shape-icon.triangle {
+    box-shadow: 0 0 15px var(--color-bg-circles-mid);
+}
+
+.shape-icon.triangle::before {
+    display: none;
+}
+
+.shape-option:hover .shape-icon {
+    background-color: var(--color-bg-circles-mid);
+    transform: scale(1.1);
+}
+
+.shape-option input[type="radio"]:checked + .shape-icon {
+    background-color: var(--color-primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px var(--color-bg-circles-mid);
+}
+
+#titulin {
+    text-shadow: 
+        1px 1px 0 var(--color-text-muted),
+        2px 2px 0 rgba(255, 255, 255, 0.8);
+    font-weight: 800;
+    letter-spacing: 4px;
+}

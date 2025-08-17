@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1.0">
-    <title>easySQL</title>
+    <title>easySQL - Gestión de Bases de Datos Simplificada</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.2/dist/alasql.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.0/dist/vis-network.min.js"></script>
@@ -12,12 +12,40 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
-    <link rel="icon" type="image/png" href="styles/eSQL.png">
+    <script src="scripts/textFormatter.js"></script>
+    <script src="scripts/editFormFormatter.js"></script>
+    <link rel="stylesheet" href="styles/checkboxes.css">
+    <link rel="icon" type="image/png" href="styles/eSQLlogo.png">
+    <!-- Google Fonts - Inter para un look más moderno -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .insertion-subtitle {
+            font-weight: 600;
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 2px solid var(--color-border);
+            text-align: left;
+            font-size: var(--font-size-lg);
+            color: var(--color-primary);
+        }
+        #top-bar {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
     <div class="login-overlay" id="loginOverlay">
         <div class="login-container">
             <h2>Iniciar Sesión</h2>
+            <div class="role-selector">
+                <button class="role-btn active" data-role="developer">Desarrollador</button>
+                <button class="role-btn" data-role="admin">Administrador</button>
+            </div>
             <form id="loginForm" onsubmit="return handleLogin(event)">
                 <div class="login-field">
                     <label for="username">Usuario</label>
@@ -29,6 +57,11 @@
                 </div>
                 <button type="submit" class="login-button">Acceder</button>
             </form>
+            <div class="guest-access">
+                <button onclick="accessAsGuest()" class="guest-button">
+                    Acceder como Invitado
+                </button>
+            </div>
         </div>
     </div>
     <div class="top-bar">
@@ -52,20 +85,22 @@
             <button id="helpBtn" class="top-btn">
                 <img src="styles/eSQL.png" alt="easySQL Guide" class="header-logo">
             </button>
+            <!-- El botón para subir .esql se ha movido al panel de personalización -->
         </div>
         <div id="colorPickerPanel" class="color-picker-panel">
             <h2 class="settings-title">PERSONALIZACIÓN</h2>
             <div class="settings-section">
-                <h3 class="section-title">Color de fondo</h3>
-                <div class="color-slider-container">
+                <h3 class="section-title">Color de Fondo</h3>
+                <!-- Eliminar el slider y gradiente -->
+                <!-- <div class="color-slider-container">
                     <input type="range" id="colorSlider" min="0" max="100" value="100">
                     <div class="color-gradient"></div>
-                </div>
+                </div> -->
                 <!-- Añadir switch modo oscuro -->
                 <div class="switch-container" style="margin-top:1rem;">
                     <span class="switch-label">Modo oscuro</span>
                     <label class="switch">
-                        <input type="checkbox" id="darkModeSwitch">
+                        <input type="checkbox" id="darkModeSwitch" checked="false">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -115,6 +150,16 @@
                     </div>
                 </div>
             </div>
+            <div class="settings-section">
+                <h3 class="section-title">Layout de Inserción</h3>
+                <div class="esql-upload-container">
+                    <label for="esql-upload" class="btn-upload-esql">
+                        <img src="styles/upload.png" alt="Subir .esql">
+                        <span>Cargar Archivo .esql</span>
+                    </label>
+                    <input type="file" id="esql-upload" accept=".esql" style="display: none;">
+                </div>
+            </div>
         </div>
     </div>
     <!-- Modal de Ayuda -->
@@ -124,709 +169,228 @@
             <div class="help-sidebar">
                 <nav class="help-navigation">
                     <ul>
-                        <li><a href="#inicio">Introducción a SQL</a></li>
-                        <li><a href="#estructuras">Estructuras y Tipos de Datos</a></li>
-                        <li><a href="#inserciones2">Inserciones de Datos</a></li>
-                        <li><a href="#mostrardatos">Visualización de Datos</a></li>
-                        <li><a href="#mostrargraficos">Gráficos y Estadísticas</a></li>
-                        <li><a href="#mostrarMapas">Mapas Interactivos</a></li>
-                        <li><a href="#excelimport">Importación Excel</a></li>
-                        <li><a href="#enumerados">Enumerados (ENUM)</a></li>
+                        <li><a href="#introduccion" class="nav-item active">
+                            <span class="nav-icon">👋</span>
+                            <span class="nav-text">Introducción</span>
+                        </a></li>
+                        <li><a href="#esquema-bd" class="nav-item">
+                            <span class="nav-icon">🏗️</span>
+                            <span class="nav-text">Esquema BD</span>
+                        </a></li>
+                        <li><a href="#gestion-datos" class="nav-item">
+                            <span class="nav-icon">💾</span>
+                            <span class="nav-text">Gestión de Datos</span>
+                        </a></li>
+                        <li><a href="#visualizacion" class="nav-item">
+                            <span class="nav-icon">📊</span>
+                            <span class="nav-text">Visualización</span>
+                        </a></li>
+                        <li><a href="#personalizacion" class="nav-item">
+                            <span class="nav-icon">🎨</span>
+                            <span class="nav-text">Personalización</span>
+                        </a></li>
+                        <li><a href="#faq" class="nav-item">
+                            <span class="nav-icon">❓</span>
+                            <span class="nav-text">FAQ y Soporte</span>
+                        </a></li>
                     </ul>
                 </nav>
             </div>
             <div class="help-main">
 
-                <!-- Modal de Ayuda -->
-
-                <section id="inicio" class="help-section active">
-                    <h2>Introducción a SQL</h2>
-                    
-                    <div class="help-block">
-                        <h3>¿Qué es SQL y por qué es importante para su empresa? 🏢</h3>
-                        <p>SQL es una herramienta que permite gestionar la información de su empresa de forma eficiente, segura y profesional. Es como tener un asistente que:</p>
-                        <ul>
-                            <li>Organiza toda su información empresarial automáticamente 📊</li>
-                            <li>Permite acceder a los datos de forma instantánea ⚡</li>
-                            <li>Mantiene la información segura y respaldada 🔒</li>
-                            <li>Crece con su empresa sin perder eficiencia 📈</li>
-                        </ul>
-                    </div>
-
-                    <div class="help-block">
-                        <h4>Caso real: Empresa de Distribución 🚚</h4>
-                        <p>La empresa "Distribuciones Rápidas S.L." tenía estos problemas:</p>
-                        <ul>
-                            <li>❌ 3 horas diarias perdidas buscando información en Excel</li>
-                            <li>❌ Errores frecuentes en el inventario</li>
-                            <li>❌ Pérdida de ventas por datos desactualizados</li>
-                        </ul>
-                        <p>Después de implementar SQL:</p>
-                        <ul>
-                            <li>✅ Búsqueda de información en segundos</li>
-                            <li>✅ Control de inventario en tiempo real</li>
-                            <li>✅ Aumento del 25% en eficiencia operativa</li>
-                            <li>✅ ROI positivo en menos de 6 meses</li>
-                        </ul>
-                    </div>
-
-                    <div class="tip-block help-block">
-                        <h4>Ventajas sobre Excel 📊</h4>
-                        <p>¿Por qué las empresas están migrando de Excel a SQL?</p>
-                        <ul>
-                            <li>💼 <strong>Profesionalidad:</strong> Estándar en empresas Fortune 500</li>
-                            <li>🔐 <strong>Seguridad:</strong> Control total sobre quién accede a qué información</li>
-                            <li>📱 <strong>Accesibilidad:</strong> Múltiples empleados pueden trabajar simultáneamente</li>
-                            <li>💪 <strong>Escalabilidad:</strong> Gestiona millones de registros sin pérdida de rendimiento</li>
-                        </ul>
-                    </div>
-
-                    <div class="roi-block help-block">
-                        <h4>Impacto en su Negocio 💰</h4>
-                        <p>Las empresas que implementan SQL reportan:</p>
-                        <ul>
-                            <li>📈 Reducción del 70% en tiempo de generación de informes</li>
-                            <li>🎯 Disminución del 90% en errores de datos</li>
-                            <li>💡 Mejor toma de decisiones basada en datos precisos</li>
-                            <li>🚀 Ventaja competitiva en su sector</li>
-                        </ul>
-                    </div>
-
-                    <div class="next-block help-block">
-                        <h4>Próximos Pasos 👣</h4>
-                        <p>No se preocupe por la complejidad técnica. easySQL está diseñado para que pueda:</p>
-                        <ul>
-                            <li>1️⃣ Empezar de forma gradual</li>
-                            <li>2️⃣ Ver resultados inmediatos</li>
-                            <li>3️⃣ Crecer según sus necesidades</li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section id="estructuras" class="help-section">
-                    <h2>Estructuras y Tipos de Datos</h2>
-
-                    <div class="info-block help-block">
-                        <h3>¿Qué es una tabla? 📋</h3>
-                        <p>Imagina una tabla como una agenda de contactos en tu teléfono:</p>
-                        <ul>
-                            <li>Cada CONTACTO es una FILA (un amigo diferente)</li>
-                            <li>Cada DATO del contacto es una COLUMNA (nombre, teléfono, email...)</li>
-                        </ul>
-                    </div>
-
-                    <div class="example-block help-block">
-                        <h4>Ejemplo Visual: Agenda de Contactos 👥</h4>
-                        <div class="table-example">
-                            <p>Así se ve una tabla:</p>
-                            <table>
-                                <tr class="header-row">
-                                    <th>ID (PK)</th>
-                                    <th>Nombre</th>
-                                    <th>Teléfono</th>
-                                    <th>Email</th>
-                                </tr>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Ana</td>
-                                    <td>555-123</td>
-                                    <td>ana@email.com</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Juan</td>
-                                    <td>555-456</td>
-                                    <td>null</td>
-                                </tr>
-                            </table>
+                <section id="introduccion" class="help-section active">
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>¿Qué es <span style="color:#9b4f96">ECO A SU MEMORIA</span>?</h2>
+                        </div>
+                        <div class="block-content">
+                            <p>
+                                <strong>ECO A SU MEMORIA</strong> es una aplicación web pensada para simplificar y mejorar la gestión de los datos de casos de feminicidios en España.
+                            </p>
+                            <div class="block-highlight">
+                                <span class="block-badge">Hackatón URV</span>
+                                <p>
+                                    El proyecto nació en una hackatón de la <strong>Universitat Rovira i Virgili</strong>, con un equipo interdisciplinar.
+                                </p>
+                            </div>
+                            <div class="block-highlight">
+                                <span class="block-badge">Objetivo</span>
+                                <p>
+                                    Facilitar el trabajo de quienes recopilan, gestionan y analizan información sobre feminicidios, permitiendo una gestión centralizada, segura y eficiente.
+                                </p>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="concepts-block help-block">
-                        <h4>Conceptos Básicos 🎯</h4>
-                        
-                        <div class="concept-item">
-                            <h5>¿Qué es una FILA? 📄</h5>
-                            <p>Es UN registro completo. Por ejemplo:</p>
-                            <p class="highlight">Ana + su teléfono + su email = UNA fila completa</p>
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>Niveles de Acceso y Permisos</h2>
                         </div>
-
-                        <div class="concept-item">
-                            <h5>¿Qué es una COLUMNA? 📊</h5>
-                            <p>Es UN tipo de información. Por ejemplo:</p>
-                            <p class="highlight">La columna "Teléfono" solo guarda números de teléfono</p>
-                        </div>
-
-                        <div class="concept-item">
-                            <h5>¿Qué significa PK (Primary Key)? 🔑</h5>
-                            <p>Es como el DNI de cada fila: un número ÚNICO que no se repite.</p>
-                            <p class="highlight">Si tienes dos Anas, por su PK sabrás que son diferentes</p>
-                        </div>
-
-                        <div class="concept-item">
-                            <h5>¿Qué significa NULL vs NOT NULL? ❓</h5>
-                            <p><strong>NULL = Puede estar vacío</strong></p>
-                            <ul>
-                                <li>Como Juan, que no tiene email (es NULL)</li>
-                                <li>Es como dejar un espacio en blanco</li>
-                            </ul>
-                            <p><strong>NOT NULL = No puede estar vacío</strong></p>
-                            <ul>
-                                <li>Como el Nombre, que siempre debe existir</li>
-                                <li>Es obligatorio rellenarlo</li>
-                            </ul>
+                        <div class="block-content">
+                            <div class="access-cards">
+                                <div class="access-card dev">
+                                    <div class="access-title">👨‍💻 Desarrollador</div>
+                                    <ul>
+                                        <li>Control total sobre la estructura de la base de datos.</li>
+                                        <li>Gestión completa de datos.</li>
+                                        <li>Acceso a todas las funcionalidades.</li>
+                                    </ul>
+                                </div>
+                                <div class="access-card admin">
+                                    <div class="access-title">🛠️ Administrador</div>
+                                    <ul>
+                                        <li>Gestionar inserciones (crear, editar, borrar).</li>
+                                        <li>Visualizar y exportar datos.</li>
+                                    </ul>
+                                </div>
+                                <div class="access-card externo">
+                                    <div class="access-title">👀 Externo</div>
+                                    <ul>
+                                        <li>Visualizar datos, mapas y gráficos de forma anónima.</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="inserciones2" class="help-section">
-                    <h2>Inserciones de Datos 📝</h2>
-                    
-                    <div class="info-block help-block">
-                        <h3>¿Qué es una Inserción? 🎯</h3>
-                        <p>Una inserción es el proceso de añadir nuevos datos a una tabla. Es como escribir una nueva entrada en un diario:</p>
-                        <ul>
-                            <li>Cada inserción es un nuevo registro en la tabla</li>
-                            <li>Debes respetar el tipo de dato de cada columna</li>
-                            <li>La clave primaria (PK) debe ser única para cada inserción</li>
-                        </ul>
-                    </div>
-
-                    <div class="case-block help-block">
-                        <h4>Caso Práctico: Registro de Ventas 🛍️</h4>
-                        <p>En una tienda necesitas registrar cada venta:</p>
-                        <ul>
-                            <li>✅ ID de venta (único para cada transacción)</li>
-                            <li>✅ Producto vendido</li>
-                            <li>✅ Cantidad</li>
-                            <li>✅ Fecha de venta</li>
-                        </ul>
-                    </div>
-
-                    <div class="tip-block help-block">
-                        <h4>Consejos para Insertar Datos 💡</h4>
-                        <p>Al insertar datos, recuerda:</p>
-                        <ul>
-                            <li>🔍 Verifica el tipo de dato antes de insertar</li>
-                            <li>⚠️ Respeta las restricciones NOT NULL</li>
-                            <li>🔑 Asegura que la PK sea única</li>
-                            <li>📋 Puedes dejar vacíos los campos opcionales</li>
-                        </ul>
-                    </div>
-
-                    <div class="example-block help-block">
-                        <h4>Ejemplo: Tabla de Productos</h4>
-                        <div class="table-example">
-                            <table>
-                                <tr class="header-row">
-                                    <th>ID (PK)</th>
-                                    <th>Nombre</th>
-                                    <th>Precio</th>
-                                    <th>Stock</th>
-                                </tr>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Laptop</td>
-                                    <td>999.99</td>
-                                    <td>10</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Mouse</td>
-                                    <td>29.99</td>
-                                    <td>50</td>
-                                </tr>
-                            </table>
+                <section id="esquema-bd" class="help-section">
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>Gestión del Esquema (Solo Desarrolladores)</h2>
+                        </div>
+                        <div class="block-content">
+                            <p>La pestaña <strong>Esquema</strong> es el centro de control para la estructura de tu base de datos.</p>
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <h4>Crear Tablas</h4>
+                                    <p>Usa el botón "Crear Tabla" para definir nuevas tablas, sus columnas y tipos de datos (Texto, Número, Fecha, Booleano, etc.).</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Crear Enums</h4>
+                                    <p>Define listas de valores predefinidos (Enums) para usarlos como tipos de datos en tus tablas, garantizando la consistencia.</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Relaciones</h4>
+                                    <p>Crea relaciones entre tablas directamente desde el diagrama visual para conectar tus datos de forma lógica.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="concepts-block help-block">
-                        <h4>Tipos de Inserción en easySQL 🛠️</h4>
-                        <ul>
-                            <li>✨ Inserción Manual: Usando el formulario</li>
-                            <li>📊 Importación Excel: Carga masiva de datos</li>
-                            <li>📝 SQL Directo: Usando comandos INSERT</li>
-                            <li>📁 Carga de archivo: Importando archivos SQL</li>
-                        </ul>
-                    </div>
-
-                    <div class="next-block help-block">
-                        <h4>Ejercicios Prácticos 👣</h4>
-                        <p>Practica las inserciones con estos ejercicios:</p>
-                        <ul>
-                            <li>1️⃣ Crea una tabla "Empleados" con campos: ID, Nombre, Salario</li>
-                            <li>2️⃣ Inserta 3 empleados diferentes usando el formulario</li>
-                            <li>3️⃣ Intenta insertar un ID duplicado para ver el error</li>
-                        </ul>
-                    </div>
                 </section>
 
-                <section id="mostrardatos" class="help-section">
-                    <h2>Visualización de Datos en Tablas 📊</h2>
-                    
-                    <div class="info-block help-block">
-                        <h3>¿Cómo ver mis datos? 🔍</h3>
-                        <p>La pestaña "Datos" te permite:</p>
-                        <ul>
-                            <li>Ver todos los registros de tus tablas</li>
-                            <li>Filtrar información específica</li>
-                            <li>Ordenar datos por columnas</li>
-                            <li>Exportar datos seleccionados</li>
-                        </ul>
-                    </div>
-
-                    <div class="case-block help-block">
-                        <h4>Panel de Control de Datos 🎛️</h4>
-                        <p>En la parte superior encontrarás:</p>
-                        <ul>
-                            <li>📋 Selector de tabla: Elige qué tabla quieres ver</li>
-                            <li>🔎 Filtros: Reduce los datos mostrados según criterios</li>
-                            <li>⬆️ Ordenación: Organiza los datos ascendente/descendente</li>
-                            <li>💾 Exportación: Guarda los datos filtrados</li>
-                        </ul>
-                    </div>
-
-                    <div class="tip-block help-block">
-                        <h4>Consejos para el Filtrado Efectivo 💡</h4>
-                        <ul>
-                            <li>🎯 Usa múltiples filtros para búsquedas precisas</li>
-                            <li>📊 Combina filtros numéricos y de texto</li>
-                            <li>📅 Filtra por rangos de fechas</li>
-                            <li>🔄 Puedes resetear los filtros en cualquier momento</li>
-                        </ul>
-                    </div>
-
-                    <div class="example-block help-block">
-                        <h4>Ejemplo Práctico: Filtrado de Ventas</h4>
-                        <p>Para encontrar ventas específicas:</p>
-                        <ol>
-                            <li>1️⃣ Selecciona la tabla "Ventas"</li>
-                            <li>2️⃣ Filtra por fecha > "01/01/2024"</li>
-                            <li>3️⃣ Filtra por monto > 1000€</li>
-                            <li>4️⃣ Ordena por fecha descendente</li>
-                        </ol>
-                    </div>
-
-                    <div class="warning-block help-block">
-                        <h4>⚠️ Importante</h4>
-                        <p>Ten en cuenta que:</p>
-                        <ul>
-                            <li>Los filtros son acumulativos</li>
-                            <li>Puedes exportar solo los datos filtrados</li>
-                            <li>El rendimiento depende del volumen de datos</li>
-                        </ul>
-                    </div>
-
-                    <div class="next-block help-block">
-                        <h4>Ejercicio Práctico 👣</h4>
-                        <p>Practica con estos pasos:</p>
-                        <ul>
-                            <li>1️⃣ Carga la tabla de ejemplo "Empleados"</li>
-                            <li>2️⃣ Filtra empleados con salario > 30000</li>
-                            <li>3️⃣ Ordena por antigüedad</li>
-                            <li>4️⃣ Exporta los resultados filtrados</li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section id="mostrargraficos" class="help-section">
-                    <h2>Gráficos y Estadísticas 📊</h2>
-                    
-                    <div class="info-block help-block">
-                        <h3>¿Qué son los gráficos en easySQL? 📈</h3>
-                        <p>Los gráficos son representaciones visuales de tus datos que te permiten:</p>
-                        <ul>
-                            <li>🎯 Identificar tendencias rápidamente</li>
-                            <li>📊 Comparar datos de forma visual</li>
-                            <li>📈 Presentar información de manera profesional</li>
-                            <li>🔍 Analizar patrones en tus datos</li>
-                        </ul>
-                    </div>
-
-                    <div class="tip-block help-block">
-                        <h4>Tipos de Gráficos Disponibles 🎨</h4>
-                        <ul>
-                            <li>⭕ <strong>Circular:</strong> Ideal para porcentajes y proporciones
-                                <ul>
-                                    <li>Perfecto para categorías</li>
-                                    <li>Muestra distribución de datos</li>
-                                </ul>
-                            </li>
-                            <li>🌗 <strong>Semicírculo:</strong> Similar al circular, pero más compacto
-                                <ul>
-                                    <li>Excelente para dashboards</li>
-                                    <li>Ahorra espacio en pantalla</li>
-                                </ul>
-                            </li>
-                            <li>📊 <strong>Barras:</strong> Perfecto para comparaciones
-                                <ul>
-                                    <li>Compara cantidades fácilmente</li>
-                                    <li>Visualiza rankings y métricas</li>
-                                </ul>
-                            </li>
-                            <li>📈 <strong>Líneas:</strong> Ideal para tendencias temporales
-                                <ul>
-                                    <li>Muestra evolución en el tiempo</li>
-                                    <li>Identifica patrones y ciclos</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="example-block help-block">
-                        <h4>Cómo Crear un Gráfico 🛠️</h4>
-                        <ol>
-                            <li>1️⃣ Selecciona una tabla (ej: "Ventas")</li>
-                            <li>2️⃣ Elige una columna (ej: "Monto")</li>
-                            <li>3️⃣ Escoge el tipo de gráfico</li>
-                            <li>4️⃣ ¡Listo! Tu gráfico se genera automáticamente</li>
-                        </ol>
-                    </div>
-
-                    <div class="benefits-block help-block">
-                        <h4>Ventajas de los Gráficos 🌟</h4>
-                        <ul>
-                            <li>⚡ Visualización instantánea de datos</li>
-                            <li>🎨 Personalización de colores y estilos</li>
-                            <li>💾 Exportación para presentaciones</li>
-                            <li>🔄 Actualización en tiempo real</li>
-                            <li>📱 Responsive en todos los dispositivos</li>
-                        </ul>
-                    </div>
-
-                    <div class="case-block help-block">
-                        <h4>Caso de Uso: Análisis de Ventas 💰</h4>
-                        <p>Una empresa utilizó los gráficos para:</p>
-                        <ul>
-                            <li>📊 Circular: Ver distribución de ventas por producto</li>
-                            <li>📈 Líneas: Analizar tendencias mensuales</li>
-                            <li>📊 Barras: Comparar rendimiento de vendedores</li>
-                            <li>🌗 Semicírculo: Mostrar objetivos cumplidos</li>
-                        </ul>
-                        <p>Resultado: Identificaron productos estrella y optimizaron inventario</p>
-                    </div>
-
-                    <div class="next-block help-block">
-                        <h4>Ejercicio Práctico 👣</h4>
-                        <p>Practica creando estos gráficos:</p>
-                        <ul>
-                            <li>1️⃣ Gráfico circular de categorías de productos</li>
-                            <li>2️⃣ Gráfico de barras de ventas por región</li>
-                            <li>3️⃣ Gráfico de líneas de ventas mensuales</li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section id="mostrarMapas" class="help-section">
-                    <h2>Mapas Interactivos 🗺️</h2>
-                    
-                    <div class="info-block help-block">
-                        <h3>¿Qué puedo hacer con los mapas? 🌍</h3>
-                        <p>La pestaña "Mapa" te permite:</p>
-                        <ul>
-                            <li>🎯 Visualizar datos geográficos</li>
-                            <li>🔍 Explorar diferentes regiones</li>
-                            <li>🎨 Ver distribuciones por colores</li>
-                            <li>📊 Analizar datos por zonas</li>
-                        </ul>
-                    </div>
-
-                    <div class="tip-block help-block">
-                        <h4>Ubicaciones Predefinidas Disponibles 📍</h4>
-                        <ul>
-                            <li>🌍 <strong>Países del mundo</strong>: Visualización global</li>
-                            <li>🇪🇸 <strong>Comunidades Autónomas</strong>: División territorial española</li>
-                            <li>📍 <strong>Provincias españolas</strong>: Nivel provincial</li>
-                            <li>🇺🇸 <strong>Estados de EEUU</strong>: División estadounidense</li>
-                        </ul>
-                    </div>
-
-                    <div class="example-block help-block">
-                        <h4>Cómo Usar el Mapa 🎯</h4>
-                        <ol>
-                            <li>1️⃣ Selecciona una tabla con datos geográficos</li>
-                            <li>2️⃣ Elige la columna que contiene las ubicaciones</li>
-                            <li>3️⃣ El mapa se actualizará automáticamente</li>
-                            <li>4️⃣ Usa el zoom para explorar diferentes niveles</li>
-                        </ol>
-                    </div>
-
-                    <div class="features-block help-block">
-                        <h4>Características del Mapa 🛠️</h4>
-                        <ul>
-                            <li>🔄 <strong>Interactividad</strong>: Zoom y desplazamiento</li>
-                            <li>🎨 <strong>Leyenda de colores</strong>: Intensidad por valores</li>
-                            <li>💡 <strong>Tooltips</strong>: Información al pasar el mouse</li>
-                            <li>📱 <strong>Responsive</strong>: Adaptable a cualquier pantalla</li>
-                        </ul>
-                    </div>
-
-                    <div class="case-block help-block">
-                        <h4>Ejemplo Práctico: Análisis de Ventas por Región 📊</h4>
-                        <p>Una empresa analiza sus ventas:</p>
-                        <ol>
-                            <li>1️⃣ Tabla: "Ventas"</li>
-                            <li>2️⃣ Columna: "Comunidad_Autonoma"</li>
-                            <li>3️⃣ Resultado: Mapa con colores según volumen de ventas</li>
-                            <li>4️⃣ Análisis: Identificación de zonas más activas</li>
-                        </ol>
-                    </div>
-
-                    <div class="warning-block help-block">
-                        <h4>⚠️ Consideraciones Importantes</h4>
-                        <ul>
-                            <li>Usa los enums predefinidos para ubicaciones</li>
-                            <li>Los datos deben coincidir exactamente con los nombres oficiales</li>
-                            <li>La intensidad del color refleja la cantidad de registros</li>
-                        </ul>
-                    </div>
-
-                    <div class="next-block help-block">
-                        <h4>Ejercicio Práctico 👣</h4>
-                        <p>Practica con estos pasos:</p>
-                        <ul>
-                            <li>1️⃣ Crea una tabla "Clientes" con columna "Provincia"</li>
-                            <li>2️⃣ Inserta datos usando el enum de provincias</li>
-                            <li>3️⃣ Visualiza la distribución en el mapa</li>
-                            <li>4️⃣ Explora diferentes niveles de zoom</li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section id="excelimport" class="help-section">
-                    <div class="section-header">
-                        <h2>Importación Excel y Gestión Masiva de Datos 📊</h2>
-                    </div>
-                    
-                    <div class="info-block help-block">
-                        <h3>¿Qué es Excel Import? 🔄</h3>
-                        <p>Excel Import es una herramienta potente que te permite:</p>
-                        <ul>
-                            <li>📥 Importar datos masivamente desde Excel</li>
-                            <li>📝 Editar múltiples registros simultáneamente</li>
-                            <li>🔍 Validar datos en tiempo real</li>
-                            <li>📋 Copiar y pegar datos desde hojas de cálculo</li>
-                            <li>⚡ Actualizar registros existentes</li>
-                        </ul>
-                    </div>
-
-                    <div class="features-block help-block">
-                        <h4>Características Principales 🌟</h4>
-                        <ul>
-                            <li>🔄 <strong>Validación en tiempo real:</strong> 
-                                <ul>
-                                    <li>Verifica tipos de datos automáticamente</li>
-                                    <li>Resalta errores y advertencias</li>
-                                    <li>Sugiere correcciones</li>
-                                </ul>
-                            </li>
-                            <li>📋 <strong>Operaciones con el portapapeles:</strong>
-                                <ul>
-                                    <li>Pega datos desde Excel manteniendo el formato</li>
-                                    <li>Copia múltiples celdas</li>
-                                    <li>Selección múltiple de celdas</li>
-                                </ul>
-                            </li>
-                            <li>⌨️ <strong>Atajos de teclado:</strong>
-                                <ul>
-                                    <li>Navegación con flechas entre celdas</li>
-                                    <li>Borrado rápido con Delete/Backspace</li>
-                                    <li>Selección múltiple con ratón</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="usage-block help-block">
-                        <h4>Cómo Usar Excel Import 📝</h4>
-                        
-                        <div class="step-block">
-                            <h5>1. Preparación</h5>
-                            <ul>
-                                <li>Selecciona la tabla destino</li>
-                                <li>Define el número de filas (10-1000)</li>
-                                <li>La cuadrícula se genera automáticamente</li>
-                            </ul>
+                <section id="gestion-datos" class="help-section">
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>Inserción y Gestión de Datos</h2>
                         </div>
-
-                        <div class="step-block">
-                            <h5>2. Importación de Datos</h5>
-                            <ul>
-                                <li>Copia datos desde Excel</li>
-                                <li>Pega directamente en la cuadrícula</li>
-                                <li>Los datos se validan automáticamente</li>
-                            </ul>
-                        </div>
-
-                        <div class="step-block">
-                            <h5>3. Validación y Corrección</h5>
-                            <ul>
-                                <li>🟢 Verde: Dato válido</li>
-                                <li>🟡 Amarillo: Advertencia (requiere atención)</li>
-                                <li>🔴 Rojo: Error (debe corregirse)</li>
-                                <li>🔵 Azul: Valor nulo permitido</li>
-                            </ul>
+                        <div class="block-content">
+                            <p>La aplicación ofrece dos formas flexibles de introducir y modificar datos:</p>
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <h4>Formularios Dinámicos (Pestaña Inserciones)</h4>
+                                    <p>Para cada tabla, se genera un formulario a medida. Ideal para añadir registros uno por uno de forma guiada.</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Interfaz tipo Excel (Pestaña Excel Import)</h4>
+                                    <p>Perfecta para inserciones masivas. Selecciona una tabla y añade o modifica múltiples filas a la vez en una parrilla intuitiva.</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Visualización y Borrado (Pestaña Datos)</h4>
+                                    <p>Consulta todos los datos insertados en tablas, con opciones para buscar, filtrar y eliminar registros.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </section>
 
-                    <div class="tips-block help-block">
-                        <h4>Consejos y Trucos 💡</h4>
-                        <ul>
-                            <li>✨ <strong>Selección múltiple:</strong> Arrastra el ratón para seleccionar varias celdas</li>
-                            <li>🔄 <strong>Actualización masiva:</strong> Pega valores en múltiples celdas seleccionadas</li>
-                            <li>⌨️ <strong>Navegación rápida:</strong> Usa las flechas del teclado</li>
-                            <li>❌ <strong>Borrado rápido:</strong> Selecciona múltiples celdas y presiona Delete</li>
-                            <li>📝 <strong>Edición inline:</strong> Doble clic para editar una celda</li>
-                        </ul>
-                    </div>
-
-                    <div class="validation-block help-block">
-                        <h4>Sistema de Validación 🔍</h4>
-                        <ul>
-                            <li>🔢 <strong>Números (INT/FLOAT):</strong>
-                                <ul>
-                                    <li>Verifica formato numérico</li>
-                                    <li>Acepta decimales para FLOAT</li>
-                                    <li>Convierte automáticamente comas a puntos</li>
-                                </ul>
-                            </li>
-                            <li>📅 <strong>Fechas (DATE):</strong>
-                                <ul>
-                                    <li>Formato: dd/mm/yyyy o dd-mm-yyyy</li>
-                                    <li>Valida días y meses correctos</li>
-                                    <li>Considera años bisiestos</li>
-                                </ul>
-                            </li>
-                            <li>✅ <strong>Booleanos (BOOLEAN):</strong>
-                                <ul>
-                                    <li>true/1/s/si/cierto</li>
-                                    <li>false/0/n/no/falso</li>
-                                    <li>Normaliza automáticamente</li>
-                                </ul>
-                            </li>
-                            <li>📝 <strong>ENUMs:</strong>
-                                <ul>
-                                    <li>Valores predefinidos</li>
-                                    <li>Sugerencias al hacer clic derecho</li>
-                                    <li>Autocompletado inteligente</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="advanced-block help-block">
-                        <h4>Funciones Avanzadas 🚀</h4>
-                        <ul>
-                            <li>🔄 <strong>Actualización de registros existentes:</strong>
-                                <ul>
-                                    <li>Detecta cambios automáticamente</li>
-                                    <li>Actualiza solo campos modificados</li>
-                                    <li>Mantiene integridad de datos</li>
-                                </ul>
-                            </li>
-                            <li>📊 <strong>Gestión de claves primarias:</strong>
-                                <ul>
-                                    <li>Validación automática de duplicados</li>
-                                    <li>Prevención de conflictos</li>
-                                    <li>Identificación visual de PKs</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="example-block help-block">
-                        <h4>Ejemplo Práctico: Importar Productos</h4>
-                        <ol>
-                            <li>1️⃣ Selecciona tabla "Productos"</li>
-                            <li>2️⃣ Establece 50 filas</li>
-                            <li>3️⃣ Copia datos desde Excel</li>
-                            <li>4️⃣ Pega en la cuadrícula</li>
-                            <li>5️⃣ Verifica las validaciones</li>
-                            <li>6️⃣ Corrige errores si los hay</li>
-                            <li>7️⃣ Guarda los cambios</li>
-                        </ol>
-                    </div>
-
-                    <div class="troubleshooting-block help-block">
-                        <h4>Solución de Problemas ⚠️</h4>
-                        <ul>
-                            <li>❌ <strong>Datos no se pegan:</strong> Verifica formato del portapapeles</li>
-                            <li>⚠️ <strong>Validaciones en rojo:</strong> Revisa el tipo de dato esperado</li>
-                            <li>🔄 <strong>Actualizaciones no se aplican:</strong> Verifica la clave primaria</li>
-                            <li>📊 <strong>Formato incorrecto:</strong> Asegura compatibilidad de tipos</li>
-                        </ul>
+                <section id="visualizacion" class="help-section">
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>Visualización de Datos: Mapas y Gráficos</h2>
+                        </div>
+                        <div class="block-content">
+                            <p>Transforma tus datos en información visual y comprensible.</p>
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <h4>Mapas Interactivos (Pestaña Mapa)</h4>
+                                    <p>Selecciona una tabla y una columna con coordenadas o nombres de lugares para visualizar tus datos geográficamente.</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Gráficos Dinámicos (Pestaña Gráficos)</h4>
+                                    <p>Elige una tabla, una columna y un tipo de gráfico (circular, barras, etc.) para analizar la distribución de tus datos.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                <section id="enumerados" class="help-section">
-                    <h2>Trabajando con Enumerados (ENUM)</h2>
-
-                    <div class="info-block help-block">
-                        <h3>¿Qué es un ENUM? 🎯</h3>
-                        <p>Un ENUM es como una lista cerrada de opciones válidas. Por ejemplo:</p>
-                        <ul>
-                            <li>Tallas de ropa: [XS, S, M, L, XL]</li>
-                            <li>Estados de pedido: [Pendiente, Enviado, Entregado, Cancelado]</li>
-                            <li>Días de la semana: [Lunes, Martes, Miércoles...]</li>
-                        </ul>
-                    </div>
-
-                    <div class="benefits-block help-block">
-                        <h4>Ventajas de usar ENUM ✨</h4>
-                        <ul>
-                            <li>✅ Evita errores de escritura</li>
-                            <li>✅ Solo permite valores válidos</li>
-                            <li>✅ Más fácil de mantener</li>
-                            <li>✅ Mejor organización de datos</li>
-                        </ul>
-                    </div>
-
-                    <div class="warning-block help-block">
-                        <h4>⚠️ ¡Cuidado al Editar!</h4>
-                        <p>Modificar un ENUM existente puede ser peligroso porque:</p>
-                        <ul>
-                            <li>❌ Podrías invalidar datos existentes</li>
-                            <li>❌ Afecta a todas las tablas que lo usan</li>
-                            <li>❌ Los cambios son permanentes</li>
-                        </ul>
-                    </div>
-
-                    <div class="predefined-block help-block">
-                        <h4>ENUMs Predefinidos en easySQL 📚</h4>
-                        <p>easySQL incluye algunos ENUMs listos para usar:</p>
-                        <ul>
-                            <li><strong>EstadoPedido</strong>: Pendiente, En Proceso, Enviado, Entregado, Cancelado</li>
-                            <li><strong>Prioridad</strong>: Baja, Media, Alta, Urgente</li>
-                            <li><strong>TipoDocumento</strong>: DNI, NIE, Pasaporte</li>
-                        </ul>
-                        <p>Para usarlos, simplemente selecciónalos al crear una columna.</p>
-                    </div>
-
-                    <div class="exercise-block help-block">
-                        <h5>Ejercicio 1: Crear un ENUM de Categorías 🏷️</h5>
-                        <ol>
-                            <li>Haz clic en "Crear Enum" en easySQL</li>
-                            <li>Nombre del ENUM: "Categoria"</li>
-                            <li>Añade estos valores:
-                                <ul>
-                                    <li>Electrónica</li>
-                                    <li>Ropa</li>
-                                    <li>Alimentos</li>
-                                    <li>Hogar</li>
-                                </ul>
-                            </li>
-                        </ol>
-                    </div>
-
-                    <div class="exercise-block help-block">
-                        <h5>Ejercicio 2: Usar el ENUM creado 🛠️</h5>
-                        <ol>
-                            <li>Crea una nueva tabla llamada "Productos"</li>
-                            <li>Añade una columna "categoria" de tipo "Categoria" (el ENUM que creaste)</li>
-                            <li>Intenta añadir un valor que no esté en la lista para ver cómo easySQL lo impide</li>
-                        </ol>
+                <section id="personalizacion" class="help-section">
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>Personaliza tu Experiencia</h2>
+                        </div>
+                        <div class="block-content">
+                            <p>Ajusta la apariencia de la aplicación a tu gusto desde el panel de personalización (icono de paleta de colores).</p>
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <h4>Tema Oscuro y Claro</h4>
+                                    <p>Activa el modo oscuro para una visualización más cómoda en entornos con poca luz.</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Animaciones</h4>
+                                    <p>Activa o desactiva las animaciones de la interfaz, como el título flotante o las partículas de fondo.</p>
+                                </div>
+                                <div class="feature-item">
+                                    <h4>Layout de Inserción (.esql)</h4>
+                                    <p>Los desarrolladores pueden subir un archivo <code>.esql</code> para definir un layout de inserción personalizado y más complejo.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
+
+                <section id="faq" class="help-section">
+                    <div class="help-block visual-block">
+                        <div class="block-header">
+                            <h2>Preguntas Frecuentes y Soluciones</h2>
+                        </div>
+                        <div class="block-content">
+                            <div class="faq-columns">
+                                <div class="faq-column">
+                                    <h4>Para Desarrolladores</h4>
+                                    <div class="faq-item">
+                                        <strong>Error: "La tabla ya existe"</strong>
+                                        <p>Usa un nombre único o elimina la tabla existente antes de crearla.</p>
+                                    </div>
+                                    <div class="faq-item">
+                                        <strong>Error: "Clave primaria duplicada"</strong>
+                                        <p>El valor de la columna PK debe ser único para cada registro.</p>
+                                    </div>
+                                    <div class="faq-item">
+                                        <strong>Error: "ENUM no válido"</strong>
+                                        <p>El valor que intentas insertar no está en la lista de opciones del ENUM. Debes añadirlo primero.</p>
+                                    </div>
+                                </div>
+                                <div class="faq-column">
+                                    <h4>Para Administradores y Usuarios</h4>
+                                    <div class="faq-item">
+                                        <strong>¿Por qué no puedo editar el esquema?</strong>
+                                        <p>Solo los perfiles de "Desarrollador" tienen permisos para modificar la estructura de la base de datos.</p>
+                                    </div>
+                                    <div class="faq-item">
+                                        <strong>¿Qué hago si no aparece una opción en un desplegable?</strong>
+                                        <p>Esa lista (ENUM) es fija. Contacta con un desarrollador para que añada la nueva opción.</p>
+                                    </div>
+                                    <div class="faq-item">
+                                        <strong>Los datos no aparecen en el mapa/gráfico.</strong>
+                                        <p>Asegúrate de que los datos estén bien insertados y que las columnas seleccionadas sean las correctas (ej. una columna de texto para un mapa).</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </div>
     </div>
@@ -839,6 +403,7 @@
             <div class="shape"></div>
         </div>
         <h1 id="titulin">easySQL</h1>
+        <p class="subtitle">Gestión de Bases de Datos Simplificada</p>
     </div>
     <!-- Menú de pestañas -->
     <div class="tab-menu">
@@ -860,7 +425,6 @@
             <select id="enumDropdown"></select>
             <button onclick="openDeleteEnumModal(document.getElementById('enumDropdown').value)">Borrar Enum</button>
             <button onclick="openEditEnumModal()">Editar Enum</button>
-            <button onclick="openRelationshipModal()">Gestionar Relaciones</button>
             <button onclick="downloadSQL()">Descargar SQL</button>
             <button onclick="document.getElementById('sqlFileInput').click()">Cargar SQL</button>
             <input type="file" id="sqlFileInput" style="display: none" accept=".sql" onchange="loadSQL(event)">
@@ -881,6 +445,9 @@
     <!-- Pestaña Datos -->
     <div id="datos" class="tab-content">
         <h2>Datos Insertados</h2>
+        <div class="search-header">
+            <h3>Buscar y filtrar</h3>
+        </div>
         <div class="data-actions">
             <button onclick="downloadInsertions()">Descargar Inserciones</button>
             <button onclick="document.getElementById('insertionsFileInput').click()">Cargar Inserciones</button>
@@ -890,10 +457,27 @@
     </div>
     <!-- Pestaña Consultas -->
     <div id="consultas" class="tab-content">
-        <h2>Consultas SQL</h2>
-        <textarea id="sql-input" placeholder="Escribe tu consulta SQL aquí (ej. INSERT, SELECT...)"></textarea>
-        <button onclick="executeSQL()">Ejecutar SQL</button>
-        <div id="result"></div>
+        <h2>Consultas con IA</h2>
+        <div class="ia-query-container">
+            <div class="ia-input-group centered">
+                <label for="apiKey">API Key de IA (ej. Gemini):</label>
+                <input type="password" id="apiKey" placeholder="Pega tu API Key aquí para usar la IA">
+            </div>
+            <div class="ia-input-group centered">
+                <label for="naturalQuery">Pregunta en lenguaje natural:</label>
+                <textarea id="naturalQuery" rows="4" placeholder="Ej: ¿Cuántas víctimas había en Barcelona en 2023?"></textarea>
+                <button onclick="generateAIQuery()">Generar Consulta SQL</button>
+            </div>
+            <div class="ia-input-group centered">
+                <label for="generatedSql">Consulta SQL generada (editable):</label>
+                <textarea id="generatedSql" rows="6" placeholder="Aquí aparecerá la consulta SQL generada..."></textarea>
+                <button onclick="executeGeneratedSQL()">Ejecutar Consulta</button>
+            </div>
+            <div class="ia-output">
+                <label>Resultado de la consulta:</label>
+                <pre id="sqlResult"></pre>
+            </div>
+        </div>
     </div>
     <!-- Pestaña Mapa -->
     <div id="mapa" class="tab-content">
@@ -1026,7 +610,9 @@
     </div>
     <!-- Scripts -->
     <script src="scripts/notifications.js"></script>
+    <script src="scripts/warningDialog.js"></script>
     <script src="scripts/main.js"></script>
+    <script src="scripts/tableDataMigrator.js"></script>
     <script src="scripts/createTable.js"></script>
     <script src="scripts/editTable.js"></script>
     <script src="scripts/deleteTable.js"></script>
@@ -1044,6 +630,10 @@
     <script src="scripts/mapCoordinates.js"></script>
     <script src="scripts/colorTheme.js"></script>
     <script src="scripts/help.js"></script>
+    <script src="eSQL/custom-insert.js"></script>
+    <!-- Añadir antes de cerrar el body -->
+    <link rel="stylesheet" href="styles/insertions.css">
+    <script src="scripts/labelScroller.js"></script>
     <script>
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
@@ -1051,6 +641,409 @@
             }
         });
     </script>
+    <style>
+/* Estilos para el menú de ayuda */
+.help-navigation {
+    background: linear-gradient(135deg, #f5edff 0%, #e4cdff 100%);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.dark-mode .help-navigation {
+    background: linear-gradient(135deg, #2a1f2d 0%, #382839 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.help-navigation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;  /* Centra el contenido horizontalmente */
+    padding: 1rem 1.5rem;
+    margin: 0.5rem 0;
+    background: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #7e3f7a;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(155,79,150,0.08);
+    text-align: center;  /* Centra el texto */
+}
+
+.dark-mode .nav-item {
+    background: #3a2950;
+    color: #e4cdff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.nav-item:hover {
+    transform: translateX(5px);
+    background: #f8f2ff;
+    box-shadow: 0 4px 12px rgba(155,79,150,0.12);
+}
+
+.dark-mode .nav-item:hover {
+    background: #4a3960;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.nav-item.active {
+    background: #9b4f96;
+    color: #fff;
+}
+
+.dark-mode .nav-item.active {
+    background: #7e3f7a;
+    color: #fff;
+}
+
+.feature-list {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-item h4 {
+    color: #9b4f96;
+    margin-bottom: 0.5rem;
+}
+
+.feature-item p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #666;
+}
+
+.dark-mode .feature-item p {
+    color: #ccc;
+}
+
+.faq-columns {
+    display: flex;
+    gap: 2rem;
+}
+
+.faq-column {
+    flex: 1;
+}
+
+.faq-column h4 {
+    color: #9b4f96;
+    border-bottom: 2px solid #f5edff;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.dark-mode .faq-column h4 {
+    border-bottom-color: #3a2950;
+}
+
+.faq-item {
+    margin-bottom: 1.5rem;
+}
+
+.faq-item strong {
+    display: block;
+    color: #7e3f7a;
+    margin-bottom: 0.3rem;
+}
+
+.dark-mode .faq-item strong {
+    color: #e4cdff;
+}
+
+.faq-item p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #666;
+    margin: 0;
+}
+
+.dark-mode .faq-item p {
+    color: #bbb;
+}
+
+/* Estilos para la nueva pestaña de Consultas con IA */
+.ia-query-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+.ia-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.ia-input-group.centered {
+    align-items: center;
+}
+.ia-input-group.centered input,
+.ia-input-group.centered textarea {
+    width: 80%;
+    max-width: 800px;
+}
+.ia-input-group.centered button {
+    width: auto;
+    align-self: center;
+    margin-top: 0.5rem;
+}
+.column-order-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: 5px;
+}
+.move-col-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-primary);
+    padding: 0;
+    width: 24px;
+    height: 16px;
+    font-size: 10px;
+    line-height: 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+.move-col-btn:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+.move-col-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+.column-input {
+    transition: all 0.3s ease-in-out;
+}
+.ia-input-group label {
+    font-weight: bold;
+    color: var(--color-primary);
+}
+/* Estilos para el login */
+.login-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+.login-container {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-container h2 {
+    margin-bottom: 1.5rem;
+    color: #7e3f7a;
+}
+
+.login-field {
+    margin-bottom: 1.2rem;
+    text-align: left;
+}
+
+.login-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.login-field input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.login-field input:focus {
+    border-color: #7e3f7a;
+    outline: none;
+}
+
+.login-button {
+    width: 100%;
+    padding: 0.8rem;
+    background: #9b4f96;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-button:hover {
+    background: #7e3f7a;
+}
+
+.role-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+    background: #f5edff;
+    border-radius: 8px;
+}
+
+.role-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #7e3f7a;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.role-btn.active {
+    background: #fff;
+    color: #9b4f96;
+    box-shadow: 0 2px 8px rgba(155,79,150,0.15);
+}
+
+.guest-access {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e7d0e6;
+    text-align: center;
+}
+
+.guest-button {
+    background: transparent;
+    border: 2px solid #9b4f96;
+    color: #9b4f96;
+    padding: 0.7rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.guest-button:hover {
+    background: #f5edff;
+}
+
+.tab-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+</style>
+
+<script>
+// Añadir interactividad al menú
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// Animación al hacer scroll
+const observerOptions = {
+    threshold: 0.1
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+            // Asegura que los estilos del modo oscuro se apliquen correctamente
+            if (document.body.classList.contains('dark-mode')) {
+                entry.target.style.background = '#3a2950';
+            }
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.static-faq').forEach(faq => {
+    faq.style.opacity = '0';
+    faq.style.transform = 'translateY(20px)';
+    observer.observe(faq);
+});
+
+// Lógica de autenticación
+let currentRole = 'developer'; // Rol por defecto
+
+document.querySelectorAll('.role-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        currentRole = this.getAttribute('data-role');
+    });
+});
+
+function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    // Aquí iría la lógica de autenticación real
+    console.log(`Intento de acceso: ${username}, Rol: ${currentRole}`);
+
+    // Simulación de éxito en el login
+    setTimeout(() => {
+        alert(`Bienvenido ${username}, has accedido como ${currentRole}`);
+        closeLogin();
+    }, 1000);
+}
+
+function accessAsGuest() {
+    // Lógica para acceso como invitado
+    alert('Has accedido como invitado');
+    closeLogin();
+}
+
+function closeLogin() {
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Abrir el login al cargar
+window.onload = function() {
+    document.body.style.overflow = 'hidden';
+};
+
+// Lógica para el botón de subir archivos .esql
+document.getElementById('esql-upload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            // Aquí iría la lógica para procesar el contenido del archivo .esql
+            console.log('Contenido del archivo .esql:', content);
+        };
+        reader.readAsText(file);
+    }
+});
+</script>
 </body>
 </html>
 
