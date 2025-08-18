@@ -28,6 +28,31 @@ function setupDataTab() {
 
     updateSearchFields();
     showAllData();
+
+    // Escuchar cambios estructurales para refrescar el select
+    document.addEventListener('tableStructureChanged', () => {
+        refreshTableFilter();
+        updateSearchFields();
+        showAllData();
+    });
+}
+
+// Nuevo: repoblar el select de tablas preservando selección válida
+function refreshTableFilter(forcedSelected = null) {
+    const select = document.getElementById('table-filter');
+    if (!select || !window.schema || !schema.tables) return;
+    const prev = forcedSelected !== null ? forcedSelected : select.value;
+    const tableNames = Object.keys(schema.tables).filter(t => !schema.tables[t].isEnum);
+    const options = ['<option value="">Todas las tablas</option>'];
+    tableNames.forEach(t => {
+        options.push(`<option value="${t}" ${t === prev ? 'selected' : ''}>${t}</option>`);
+    });
+    select.innerHTML = options.join('');
+    // Si la tabla seleccionada ya no existe, limpiar campos
+    if (prev && !schema.tables[prev]) {
+        select.value = '';
+        updateSearchFields();
+    }
 }
 
 function updateSearchFields() {

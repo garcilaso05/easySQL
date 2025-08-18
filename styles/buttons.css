@@ -7,7 +7,7 @@ button, .btn {
     border: none;
     border-radius: var(--border-radius-md);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -16,6 +16,39 @@ button, .btn {
     min-height: 40px;
     position: relative;
     overflow: hidden;
+    transform: translateY(0) scale(1);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Efecto ripple mejorado */
+button::before, .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Efecto shimmer para botones primarios */
+button::after, .btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+    z-index: 2;
+    pointer-events: none;
 }
 
 /* Botón primario */
@@ -23,17 +56,29 @@ button, .btn {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     color: var(--color-white);
     box-shadow: var(--shadow-sm);
+    position: relative;
 }
 
 .btn-primary:hover, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: var(--shadow-lg);
     background: linear-gradient(135deg, var(--color-primary-hover) 0%, #357ABD 100%);
 }
 
+.btn-primary:hover::after, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):hover::after {
+    left: 100%;
+}
+
 .btn-primary:active, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active::before, button:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):active::before {
+    width: 120px;
+    height: 120px;
+    opacity: 1;
+    transition: width 0.2s ease, height 0.2s ease;
 }
 
 /* Botón secundario */
@@ -47,8 +92,13 @@ button, .btn {
 .btn-secondary:hover {
     background: var(--color-bg-hover);
     border-color: var(--color-primary);
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.01);
     box-shadow: var(--shadow-md);
+}
+
+.btn-secondary:active {
+    transform: translateY(0) scale(0.99);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Botón outline */
@@ -56,13 +106,30 @@ button, .btn {
     background: transparent;
     color: var(--color-primary);
     border: 2px solid var(--color-primary);
+    position: relative;
+}
+
+.btn-outline::before {
+    background: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .btn-outline:hover {
-    background: var(--color-primary);
     color: var(--color-white);
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.01);
     box-shadow: var(--shadow-md);
+}
+
+.btn-outline:hover::before {
+    opacity: 0.1;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius-md);
+}
+
+.btn-outline:active {
+    transform: translateY(0) scale(0.99);
 }
 
 /* Botón ghost */
@@ -76,6 +143,11 @@ button, .btn {
 .btn-ghost:hover {
     background: var(--color-bg-hover);
     border-radius: var(--border-radius-md);
+    transform: scale(1.05);
+}
+
+.btn-ghost:active {
+    transform: scale(0.95);
 }
 
 /* Tamaños de botón */
@@ -99,23 +171,9 @@ button:disabled, .btn:disabled {
     box-shadow: none !important;
 }
 
-/* Efecto ripple en botones */
-button::before, .btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.3s, height 0.3s;
-}
-
-button:active::before, .btn:active::before {
-    width: 300px;
-    height: 300px;
+button:disabled::before, .btn:disabled::before,
+button:disabled::after, .btn:disabled::after {
+    display: none;
 }
 
 /* Grupos de botones */
@@ -129,4 +187,63 @@ button:active::before, .btn:active::before {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+}
+
+/* Animación de entrada para botones dinámicos */
+@keyframes buttonSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.btn-animated-entry {
+    animation: buttonSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Botones con iconos */
+.btn-icon {
+    gap: var(--spacing-sm);
+}
+
+.btn-icon:hover {
+    gap: calc(var(--spacing-sm) + 2px);
+}
+
+/* Botones de acción específicos */
+.btn-danger {
+    background: linear-gradient(135deg, var(--color-error) 0%, #dc2626 100%);
+    color: var(--color-white);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--color-success) 0%, #059669 100%);
+    color: var(--color-white);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--color-warning) 0%, #d97706 100%);
+    color: var(--color-white);
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
 }

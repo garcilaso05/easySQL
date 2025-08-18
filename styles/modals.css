@@ -43,6 +43,7 @@
     }
 }
 
+/* Botón de cierre del modal mejorado */
 .close {
     position: absolute;
     top: var(--spacing-lg);
@@ -57,14 +58,22 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: all var(--transition-fast);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: var(--color-bg-hover);
+    opacity: 1 !important; /* Forzar opacidad completa */
 }
 
 .close:hover {
     background: var(--color-error);
     color: var(--color-white);
-    transform: scale(1.1);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    opacity: 1 !important; /* Mantener opacidad en hover */
+}
+
+.close:active {
+    transform: scale(0.9) rotate(90deg);
+    opacity: 1 !important; /* Mantener opacidad en active */
 }
 
 .modal-content h2 {
@@ -118,6 +127,40 @@
     margin-top: var(--spacing-xl);
     padding-top: var(--spacing-lg);
     border-top: 1px solid var(--color-border);
+}
+
+.modal-footer button {
+    min-width: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-footer button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.modal-footer button:hover::before {
+    left: 100%;
+}
+
+/* Animaciones específicas para botones de modal */
+.modal-content button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-content button:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.modal-content button:active {
+    transform: translateY(0) scale(0.98);
 }
 
 /* Modal responsivo */

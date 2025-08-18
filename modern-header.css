@@ -1,0 +1,332 @@
+/* Modern Background - matching landing page */
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.gradient-bg {
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 102, 255, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 128, 255, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(0, 204, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #000814 0%, #001d3d 50%, #003566 100%);
+    position: relative;
+}
+
+.gradient-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(45deg, transparent 30%, rgba(0, 102, 255, 0.1) 50%, transparent 70%),
+        linear-gradient(-45deg, transparent 30%, rgba(0, 128, 255, 0.05) 50%, transparent 70%);
+    animation: meshMove 20s ease-in-out infinite;
+}
+
+.floating-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.floating-shapes::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 102, 255, 0.03) 2px,
+            rgba(0, 102, 255, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 128, 255, 0.03) 2px,
+            rgba(0, 128, 255, 0.03) 4px
+        );
+    animation: gridMove 30s linear infinite;
+}
+
+/* Header styling - matching landing page */
+.top-bar {
+    /* backdrop-filter: blur(20px); <-- Eliminado blur */
+    background: rgba(0, 102, 255, 0.05);
+    border-radius: 25px;
+    margin: 1rem; /* Reduced from 2rem to 1rem to prevent overflow */
+    padding: 0.5rem 1rem 0.7rem; /* Reducido padding superior */
+    border: 1px solid rgba(0, 102, 255, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 100;
+    min-height: unset;
+    height: auto !important;
+    box-sizing: border-box; /* Include padding in width calculation */
+    flex-wrap: nowrap; /* No permitir salto en modo fila */
+    gap: 1.5rem;
+    align-content: flex-start; /* Permite múltiples filas compactas */
+    overflow: visible;
+    transition: padding 0.25s ease, height 0.25s ease;
+    width: calc(100% - 2rem); /* Evita overflow horizontal (margen 1rem a cada lado) */
+}
+
+.top-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00ccff, transparent);
+}
+
+/* Remove left-section - put logo directly in top-bar */
+.left-section {
+    display: none !important;
+}
+
+.logo-text {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #00ccff, #0066ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0.75rem 0 1.5rem; /* Más margen izquierda y ligero a la derecha */
+    text-shadow: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+
+.tab-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    flex-wrap: nowrap;
+    flex: 1;
+    justify-content: flex-start;
+    min-width: 0; /* Allow shrinking */
+    overflow-x: hidden;   /* solo controlar desbordes horizontales */
+    overflow-y: visible;  /* permitir que sobresalga blur / elevación */
+}
+
+.tab-nav-item {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.6rem 1.15rem; /* Más grande */
+    border-radius: 10px;
+    transition: all 0.3s ease, padding 0.25s ease, font-size 0.25s ease, background 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    flex: 1 1 0;          /* Todos se reparten igual en modo fila */
+    min-width: 0;         /* Permitir que contraigan */
+    min-height: 0;
+    text-align: center;
+    outline: none;
+    will-change: transform, box-shadow;
+}
+
+.tab-nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.tab-nav-item:hover::before {
+    left: 100%;
+}
+
+.tab-nav-item:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    text-decoration: none; /* Eliminar subrayado en hover */
+}
+
+.tab-nav-item:focus,
+.tab-nav-item:active {
+    outline: none;
+    box-shadow: 0 0 0 0 transparent; /* evita borde "feo" */
+    text-decoration: none; /* Eliminar subrayado en focus/active */
+}
+
+/* (Opcional foco accesible: descomentar si quieres un anillo suave)
+.tab-nav-item:focus-visible {
+    box-shadow: 0 0 0 2px rgba(0,204,255,0.35);
+}
+*/
+
+.tab-nav-item.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, #0066ff, #00ccff);
+    box-shadow: 
+        0 4px 15px rgba(0, 102, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    text-decoration: none; /* Eliminar subrayado en estado activo */
+}
+
+.tab-nav-item.active:hover {
+    /* transform: translateY(-2px); <-- Eliminado movimiento vertical */
+    box-shadow: 
+        0 6px 20px rgba(0, 102, 255, 0.4),
+        0 0 15px rgba(0, 204, 255, 0.3);
+    text-decoration: none; /* Eliminar subrayado en active hover */
+}
+
+/* Estado compacto (todavía en una sola línea) */
+.top-bar.compact .tab-nav-item {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.78rem;
+    border-radius: 8px;
+}
+
+/* Estado apilado */
+.top-bar.stacked {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.top-bar.stacked .logo-text {
+    margin: 0;
+    order: 0;
+    text-align: center;
+}
+
+.top-bar.stacked .tab-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+.top-bar.stacked .tab-nav-item {
+    flex: 0 0 120px;      /* Ancho fijo uniforme */
+    max-width: 120px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Remove right section - no utility buttons */
+.right-section {
+    display: none;
+}
+
+/* Hide old elements */
+.tab-menu {
+    display: none !important;
+}
+
+.title-container {
+    display: none !important;
+}
+
+/* Hide color picker panel and utility buttons from the old layout */
+.color-picker-panel,
+.top-btn {
+    display: none !important;
+}
+
+/* Main Container - Add margins for tab content */
+.main-container {
+    margin: 0 2rem 2rem;
+    background: rgba(0, 102, 255, 0.02);
+    /* backdrop-filter: blur(20px); <-- Eliminado blur */
+    border-radius: 25px;
+    border: 1px solid rgba(0, 102, 255, 0.1);
+    min-height: calc(100vh - 200px);
+    position: relative;
+}
+
+/* Update existing tab content styling */
+.tab-content {
+    padding: 2rem;
+    color: white;
+    margin: 0 2rem 2rem; /* Add horizontal margins to tab content */
+    border-radius: 15px;
+    min-height: calc(100vh - 180px);
+}
+
+/* Forzar color blanco en headings */
+h1, h2, h3, h4 {
+    color: #ffffff !important;
+}
+
+/* Neutralizar cualquier resto de modo oscuro (si alguna clase se aplica accidentalmente) */
+.dark-mode, .dark-mode * {
+    background: inherit !important;
+    color: inherit !important;
+}
+
+/* Animations */
+@keyframes meshMove {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+        transform: translate(-20px, -20px) rotate(1deg);
+    }
+    66% {
+        transform: translate(20px, -10px) rotate(-1deg);
+    }
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(4px, 4px);
+    }
+}
+
+/* Eliminamos/neutralizamos media queries previas para evitar estados intermedios */
+@media (max-width: 2000px) {
+    /* Intencionalmente vacío: se reemplaza por lógica JS */
+}
+
+/* Forzar que otros estilos externos no impongan altura fija */
+.top-bar,
+.top-bar * {
+    box-sizing: border-box;
+}

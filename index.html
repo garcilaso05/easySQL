@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=1.0">
     <title>easySQL - Gestión de Bases de Datos Simplificada</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="modern-header.css">
     <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.2/dist/alasql.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.0/dist/vis-network.min.js"></script>
     <!-- Leaflet CSS -->
@@ -36,9 +37,19 @@
             background-color: #f0f0f0;
             border-bottom: 1px solid #ccc;
         }
+        /* Eliminados bloques .dark-mode (ya no hay modo oscuro) */
+        /* Forzar (redundante) headings blancos si se carga antes que modern-header.css */
+        h1, h2, h3, h4 { color: #ffffff !important; }
     </style>
 </head>
 <body>
+    <!-- Add background container matching landing page -->
+    <div class="background-container">
+        <div class="gradient-bg">
+            <div class="floating-shapes"></div>
+        </div>
+    </div>
+    
     <div class="login-overlay" id="loginOverlay">
         <div class="login-container">
             <h2>Iniciar Sesión</h2>
@@ -65,357 +76,20 @@
         </div>
     </div>
     <div class="top-bar">
-        <span id="datetime"></span>
-        <div class="top-buttons">
-            <button id="colorPickerBtn" class="top-btn">
-                <img src="styles/color.png" alt="Color Theme">
-            </button>
-            <button class="top-btn" onclick="document.getElementById('sqlFileInput').click()">
-                <img src="styles/cargarSQL.png" alt="Cargar SQL">
-            </button>
-            <button class="top-btn" onclick="downloadSQL()">
-                <img src="styles/descargarSQL.png" alt="Descargar SQL">
-            </button>
-            <button class="top-btn" onclick="document.getElementById('insertionsFileInput').click()">
-                <img src="styles/cargarINS.png" alt="Cargar Inserciones">
-            </button>
-            <button class="top-btn" onclick="downloadInsertions()">
-                <img src="styles/descargarINS.png" alt="Descargar Inserciones">
-            </button>
-            <button id="helpBtn" class="top-btn">
-                <img src="styles/eSQL.png" alt="easySQL Guide" class="header-logo">
-            </button>
-            <!-- El botón para subir .esql se ha movido al panel de personalización -->
-        </div>
-        <div id="colorPickerPanel" class="color-picker-panel">
-            <h2 class="settings-title">PERSONALIZACIÓN</h2>
-            <div class="settings-section">
-                <h3 class="section-title">Color de Fondo</h3>
-                <!-- Eliminar el slider y gradiente -->
-                <!-- <div class="color-slider-container">
-                    <input type="range" id="colorSlider" min="0" max="100" value="100">
-                    <div class="color-gradient"></div>
-                </div> -->
-                <!-- Añadir switch modo oscuro -->
-                <div class="switch-container" style="margin-top:1rem;">
-                    <span class="switch-label">Modo oscuro</span>
-                    <label class="switch">
-                        <input type="checkbox" id="darkModeSwitch" checked="false">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-            <div class="settings-section">
-                <h3 class="section-title">Animaciones</h3>
-                <div class="animation-switches">
-                    <div class="switch-container">
-                        <span class="switch-label">Título flotante</span>
-                        <label class="switch">
-                            <input type="checkbox" id="titleAnimation" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="switch-container">
-                        <span class="switch-label">Partículas</span>
-                        <label class="switch">
-                            <input type="checkbox" id="particlesAnimation" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="switch-container">
-                        <span class="switch-label">Fondo</span>
-                        <label class="switch">
-                            <input type="checkbox" id="circlesAnimation" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div id="shapesSection" class="settings-section" style="display: none;">
-                <h3 class="section-title">Formas de fondo</h3>
-                <div class="shapes-selector">
-                    <div class="shape-options">
-                        <label class="shape-option">
-                            <input type="radio" name="bgShape" value="circle" checked>
-                            <span class="shape-icon circle"></span>
-                        </label>
-                        <label class="shape-option">
-                            <input type="radio" name="bgShape" value="square">
-                            <span class="shape-icon square"></span>
-                        </label>
-                        <label class="shape-option">
-                            <input type="radio" name="bgShape" value="triangle">
-                            <span class="shape-icon triangle"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-section">
-                <h3 class="section-title">Layout de Inserción</h3>
-                <div class="esql-upload-container">
-                    <label for="esql-upload" class="btn-upload-esql">
-                        <img src="styles/upload.png" alt="Subir .esql">
-                        <span>Cargar Archivo .esql</span>
-                    </label>
-                    <input type="file" id="esql-upload" accept=".esql" style="display: none;">
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Modal de Ayuda -->
-    <div id="helpModal" class="help-modal">
-        <div class="help-content">
-            <span class="close" onclick="closeHelpModal()">&times;</span>
-            <div class="help-sidebar">
-                <nav class="help-navigation">
-                    <ul>
-                        <li><a href="#introduccion" class="nav-item active">
-                            <span class="nav-icon">👋</span>
-                            <span class="nav-text">Introducción</span>
-                        </a></li>
-                        <li><a href="#esquema-bd" class="nav-item">
-                            <span class="nav-icon">🏗️</span>
-                            <span class="nav-text">Esquema BD</span>
-                        </a></li>
-                        <li><a href="#gestion-datos" class="nav-item">
-                            <span class="nav-icon">💾</span>
-                            <span class="nav-text">Gestión de Datos</span>
-                        </a></li>
-                        <li><a href="#visualizacion" class="nav-item">
-                            <span class="nav-icon">📊</span>
-                            <span class="nav-text">Visualización</span>
-                        </a></li>
-                        <li><a href="#personalizacion" class="nav-item">
-                            <span class="nav-icon">🎨</span>
-                            <span class="nav-text">Personalización</span>
-                        </a></li>
-                        <li><a href="#faq" class="nav-item">
-                            <span class="nav-icon">❓</span>
-                            <span class="nav-text">FAQ y Soporte</span>
-                        </a></li>
-                    </ul>
-                </nav>
-            </div>
-            <div class="help-main">
-
-                <section id="introduccion" class="help-section active">
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>¿Qué es <span style="color:#9b4f96">ECO A SU MEMORIA</span>?</h2>
-                        </div>
-                        <div class="block-content">
-                            <p>
-                                <strong>ECO A SU MEMORIA</strong> es una aplicación web pensada para simplificar y mejorar la gestión de los datos de casos de feminicidios en España.
-                            </p>
-                            <div class="block-highlight">
-                                <span class="block-badge">Hackatón URV</span>
-                                <p>
-                                    El proyecto nació en una hackatón de la <strong>Universitat Rovira i Virgili</strong>, con un equipo interdisciplinar.
-                                </p>
-                            </div>
-                            <div class="block-highlight">
-                                <span class="block-badge">Objetivo</span>
-                                <p>
-                                    Facilitar el trabajo de quienes recopilan, gestionan y analizan información sobre feminicidios, permitiendo una gestión centralizada, segura y eficiente.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>Niveles de Acceso y Permisos</h2>
-                        </div>
-                        <div class="block-content">
-                            <div class="access-cards">
-                                <div class="access-card dev">
-                                    <div class="access-title">👨‍💻 Desarrollador</div>
-                                    <ul>
-                                        <li>Control total sobre la estructura de la base de datos.</li>
-                                        <li>Gestión completa de datos.</li>
-                                        <li>Acceso a todas las funcionalidades.</li>
-                                    </ul>
-                                </div>
-                                <div class="access-card admin">
-                                    <div class="access-title">🛠️ Administrador</div>
-                                    <ul>
-                                        <li>Gestionar inserciones (crear, editar, borrar).</li>
-                                        <li>Visualizar y exportar datos.</li>
-                                    </ul>
-                                </div>
-                                <div class="access-card externo">
-                                    <div class="access-title">👀 Externo</div>
-                                    <ul>
-                                        <li>Visualizar datos, mapas y gráficos de forma anónima.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="esquema-bd" class="help-section">
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>Gestión del Esquema (Solo Desarrolladores)</h2>
-                        </div>
-                        <div class="block-content">
-                            <p>La pestaña <strong>Esquema</strong> es el centro de control para la estructura de tu base de datos.</p>
-                            <div class="feature-list">
-                                <div class="feature-item">
-                                    <h4>Crear Tablas</h4>
-                                    <p>Usa el botón "Crear Tabla" para definir nuevas tablas, sus columnas y tipos de datos (Texto, Número, Fecha, Booleano, etc.).</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Crear Enums</h4>
-                                    <p>Define listas de valores predefinidos (Enums) para usarlos como tipos de datos en tus tablas, garantizando la consistencia.</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Relaciones</h4>
-                                    <p>Crea relaciones entre tablas directamente desde el diagrama visual para conectar tus datos de forma lógica.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="gestion-datos" class="help-section">
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>Inserción y Gestión de Datos</h2>
-                        </div>
-                        <div class="block-content">
-                            <p>La aplicación ofrece dos formas flexibles de introducir y modificar datos:</p>
-                            <div class="feature-list">
-                                <div class="feature-item">
-                                    <h4>Formularios Dinámicos (Pestaña Inserciones)</h4>
-                                    <p>Para cada tabla, se genera un formulario a medida. Ideal para añadir registros uno por uno de forma guiada.</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Interfaz tipo Excel (Pestaña Excel Import)</h4>
-                                    <p>Perfecta para inserciones masivas. Selecciona una tabla y añade o modifica múltiples filas a la vez en una parrilla intuitiva.</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Visualización y Borrado (Pestaña Datos)</h4>
-                                    <p>Consulta todos los datos insertados en tablas, con opciones para buscar, filtrar y eliminar registros.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="visualizacion" class="help-section">
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>Visualización de Datos: Mapas y Gráficos</h2>
-                        </div>
-                        <div class="block-content">
-                            <p>Transforma tus datos en información visual y comprensible.</p>
-                            <div class="feature-list">
-                                <div class="feature-item">
-                                    <h4>Mapas Interactivos (Pestaña Mapa)</h4>
-                                    <p>Selecciona una tabla y una columna con coordenadas o nombres de lugares para visualizar tus datos geográficamente.</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Gráficos Dinámicos (Pestaña Gráficos)</h4>
-                                    <p>Elige una tabla, una columna y un tipo de gráfico (circular, barras, etc.) para analizar la distribución de tus datos.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="personalizacion" class="help-section">
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>Personaliza tu Experiencia</h2>
-                        </div>
-                        <div class="block-content">
-                            <p>Ajusta la apariencia de la aplicación a tu gusto desde el panel de personalización (icono de paleta de colores).</p>
-                            <div class="feature-list">
-                                <div class="feature-item">
-                                    <h4>Tema Oscuro y Claro</h4>
-                                    <p>Activa el modo oscuro para una visualización más cómoda en entornos con poca luz.</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Animaciones</h4>
-                                    <p>Activa o desactiva las animaciones de la interfaz, como el título flotante o las partículas de fondo.</p>
-                                </div>
-                                <div class="feature-item">
-                                    <h4>Layout de Inserción (.esql)</h4>
-                                    <p>Los desarrolladores pueden subir un archivo <code>.esql</code> para definir un layout de inserción personalizado y más complejo.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="faq" class="help-section">
-                    <div class="help-block visual-block">
-                        <div class="block-header">
-                            <h2>Preguntas Frecuentes y Soluciones</h2>
-                        </div>
-                        <div class="block-content">
-                            <div class="faq-columns">
-                                <div class="faq-column">
-                                    <h4>Para Desarrolladores</h4>
-                                    <div class="faq-item">
-                                        <strong>Error: "La tabla ya existe"</strong>
-                                        <p>Usa un nombre único o elimina la tabla existente antes de crearla.</p>
-                                    </div>
-                                    <div class="faq-item">
-                                        <strong>Error: "Clave primaria duplicada"</strong>
-                                        <p>El valor de la columna PK debe ser único para cada registro.</p>
-                                    </div>
-                                    <div class="faq-item">
-                                        <strong>Error: "ENUM no válido"</strong>
-                                        <p>El valor que intentas insertar no está en la lista de opciones del ENUM. Debes añadirlo primero.</p>
-                                    </div>
-                                </div>
-                                <div class="faq-column">
-                                    <h4>Para Administradores y Usuarios</h4>
-                                    <div class="faq-item">
-                                        <strong>¿Por qué no puedo editar el esquema?</strong>
-                                        <p>Solo los perfiles de "Desarrollador" tienen permisos para modificar la estructura de la base de datos.</p>
-                                    </div>
-                                    <div class="faq-item">
-                                        <strong>¿Qué hago si no aparece una opción en un desplegable?</strong>
-                                        <p>Esa lista (ENUM) es fija. Contacta con un desarrollador para que añada la nueva opción.</p>
-                                    </div>
-                                    <div class="faq-item">
-                                        <strong>Los datos no aparecen en el mapa/gráfico.</strong>
-                                        <p>Asegúrate de que los datos estén bien insertados y que las columnas seleccionadas sean las correctas (ej. una columna de texto para un mapa).</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-            </div>
-        </div>
+        <h1 class="logo-text">easySQL</h1>
+        <nav class="tab-nav">
+            <a href="#" class="tab-nav-item active" onclick="showTab('esquema')">Esquema</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('inserciones')">Inserciones</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('datos')">Datos</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('consultas')">Consultas</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('mapa')">Mapa</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('graficos')">Gráficos</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('excelImport')">Excel Import</a>
+        </nav>
     </div>
     <div class="background-circles"></div>
-    <div class="title-container">
-        <div class="bg-shapes">
-            <div class="shape"></div>
-            <div class="shape"></div>
-            <div class="shape"></div>
-            <div class="shape"></div>
-        </div>
-        <h1 id="titulin">easySQL</h1>
-        <p class="subtitle">Gestión de Bases de Datos Simplificada</p>
-    </div>
-    <!-- Menú de pestañas -->
-    <div class="tab-menu">
-        <button class="tab-button active" onclick="showTab('esquema')">Esquema</button>
-        <button class="tab-button" onclick="showTab('inserciones')">Inserciones</button>
-        <button class="tab-button" onclick="showTab('datos')">Datos</button>
-        <button class="tab-button" onclick="showTab('consultas')">Consultas</button>
-        <button class="tab-button" onclick="showTab('mapa')">Mapa</button>
-        <button class="tab-button" onclick="showTab('graficos')">Gráficos</button>
-        <button class="tab-button" onclick="showTab('excelImport')">Excel Import</button>
-    </div>
-    <!-- Pestaña Esquema -->
+    <!-- Menú de pestañas eliminado -->
+    <!-- Nueva lógica de navegación -->
     <div id="esquema" class="tab-content active">
         <div id="buttons-container">
             <button onclick="openCreateTableModal()">Crear Tabla</button>
@@ -532,12 +206,12 @@
     </div>
     <!-- Modal para crear tabla -->
     <div id="createTableModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh; max-width: 800px; width: 90%;">
             <span class="close" onclick="closeCreateTableModal()">×</span>
             <h2>Crear Nueva Tabla</h2>
             <label for="tableName">Nombre de la tabla:</label>
             <input type="text" id="tableName" class="table-name-input" placeholder="ej. estudiantes"><br><br>
-            <h3>Elementos (Columnas)</h3>
+            <label for="columnsElements">Elementos columnas:</label>
             <div id="columnsContainer"></div>
             <button onclick="addColumnInput()">Añadir Elemento</button><br><br>
             <button onclick="createTableFromForm()">Crear Tabla</button>
@@ -545,10 +219,10 @@
     </div>
     <!-- Modal para editar tabla -->
     <div id="editTableModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh; max-width: 800px; width: 90%;">
             <span class="close" onclick="closeEditTableModal()">×</span>
             <h2>Editar Tabla</h2>
-            <h3>Elementos (Columnas)</h3>
+            <label for="columnsElements">Elementos columnas:</label>
             <div id="editColumnsContainer"></div>
             <button onclick="addColumnInputEdit()">Añadir Elemento</button><br><br>
             <button onclick="saveTableChanges()">Guardar Cambios</button>
@@ -557,7 +231,7 @@
     </div>
     <!-- Modal para crear enum -->
     <div id="createEnumModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh;">
             <span class="close" onclick="closeCreateEnumModal()">×</span>
             <h2>Crear Nuevo Enum</h2>
             <label for="enumName">Nombre del Enum:</label>
@@ -570,7 +244,7 @@
     </div>
     <!-- Modal para editar enums -->
     <div id="editEnumModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh;">
             <span class="close" onclick="closeEditEnumModal()">×</span>
             <h2>Editar Enum</h2>
             <label for="editEnumName">Nombre del Enum:</label>
@@ -634,10 +308,60 @@
     <!-- Añadir antes de cerrar el body -->
     <link rel="stylesheet" href="styles/insertions.css">
     <script src="scripts/labelScroller.js"></script>
+    <!-- <script src="scripts/topBarAutoResize.js"></script>  sustituido por topBarLayout.js -->
+    <script src="scripts/topBarLayout.js"></script>
+    <script src="scripts/logoAnimation.js"></script>
     <script>
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 document.querySelector('.background-circles').innerHTML = '';
+            }
+        });
+
+        // Update showTab function for new navigation
+        let dataTabInitialized = false;
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const navItems = document.querySelectorAll('.tab-nav-item');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-nav-item[onclick="showTab('${tabName}')"]`).classList.add('active');
+            
+            if (tabName === 'datos') {
+                if (!dataTabInitialized && typeof setupDataTab === 'function') {
+                    setupDataTab();
+                    dataTabInitialized = true;
+                } else {
+                    if (typeof refreshTableFilter === 'function') refreshTableFilter();
+                    if (typeof updateSearchFields === 'function') updateSearchFields();
+                }
+                if (typeof showAllData === 'function') {
+                    showAllData();
+                }
+            } else if (tabName === 'mapa') {
+                initMap && initMap();
+            } else if (tabName === 'inserciones') {
+                setupInsertionsTab && setupInsertionsTab();
+                if (window.customInsertLayouts) {
+                    for (const tableName in window.customInsertLayouts) {
+                        applyCustomInsertLayout(window.customInsertLayouts[tableName]);
+                    }
+                }
+            } else if (tabName === 'excelImport') {
+                const currentTable = document.getElementById('excelTableSelect').value;
+                if (!currentTable) {
+                    updateTableSelect && updateTableSelect();
+                }
+            }
+        }
+
+        // Opcional: pre-cargar el data tab si ya existen tablas al inicio
+        window.addEventListener('DOMContentLoaded', () => {
+            if (Object.keys(window.schema?.tables || {}).some(t => !schema.tables[t].isEnum)) {
+                // Dejar que el usuario abra la pestaña cuando quiera; no forzamos.
             }
         });
     </script>
@@ -649,11 +373,6 @@
     border-radius: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     transition: all 0.3s ease;
-}
-
-.dark-mode .help-navigation {
-    background: linear-gradient(135deg, #2a1f2d 0%, #382839 100%);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
 .help-navigation ul {
@@ -677,30 +396,14 @@
     text-align: center;  /* Centra el texto */
 }
 
-.dark-mode .nav-item {
-    background: #3a2950;
-    color: #e4cdff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
 .nav-item:hover {
     transform: translateX(5px);
     background: #f8f2ff;
     box-shadow: 0 4px 12px rgba(155,79,150,0.12);
 }
 
-.dark-mode .nav-item:hover {
-    background: #4a3960;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-}
-
 .nav-item.active {
     background: #9b4f96;
-    color: #fff;
-}
-
-.dark-mode .nav-item.active {
-    background: #7e3f7a;
     color: #fff;
 }
 
@@ -722,10 +425,6 @@
     color: #666;
 }
 
-.dark-mode .feature-item p {
-    color: #ccc;
-}
-
 .faq-columns {
     display: flex;
     gap: 2rem;
@@ -742,10 +441,6 @@
     margin-bottom: 1rem;
 }
 
-.dark-mode .faq-column h4 {
-    border-bottom-color: #3a2950;
-}
-
 .faq-item {
     margin-bottom: 1.5rem;
 }
@@ -756,19 +451,11 @@
     margin-bottom: 0.3rem;
 }
 
-.dark-mode .faq-item strong {
-    color: #e4cdff;
-}
-
 .faq-item p {
     font-size: 0.9rem;
     line-height: 1.5;
     color: #666;
     margin: 0;
-}
-
-.dark-mode .faq-item p {
-    color: #bbb;
 }
 
 /* Estilos para la nueva pestaña de Consultas con IA */
@@ -953,97 +640,19 @@
     cursor: not-allowed;
     pointer-events: none;
 }
-</style>
 
-<script>
-// Añadir interactividad al menú
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-    });
-});
-
-// Animación al hacer scroll
-const observerOptions = {
-    threshold: 0.1
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-            // Asegura que los estilos del modo oscuro se apliquen correctamente
-            if (document.body.classList.contains('dark-mode')) {
-                entry.target.style.background = '#3a2950';
-            }
-        }
-    });
-}, observerOptions);
-
-document.querySelectorAll('.static-faq').forEach(faq => {
-    faq.style.opacity = '0';
-    faq.style.transform = 'translateY(20px)';
-    observer.observe(faq);
-});
-
-// Lógica de autenticación
-let currentRole = 'developer'; // Rol por defecto
-
-document.querySelectorAll('.role-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-        currentRole = this.getAttribute('data-role');
-    });
-});
-
-function handleLogin(event) {
-    event.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    // Aquí iría la lógica de autenticación real
-    console.log(`Intento de acceso: ${username}, Rol: ${currentRole}`);
-
-    // Simulación de éxito en el login
-    setTimeout(() => {
-        alert(`Bienvenido ${username}, has accedido como ${currentRole}`);
-        closeLogin();
-    }, 1000);
+/* Update body styling to match landing page */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: #ffffff;
+    overflow-x: hidden;
+    background: #000814;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
 }
-
-function accessAsGuest() {
-    // Lógica para acceso como invitado
-    alert('Has accedido como invitado');
-    closeLogin();
-}
-
-function closeLogin() {
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-// Abrir el login al cargar
-window.onload = function() {
-    document.body.style.overflow = 'hidden';
-};
-
-// Lógica para el botón de subir archivos .esql
-document.getElementById('esql-upload').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            // Aquí iría la lógica para procesar el contenido del archivo .esql
-            console.log('Contenido del archivo .esql:', content);
-        };
-        reader.readAsText(file);
-    }
-});
-</script>
+    </style>
 </body>
 </html>
 
