@@ -1,0 +1,76 @@
+/* === GRAFICOS CONTAINER === */
+.graficos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;  /* Reducido de 3rem a 2rem */
+    padding: 1rem;
+}
+
+.grafico-item {
+    background-color: var(--color-white);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    min-height: 500px;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Cambiado de center a space-between */
+}
+
+.chart-container {
+    width: 100%;
+    height: 100%; /* Cambiado de auto a 100% */
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grafico-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.8rem; /* Aumentado ligeramente el espacio entre botones */
+    z-index: 100; /* Aumentado para asegurar que está por encima */
+}
+
+.grafico-btn {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+    color: var(--color-white) !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+.grafico-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.grafico-btn.download {
+    background-color: var(--color-blue-strong) !important; /* Azul más suave */
+}
+
+.grafico-btn.download:hover {
+    background-color: var(--color-info-dark) !important;
+}
+
+.grafico-btn.delete {
+    background-color: var(--color-red-strong) !important; /* Rojo más suave */
+}
+
+.grafico-btn.delete:hover {
+    background-color: var(--color-error) !important;
+}

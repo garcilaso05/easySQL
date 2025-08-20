@@ -1,0 +1,41 @@
+/* === CONTAINER === */
+.container {
+    background-color: var(--color-white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.table-section {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+.dark-mode .container,
+.dark-mode .graficos-selectors,
+.dark-mode .graficos-container,
+.dark-mode .grafico-container,
+.dark-mode .login-container,
+.dark-mode .predefined-enums-container,
+.dark-mode .excel-import-controls,
+.dark-mode .data-actions,
+.dark-mode .search-form,
+.dark-mode .input-dialog-content,
+.dark-mode .custom-notification,
+.dark-mode .help-section,
+.dark-mode .settings-section,
+.dark-mode .color-picker-panel,
+.dark-mode .table-section,
+.dark-mode .data-details,
+.dark-mode .map-legend {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text) !important;
+}

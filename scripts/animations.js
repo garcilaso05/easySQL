@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bgShapes = document.querySelector('.bg-shapes');
     
     // Crear más formas dinámicamente
-    for(let i = 0; i < 20; i++) {
+    for(let i = 0; i < 8; i++) {
         const shape = document.createElement('div');
         shape.className = 'shape';
         bgShapes.appendChild(shape);

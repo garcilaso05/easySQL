@@ -1,0 +1,11 @@
+/* === NETWORK VISUALIZATION === */
+#network {
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+    height: 600px !important; /* Forzar altura fija */
+    width: 100% !important; /* Forzar ancho completo */
+    min-height: 600px; /* Altura mínima */
+    margin: 0 !important;
+}

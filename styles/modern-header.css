@@ -1,0 +1,389 @@
+/* Modern Background */
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.gradient-bg {
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 102, 255, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 128, 255, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(0, 204, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #000814 0%, #001d3d 50%, #003566 100%);
+    position: relative;
+}
+
+.gradient-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(45deg, transparent 30%, rgba(0, 102, 255, 0.1) 50%, transparent 70%),
+        linear-gradient(-45deg, transparent 30%, rgba(0, 128, 255, 0.05) 50%, transparent 70%);
+    animation: meshMove 20s ease-in-out infinite;
+}
+
+.floating-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.floating-shapes::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 102, 255, 0.03) 2px,
+            rgba(0, 102, 255, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 128, 255, 0.03) 2px,
+            rgba(0, 128, 255, 0.03) 4px
+        );
+    animation: gridMove 30s linear infinite;
+}
+
+/* Modern Header */
+.modern-header {
+    background: rgba(0, 102, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    margin: 2rem;
+    border: 1px solid rgba(0, 102, 255, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00ccff, transparent);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem 1rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.logo-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #00ccff, #0066ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    line-height: 1;
+}
+
+.app-tagline {
+    font-size: 0.75rem;
+    color: rgba(0, 204, 255, 0.8);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.25rem;
+}
+
+.datetime-display {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.top-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.top-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 204, 255, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.top-btn:hover {
+    background: rgba(0, 204, 255, 0.1);
+    border-color: #00ccff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
+}
+
+.top-btn img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.top-btn:hover img {
+    opacity: 1;
+}
+
+.header-nav {
+    border-top: 1px solid rgba(0, 102, 255, 0.1);
+    padding: 0 3rem 1.5rem;
+}
+
+.tab-navigation {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 1rem;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 204, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.tab-button:hover::before {
+    left: 100%;
+}
+
+.tab-button:hover,
+.tab-button.active {
+    background: rgba(0, 102, 255, 0.15);
+    color: #00ccff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 102, 255, 0.2);
+}
+
+.tab-icon {
+    font-size: 1.1rem;
+}
+
+.tab-text {
+    font-size: 0.9rem;
+}
+
+/* Main Container */
+.main-container {
+    margin: 0 2rem 2rem;
+    background: rgba(0, 102, 255, 0.02);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    border: 1px solid rgba(0, 102, 255, 0.1);
+    min-height: calc(100vh - 200px);
+    position: relative;
+}
+
+/* Update existing tab content styling */
+.tab-content {
+    padding: 2rem;
+    color: white;
+}
+
+.tab-content h2 {
+    color: white;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+/* Update form styling for modern look */
+input, select, textarea, button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 204, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #00ccff;
+    box-shadow: 0 0 0 3px rgba(0, 204, 255, 0.1);
+    outline: none;
+}
+
+button {
+    background: linear-gradient(135deg, #0066ff, #00ccff);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 102, 255, 0.4);
+}
+
+button:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Animations */
+@keyframes meshMove {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+        transform: translate(-20px, -20px) rotate(1deg);
+    }
+    66% {
+        transform: translate(20px, -10px) rotate(-1deg);
+    }
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(4px, 4px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .header-top {
+        padding: 1.5rem 2rem 1rem;
+    }
+    
+    .header-nav {
+        padding: 0 2rem 1.5rem;
+    }
+    
+    .main-container {
+        margin: 0 1rem 1rem;
+    }
+    
+    .modern-header {
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-top {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem 1rem 1rem;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .tab-navigation {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+    
+    .tab-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .tab-text {
+        display: none;
+    }
+    
+    .tab-icon {
+        font-size: 1.2rem;
+    }
+    
+    .top-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .header-nav {
+        padding: 0 1rem 1.5rem;
+    }
+}
+
+/* Hide old elements */
+.top-bar,
+.tab-menu,
+.title-container {
+    display: none !important;
+}

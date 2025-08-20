@@ -1,0 +1,262 @@
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    33% {
+        transform: translateY(-30px) rotate(120deg);
+    }
+    66% {
+        transform: translateY(30px) rotate(240deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes meshMove {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+        transform: translate(-20px, -20px) rotate(1deg);
+    }
+    66% {
+        transform: translate(20px, -10px) rotate(-1deg);
+    }
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(4px, 4px);
+    }
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes neonPulse {
+    0%, 100% {
+        filter: drop-shadow(0 0 10px rgba(0, 204, 255, 0.5));
+        background-position: 0% 50%;
+    }
+    50% {
+        filter: drop-shadow(0 0 20px rgba(0, 204, 255, 0.8));
+        background-position: 100% 50%;
+    }
+}
+
+/* Remove the shake animation */
+/* @keyframes shake - REMOVED */
+
+@keyframes arrowPulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 20px rgba(0, 204, 255, 0.6));
+    }
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 30px rgba(0, 204, 255, 1));
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(0, 204, 255, 0.6);
+    }
+}
+
+/* Apply animations to elements */
+.hero-content {
+    animation: slideInLeft 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-visual {
+    animation: slideInRight 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
+.feature-card {
+    animation: scaleIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-card:nth-child(1) { animation-delay: 0.1s; }
+.feature-card:nth-child(2) { animation-delay: 0.2s; }
+.feature-card:nth-child(3) { animation-delay: 0.3s; }
+.feature-card:nth-child(4) { animation-delay: 0.4s; }
+.feature-card:nth-child(5) { animation-delay: 0.5s; }
+.feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+.path-option:nth-child(1) {
+    animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+}
+
+.path-option:nth-child(2) {
+    animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+}
+
+.result-card {
+    animation: slideInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both;
+}
+
+.guarantee-card {
+    animation: scaleIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+}
+
+/* Enhanced hover animations */
+.feature-card,
+.path-option,
+.result-card {
+    transform-origin: center;
+}
+
+/* Electric effect for buttons */
+.nav-btn,
+.access-btn,
+.cta-primary,
+.cta-secondary,
+.path-button,
+.submit-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Loading animation */
+.container {
+    animation: slideInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Staggered navigation animation */
+.nav-btn:nth-child(1) { animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.7s both; }
+.nav-btn:nth-child(2) { animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both; }
+.access-btn { animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.9s both; }
+
+/* Continuous animations for dynamic elements */
+
+/* Remove the logo glow animation */
+/* .logo h1 {
+    animation: glowPulse 4s ease-in-out infinite;
+} - REMOVED */
+
+/* Advanced hover effects */
+@keyframes electricSpark {
+    0% { opacity: 0; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+    100% { opacity: 0; transform: scale(1.2) rotate(360deg); }
+}
+
+.cta-primary::after,
+.path-button.primary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.3s;
+}
+
+.cta-primary:hover::after,
+.path-button.primary:hover::after {
+    animation: electricSpark 0.6s ease-out;
+}
+
+/* Special animation for the highlight text */
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.highlight {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease-in-out infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}

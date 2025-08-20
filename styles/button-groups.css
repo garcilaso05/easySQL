@@ -1,0 +1,69 @@
+/* === BUTTON GROUPS === */
+#buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--color-bg-secondary) 0%, rgba(255, 255, 255, 0.8) 100%);
+    border-radius: 15px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    position: relative;
+    overflow: hidden;
+}
+
+#buttons-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+    animation: slideProgress 3s ease-in-out infinite;
+}
+
+#buttons-container button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+#buttons-container button:hover {
+    transform: translateY(-2px) scale(1.02);
+    z-index: 2;
+}
+
+#buttons-container select {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    background: var(--color-white);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#buttons-container select:hover {
+    border-color: var(--color-primary);
+    transform: scale(1.01);
+    box-shadow: var(--shadow-sm);
+}
+
+#buttons-container select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+    transform: scale(1.02);
+}
+
+@keyframes slideProgress {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: -100%; }
+}
+
+/* Efecto hover del contenedor */
+#buttons-container:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}

@@ -1,0 +1,98 @@
+/* === CRITICAL WARNINGS === */
+.critical-warning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--color-warning-overlay); /* Reducido de 0.2 a 0.1 */
+    backdrop-filter: blur(3px); /* Reducido de 4px a 3px */
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.critical-warning-content {
+    background: var(--color-white);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 0 30px var(--color-warning-overlay); /* Reducido de 0.3 */
+    border: 1px solid var(--color-error-critical); /* Reducido de 2px a 1px */
+    animation: warningPulse 2s infinite;
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-error-critical);
+}
+
+.warning-icon {
+    font-size: 2rem;
+    animation: warningShake 0.5s infinite;
+}
+
+.warning-header h2 {
+    color: var(--color-error-critical);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.warning-message {
+    color: var(--color-text);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    white-space: pre-line;
+}
+
+.warning-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.warning-buttons button {
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.warning-buttons .btn-cancel {
+    background: var(--color-white);
+    color: var(--color-error-critical);
+    border: 2px solid var(--color-error-critical);
+}
+
+.warning-buttons .btn-cancel:hover {
+    background: var(--color-error-bg);
+}
+
+.warning-buttons .btn-continue {
+    background: var(--color-error-critical);
+    color: var(--color-white);
+}
+
+.warning-buttons .btn-continue:hover {
+    background: var(--color-error-critical-dark);
+    transform: translateY(-2px);
+}
+
+@keyframes warningPulse {
+    0% { box-shadow: 0 0 30px var(--color-warning-overlay); }
+    50% { box-shadow: 0 0 30px var(--color-warning-overlay); }
+    100% { box-shadow: 0 0 30px var(--color-warning-overlay); }
+}
+
+@keyframes warningShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}

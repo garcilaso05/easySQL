@@ -108,38 +108,132 @@ function updateClassMap() {
     updateTableSelect(); // Añadir esta línea
 }
 
-// Ejecutar consultas SQL manuales
-function executeSQL() {
-    const query = document.getElementById('sql-input').value.trim();
-    const resultDiv = document.getElementById('result');
+// Ejecutar consultas SQL manuales (ahora desde la IA)
+function executeGeneratedSQL() {
+    const query = document.getElementById('generatedSql').value.trim();
+    const resultDiv = document.getElementById('sqlResult');
+    if (!query) {
+        resultDiv.innerText = 'No hay consulta para ejecutar.';
+        return;
+    }
     try {
-        const insertMatch = query.match(/INSERT INTO (\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i);
-        if (insertMatch) {
-            const tableName = insertMatch[1];
-            const columns = insertMatch[2].split(',').map(col => col.trim());
-            const values = insertMatch[3].split(',').map(val => val.trim().replace(/['"]/g, ''));
-
-            if (schema.tables[tableName]) {
-                const table = schema.tables[tableName];
-                for (let i = 0; i < columns.length; i++) {
-                    const column = table.columns.find(col => col.name === columns[i]);
-                    if (column && schema.tables[column.type]?.isEnum) {
-                        const enumValues = schema.tables[column.type].values;
-                        if (!enumValues.includes(values[i])) {
-                            throw new Error(`El valor "${values[i]}" no es válido para el enum "${column.type}". Valores válidos: ${enumValues.join(', ')}`);
-                        }
-                    }
-                }
-            }
+        const res = alasql(query);
+        
+        // Formatear la salida
+        if (Array.isArray(res)) {
+            const formattedResult = res.map(record => {
+                // Convertir cada registro a JSON y quitar las llaves
+                return JSON.stringify(record, null, 2)
+                    .replace(/^{\n/, '')
+                    .replace(/\n}$/, '')
+                    .trim();
+            }).join('\n\n'); // Separar registros con doble salto de línea
+            resultDiv.innerText = formattedResult;
+        } else {
+            resultDiv.innerText = JSON.stringify(res, null, 2);
         }
 
-        const res = alasql(query);
-        resultDiv.innerText = JSON.stringify(res, null, 2);
-        updateClassMap();
+        // Si es una inserción, actualización o borrado, puede que queramos actualizar otras vistas
+        if (query.toUpperCase().startsWith('INSERT') || query.toUpperCase().startsWith('UPDATE') || query.toUpperCase().startsWith('DELETE')) {
+            updateClassMap(); // Actualiza el mapa por si hay cambios estructurales (aunque es raro aquí)
+            // Podríamos llamar a showAllData() si la pestaña de datos está visible, etc.
+        }
     } catch (e) {
         resultDiv.innerText = 'Error: ' + e.message;
     }
 }
+
+// Generar consulta SQL usando IA
+async function generateAIQuery() {
+    const apiKey = document.getElementById('apiKey').value;
+    const naturalQuery = document.getElementById('naturalQuery').value;
+    const generatedSqlTextarea = document.getElementById('generatedSql');
+    const resultDiv = document.getElementById('sqlResult');
+
+    if (!apiKey) {
+        alert('Por favor, introduce tu API Key de Gemini.');
+        return;
+    }
+    if (!naturalQuery) {
+        alert('Por favor, escribe una pregunta.');
+        return;
+    }
+
+    generatedSqlTextarea.value = 'Generando consulta con IA...';
+    resultDiv.innerText = '';
+
+    const schemaDescription = getSchemaForAI();
+    const prompt = `Genera una consulta simple en SQL para obtener los datos de esta pregunta: ${naturalQuery}. Las tablas SQL son las siguientes: ${schemaDescription}`;
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 200
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error?.message || 'Error desconocido de la API.';
+            throw new Error(`Error de la API de IA: ${errorMessage}`);
+        }
+
+        const data = await response.json();
+        // Limpiar la respuesta para obtener solo el SQL
+        let sqlQuery = data.candidates[0]?.content?.parts[0]?.text.trim() || '';
+        if (sqlQuery.startsWith('```sql')) {
+            sqlQuery = sqlQuery.substring(5, sqlQuery.length - 3).trim();
+        } else if (sqlQuery.startsWith('```')) {
+            sqlQuery = sqlQuery.substring(3, sqlQuery.length - 3).trim();
+        }
+        
+        // Eliminar la 'l' solitaria en la primera línea si existe
+        const lines = sqlQuery.split('\n');
+        if (lines.length > 0 && lines[0].trim() === 'l') {
+            lines.shift(); // Elimina la primera línea
+            sqlQuery = lines.join('\n');
+        }
+
+        generatedSqlTextarea.value = sqlQuery;
+
+    } catch (error) {
+        generatedSqlTextarea.value = '';
+        resultDiv.innerText = `Error al generar la consulta: ${error.message}`;
+        console.error(error);
+    }
+}
+
+function getSchemaForAI() {
+    let description = '';
+    for (const tableName in schema.tables) {
+        const table = schema.tables[tableName];
+        if (table.isEnum) {
+            description += `CREATE TYPE ${tableName} AS ENUM (${table.values.map(v => `'${v}'`).join(', ')});\n\n`;
+        } else {
+            const columns = table.columns.map(col => {
+                let colDef = `${col.name} ${col.type}`;
+                if (col.pk) colDef += ' PRIMARY KEY';
+                if (col.notNull && !col.pk) colDef += ' NOT NULL';
+                return `  ${colDef}`;
+            }).join(',\n');
+            description += `CREATE TABLE ${tableName} (\n${columns}\n);\n\n`;
+        }
+    }
+    return description;
+}
+
 
 // Descargar el SQL generado
 // Generar archivo .sql con el esquema de la base de datos
@@ -172,7 +266,7 @@ async function downloadSQL() {
     // Luego las tablas
     for (const tableName in schema.tables) {
         const table = schema.tables[tableName];
-        if (!table.isEnum && !table.isRelationship) {
+        if (!table.isEnum) {
             sqlContent += `-- TABLE: ${tableName}\n`;
             const columns = table.columns.map(col => {
                 let colDef = `${col.name} ${col.type}`;
@@ -200,18 +294,6 @@ async function downloadSQL() {
                 return colDef;
             }).join(',\n  ');
             sqlContent += `CREATE TABLE ${tableName} (\n  ${columns}\n);\n\n`;
-        } else if (table.isRelationship) {
-            sqlContent += `-- RELATIONSHIP TABLE: ${tableName}\n`;
-            sqlContent += `CREATE TABLE ${tableName} (\n`;
-            const columns = table.columns.map(col => {
-                let def = `  ${col.name} ${col.type}`;
-                return def;
-            }).join(',\n');
-            sqlContent += `${columns},\n`;
-            sqlContent += `  PRIMARY KEY (${table.columns.map(c => c.name).join(', ')}),\n`;
-            sqlContent += `  FOREIGN KEY (${table.columns[0].name}) REFERENCES ${table.references.table1.name}(${table.references.table1.field}) ON DELETE CASCADE,\n`;
-            sqlContent += `  FOREIGN KEY (${table.columns[1].name}) REFERENCES ${table.references.table2.name}(${table.references.table2.field}) ON DELETE CASCADE\n`;
-            sqlContent += `);\n\n`;
         }
     }
 
@@ -297,40 +379,51 @@ function loadSQL(event) {
                 }
             });
 
-            // Separar el contenido en bloques y mantener comentarios
-            const blocks = content.split('\n\n').map(block => block.trim()).filter(block => block);
+            // Separar el contenido en bloques
+            const blocks = content.split('\n\n').filter(block => block.trim());
             
-            // Primer paso: procesar los ENUMs
+            // Primer paso: procesar los ENUMs y crear los tipos
             blocks.forEach(block => {
                 if (block.includes('CREATE TYPE') && block.includes('AS ENUM')) {
                     processEnum(block);
-                    try { alasql(block); } catch (e) { console.warn('Error al crear enum:', e); }
+                    // También ejecutar la creación del enum en alasql
+                    try {
+                        alasql(block);
+                    } catch (e) {
+                        console.warn('Error al crear enum en alasql:', e);
+                    }
                 }
             });
 
-            // Segundo paso: procesar todas las tablas (normales y relaciones)
-            let previousComment = '';
+            // Segundo paso: procesar y crear las tablas
             blocks.forEach(block => {
-                const lines = block.split('\n');
-                // Capturar el comentario si existe
-                if (lines[0].trim().startsWith('--')) {
-                    previousComment = lines[0].trim();
-                }
-                
                 if (block.includes('CREATE TABLE')) {
-                    const isRelationship = previousComment.includes('-- RELATIONSHIP TABLE:');
-                    processTable(block, isRelationship);
-                    try { alasql(block); } catch (e) { console.warn('Error al crear tabla:', e); }
+                    processTable(block);
+                    // También ejecutar la creación de la tabla en alasql
+                    try {
+                        alasql(block);
+                    } catch (e) {
+                        console.warn('Error al crear tabla en alasql:', e);
+                    }
                 }
             });
 
-            // Procesar las relaciones visuales
+            // Procesar las relaciones
             blocks.forEach(block => {
                 if (block.includes('-- RELATIONSHIPS')) {
                     const lines = block.split('\n');
                     lines.forEach(line => {
                         if (line.startsWith('-- ') && !line.startsWith('-- RELATIONSHIPS')) {
-                            processRelationship(line);
+                            const match = line.match(/-- (.*): (.*) (.*) (.*) \((.*)\)/);
+                            if (match) {
+                                relationships.push({
+                                    name: match[1],
+                                    table1: match[2],
+                                    type: match[3],
+                                    table2: match[4],
+                                    direction: match[5]
+                                });
+                            }
                         }
                     });
                 }
@@ -339,9 +432,9 @@ function loadSQL(event) {
             updateClassMap();
             populateTableDropdown();
             populateEnumDropdown();
-            updateRelationshipDropdown(); // Asegurar que se actualice el desplegable de relaciones
             
             alert('SQL cargado exitosamente');
+            
             event.target.value = '';
             
         } catch (error) {
@@ -349,6 +442,7 @@ function loadSQL(event) {
             console.error(error);
         }
     };
+
     reader.readAsText(file);
 }
 
@@ -372,44 +466,36 @@ function processEnum(sql) {
     }
 }
 
-function processTable(sql, isRelationship = false) {
-    const match = sql.match(/CREATE TABLE (\w+)\s*\(([\s\S]*?)\)/i);
+function processTable(sql) {
+    const match = sql.match(/CREATE TABLE (\w+)\s*\(([\s\S]+)\)/i);
     if (match) {
         const tableName = match[1];
-        const columnsString = match[2];
-        let currentColumn = '';
+        let columnsPart = match[2].replace(/\)\s*$/g, '').trim();
+        
+        // Separar las columnas correctamente, teniendo en cuenta los CHECK
         const columnDefinitions = [];
-        const foreignKeys = [];
+        let currentColumn = '';
+        let inCheck = false;
+        let parenCount = 0;
 
-        // Procesar cada línea
-        columnsString.split('\n').forEach(line => {
-            line = line.trim();
-            if (!line) return;
-
-            if (line.endsWith(',')) {
-                line = line.slice(0, -1);
+        for (let char of columnsPart) {
+            if (char === '(' && !inCheck) {
+                inCheck = true;
+                parenCount++;
+            } else if (char === '(') {
+                parenCount++;
+            } else if (char === ')') {
+                parenCount--;
+                if (parenCount === 0) inCheck = false;
             }
 
-            // Capturar FOREIGN KEYs
-            if (line.toUpperCase().startsWith('FOREIGN KEY')) {
-                foreignKeys.push(line);
-                columnDefinitions.push(line);
-            } else if (line.toUpperCase().startsWith('PRIMARY KEY')) {
-                columnDefinitions.push(line);
-            } else if (currentColumn) {
-                currentColumn += ' ' + line;
-                if (!line.endsWith(',')) {
-                    columnDefinitions.push(currentColumn.trim());
-                    currentColumn = '';
-                }
+            if (char === ',' && !inCheck && parenCount === 0) {
+                if (currentColumn.trim()) columnDefinitions.push(currentColumn.trim());
+                currentColumn = '';
             } else {
-                currentColumn = line;
-                if (!line.endsWith(',')) {
-                    columnDefinitions.push(currentColumn.trim());
-                    currentColumn = '';
-                }
+                currentColumn += char;
             }
-        });
+        }
         if (currentColumn.trim()) columnDefinitions.push(currentColumn.trim());
 
         const columns = columnDefinitions.map(def => {
@@ -418,41 +504,27 @@ function processTable(sql, isRelationship = false) {
             const type = parts[1];
             const pk = def.toLowerCase().includes('primary key');
             const notNull = !pk && def.toLowerCase().includes('not null');
+            const isEnum = schema.tables[type]?.isEnum;
+
+            // Verificar si es un ENUM sin "IS NULL OR" en el CHECK
+            const hasNotNullEnum = isEnum && !def.toLowerCase().includes('is null or');
+            
             return {
                 name,
                 type,
                 pk,
-                notNull: pk || notNull
+                notNull: pk || notNull || hasNotNullEnum,
+                check: isEnum ? {
+                    type: type,
+                    values: schema.tables[type].values
+                } : undefined
             };
-        }).filter(col => col.name && col.type); // Filtrar constraints
-
-        // Procesar foreign keys para detectar referencias
-        const references = {};
-        foreignKeys.forEach(fk => {
-            const fkMatch = fk.match(/FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s*([^(]+)\(([^)]+)\)/i);
-            if (fkMatch) {
-                const localColumn = fkMatch[1].trim();
-                const refTable = fkMatch[2].trim();
-                const refColumn = fkMatch[3].trim();
-                references[localColumn] = { table: refTable, column: refColumn };
-            }
         });
 
-        // Detectar si es una tabla de relación
-        const hasMultipleFKs = foreignKeys.length >= 2;
-        
-        schema.tables[tableName] = {
-            columns: columns,
-            isRelationship: isRelationship || hasMultipleFKs,
-            data: []
-        };
-
-        // Si es una relación, añadir información de referencias
-        if ((isRelationship || hasMultipleFKs) && Object.keys(references).length >= 2) {
-            const refs = Object.entries(references);
-            schema.tables[tableName].references = {
-                table1: { name: refs[0][1].table, field: refs[0][1].column },
-                table2: { name: refs[1][1].table, field: refs[1][1].column }
+        if (columns.length > 0) {
+            schema.tables[tableName] = {
+                columns: columns,
+                data: []
             };
         }
     }
@@ -523,123 +595,22 @@ function closeRelationshipModal() {
     document.getElementById('relationshipModal').style.display = 'none';
 }
 
-function updateRelationshipDropdown() {
-    const dropdown = document.getElementById('relationshipDropdown');
-    dropdown.innerHTML = '<option value="">Selecciona una relación</option>';
-    
-    for (const tableName in schema.tables) {
-        if (schema.tables[tableName].isRelationship) {
-            const option = document.createElement('option');
-            option.value = tableName;
-            option.textContent = tableName;
-            dropdown.appendChild(option);
-        }
-    }
-}
-
-function updateRelationshipFields() {
-    const table1 = document.getElementById('relationshipTable1').value;
-    const table2 = document.getElementById('relationshipTable2').value;
-    const field1 = document.getElementById('relationshipField1');
-    const field2 = document.getElementById('relationshipField2');
-    
-    field1.innerHTML = '<option value="">Selecciona campo</option>';
-    field2.innerHTML = '<option value="">Selecciona campo</option>';
-    
-    if (table1) {
-        const pkColumn1 = schema.tables[table1].columns.find(col => col.pk);
-        if (pkColumn1) {
-            field1.innerHTML = `<option value="${pkColumn1.name}">${pkColumn1.name}</option>`;
-        }
-        field1.disabled = !table1;
-    }
-    
-    if (table2) {
-        const pkColumn2 = schema.tables[table2].columns.find(col => col.pk);
-        if (pkColumn2) {
-            field2.innerHTML = `<option value="${pkColumn2.name}">${pkColumn2.name}</option>`;
-        }
-        field2.disabled = !table2;
-    }
-}
-
 function saveRelationship() {
-    const name = document.getElementById('relationshipName').value.trim().toLowerCase();
+    const name = document.getElementById('relationshipName').value.trim();
     const table1 = document.getElementById('relationshipTable1').value;
     const table2 = document.getElementById('relationshipTable2').value;
-    const field1 = document.getElementById('relationshipField1').value;
-    const field2 = document.getElementById('relationshipField2').value;
+    const type = document.getElementById('relationshipType').value;
+    const direction = document.getElementById('relationshipDirection').value;
 
-    if (!name || !table1 || !table2 || !field1 || !field2) {
+    if (!name || !table1 || !table2 || !type || !direction) {
         alert('Por favor, completa todos los campos.');
         return;
     }
 
-    if (schema.tables[name]) {
-        alert('Ya existe una tabla o relación con ese nombre.');
-        return;
-    }
-
-    // Usar sintaxis básica sin foreign keys explícitas (AlaSQL las manejará implícitamente)
-    const createTableSQL = `CREATE TABLE ${name} (
-        ${table1.toLowerCase()}_${field1.toLowerCase()} ${schema.tables[table1].columns.find(col => col.pk).type},
-        ${table2.toLowerCase()}_${field2.toLowerCase()} ${schema.tables[table2].columns.find(col => col.pk).type},
-        PRIMARY KEY (${table1.toLowerCase()}_${field1.toLowerCase()}, ${table2.toLowerCase()}_${field2.toLowerCase()})
-    )`;
-
-    try {
-        console.log('SQL a ejecutar:', createTableSQL);
-        alasql(createTableSQL);
-
-        schema.tables[name] = {
-            isRelationship: true,
-            columns: [
-                {
-                    name: `${table1.toLowerCase()}_${field1.toLowerCase()}`,
-                    type: schema.tables[table1].columns.find(col => col.pk).type,
-                    pk: true
-                },
-                {
-                    name: `${table2.toLowerCase()}_${field2.toLowerCase()}`,
-                    type: schema.tables[table2].columns.find(col => col.pk).type,
-                    pk: true
-                }
-            ],
-            references: {
-                table1: { name: table1, field: field1 },
-                table2: { name: table2, field: field2 }
-            }
-        };
-
-        updateClassMap();
-        updateRelationshipDropdown();
-        closeRelationshipModal();
-        showNotification(`Relación "${name}" creada exitosamente.`, 'success');
-    } catch (error) {
-        showNotification(`Error al crear la relación: ${error.message}`, 'error');
-        console.error('Error en SQL:', error);
-    }
-}
-
-function deleteRelationship() {
-    const relationshipName = document.getElementById('relationshipDropdown').value;
-    if (!relationshipName) {
-        showNotification('Por favor, selecciona una relación para borrar.', 'warning');
-        return;
-    }
-
-    if (!schema.tables[relationshipName]?.isRelationship) {
-        showNotification('La tabla seleccionada no es una relación.', 'error');
-        return;
-    }
-
-    if (confirm(`¿Estás seguro de que deseas eliminar la relación "${relationshipName}"?`)) {
-        alasql(`DROP TABLE ${relationshipName}`);
-        delete schema.tables[relationshipName];
-        updateClassMap();
-        updateRelationshipDropdown();
-        showNotification(`Relación "${relationshipName}" eliminada exitosamente.`, 'success');
-    }
+    relationships.push({ name, table1, table2, type, direction });
+    updateClassMap();
+    closeRelationshipModal();
+    alert(`Relación "${name}" creada exitosamente.`);
 }
 
 function updatePredefinedEnums() {
@@ -680,5 +651,109 @@ async function togglePredefinedEnum(enumName) {
     }
 }
 
+function normalizeInput(input) {
+    if (input.startsWith(' ')) {
+        input = input.trimStart();
+    }
+    // Normalizar las entradas para quitar acentos y caracteres especiales
+    const normalized = input
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
+        .replace(/[^a-zA-Z0-9]/g, '_') // Reemplazar caracteres no alfanuméricos con _
+        .replace(/_+/g, '_') // Reemplazar múltiples _ con uno solo
+        .replace(/^_|_$/g, '') // Eliminar _ al inicio y final
+        .toUpperCase();
+    return normalized;
+}
+
+function setupTableNameInputs() {
+    const inputs = document.querySelectorAll('.table-name-input, .col-name');
+    inputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            const normalized = normalizeInput(this.value);
+            this.value = normalized;
+        });
+    });
+}
+
+// Llamar a esta función cuando se cargue la página y cuando se añadan nuevos inputs
+document.addEventListener('DOMContentLoaded', () => {
+    setupTableNameInputs();
+});
+
+// Observador para detectar nuevos campos añadidos
+const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1) { // Es un elemento
+                const inputs = node.querySelectorAll('.table-name-input, .col-name');
+                inputs.forEach(input => {
+                    input.addEventListener('input', function(e) {
+                        const normalized = normalizeInput(this.value);
+                        this.value = normalized;
+                    });
+                });
+            }
+        });
+    });
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
 populateEnumDropdown();
 cargarTablaOAVD();
+
+function handleEsqlUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            
+            // Guardar el contenido para uso futuro
+            if (!window.customInsertLayouts) {
+                window.customInsertLayouts = {};
+            }
+            const tableName = content.split('\n')[0].substring(1).trim();
+            if (tableName) {
+                window.customInsertLayouts[tableName] = content;
+            }
+
+            applyCustomInsertLayout(content);
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Limpiar el input para permitir recargar el mismo archivo
+    }
+}
+
+function showTab(tabName) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    contents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+    // Cargar datos específicos si es necesario
+    if (tabName === 'datos') {
+        showAllData();
+    } else if (tabName === 'mapa') {
+        initMap();
+    } else if (tabName === 'inserciones') {
+        // Reaplicar todos los layouts personalizados al volver a la pestaña
+        if (window.customInsertLayouts) {
+            for (const tableName in window.customInsertLayouts) {
+                applyCustomInsertLayout(window.customInsertLayouts[tableName]);
+            }
+        }
+    }
+}

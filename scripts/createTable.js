@@ -36,6 +36,10 @@ function addColumnInput() {
             ${isFirstColumn ? 'disabled' : ''}> NOT NULL</label>
         <button onclick="removeColumnInput(this)" class="remove-column" 
             ${isFirstColumn ? 'disabled' : ''}>Eliminar</button>
+        <div class="column-order-buttons">
+            <button onclick="moveColumn(this, 'up')" class="move-col-btn up-btn">▲</button>
+            <button onclick="moveColumn(this, 'down')" class="move-col-btn down-btn">▼</button>
+        </div>
     `;
     container.appendChild(newInput);
 
@@ -54,9 +58,7 @@ function addColumnInput() {
         if (pkCheckbox.checked) notNullCheckbox.checked = false;
     });
 
-    // Hacer el contenedor de columnas desplazable
-    container.style.maxHeight = '300px';
-    container.style.overflowY = 'auto';
+    updateColumnOrderButtons(container);
 }
 
 function handlePrimaryKeyChange(checkbox, containerId) {
@@ -69,6 +71,7 @@ function handlePrimaryKeyChange(checkbox, containerId) {
     const container = document.getElementById(containerId);
     const allCheckboxes = container.querySelectorAll('.col-pk');
     const allRemoveButtons = container.querySelectorAll('.remove-column');
+    const allNotNullCheckboxes = container.querySelectorAll('.col-notnull');
     
     // Desmarcar y habilitar todos los checkboxes y botones de eliminar
     allCheckboxes.forEach((cb, index) => {
@@ -76,16 +79,23 @@ function handlePrimaryKeyChange(checkbox, containerId) {
             cb.checked = false;
             cb.disabled = false;
             allRemoveButtons[index].disabled = false;
+            // Habilitar NOT NULL cuando se desmarca PK
+            allNotNullCheckboxes[index].disabled = false;
         }
     });
 
     // Deshabilitar el checkbox y botón de eliminar de la nueva PK
     checkbox.disabled = true;
     checkbox.parentElement.parentElement.querySelector('.remove-column').disabled = true;
+
+    // Deshabilitar y desmarcar NOT NULL para la PK
+    const notNullCheckbox = checkbox.parentElement.parentElement.querySelector('.col-notnull');
+    notNullCheckbox.checked = false;
+    notNullCheckbox.disabled = true;
 }
 
 function removeColumnInput(button) {
-    const columnDiv = button.parentElement;
+    const columnDiv = button.closest('.column-input');
     const container = columnDiv.parentElement;
     const isPK = columnDiv.querySelector('.col-pk').checked;
     
@@ -107,6 +117,7 @@ function removeColumnInput(button) {
             firstColumn.querySelector('.remove-column').disabled = true;
         }
     }
+    updateColumnOrderButtons(container);
 }
 
 function createTableFromForm() {
@@ -230,4 +241,48 @@ function updateClassMap() {
     });
 
     populateTableDropdown();
+}
+
+function moveColumn(button, direction) {
+    const columnDiv = button.closest('.column-input');
+    const container = columnDiv.parentElement;
+    const sibling = direction === 'up' ? columnDiv.previousElementSibling : columnDiv.nextElementSibling;
+
+    if (sibling) {
+        // Animación
+        columnDiv.style.transform = direction === 'up' ? 'translateY(-100%)' : 'translateY(100%)';
+        sibling.style.transform = direction === 'up' ? 'translateY(100%)' : 'translateY(-100%)';
+
+        setTimeout(() => {
+            columnDiv.style.transition = 'none';
+            sibling.style.transition = 'none';
+            columnDiv.style.transform = '';
+            sibling.style.transform = '';
+
+            if (direction === 'up') {
+                container.insertBefore(columnDiv, sibling);
+            } else {
+                container.insertBefore(sibling, columnDiv);
+            }
+            
+            updateColumnOrderButtons(container);
+
+            // Re-enable transitions after DOM update
+            setTimeout(() => {
+                columnDiv.style.transition = 'all 0.3s ease-in-out';
+                sibling.style.transition = 'all 0.3s ease-in-out';
+            }, 50);
+
+        }, 300);
+    }
+}
+
+function updateColumnOrderButtons(container) {
+    const columns = container.querySelectorAll('.column-input');
+    columns.forEach((col, index) => {
+        const upBtn = col.querySelector('.up-btn');
+        const downBtn = col.querySelector('.down-btn');
+        if (upBtn) upBtn.disabled = (index === 0);
+        if (downBtn) downBtn.disabled = (index === columns.length - 1);
+    });
 }

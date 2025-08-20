@@ -2,10 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verify elements exist
     const colorPickerBtn = document.getElementById('colorPickerBtn');
     const colorPickerPanel = document.getElementById('colorPickerPanel');
-    const colorSlider = document.getElementById('colorSlider');
     const darkModeSwitch = document.getElementById('darkModeSwitch');
 
-    if (!colorPickerBtn || !colorPickerPanel || !colorSlider) {
+    if (!colorPickerBtn || !colorPickerPanel) {
         console.error('Color picker elements not found');
         return;
     }
@@ -20,15 +19,21 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.toggle('dark-mode', darkModeSwitch.checked);
             localStorage.setItem('darkMode', darkModeSwitch.checked);
             
-            // Mantener el valor actual del slider
-            const currentValue = colorSlider.value;
-            updateBackgroundColor(currentValue);
-            
             // Actualizar color de fondo de los gráficos existentes
             const charts = document.querySelectorAll('.highcharts-background');
             charts.forEach(chart => {
                 chart.setAttribute('fill', darkModeSwitch.checked ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)');
             });
+
+            // Add help modal dark mode
+            const helpModal = document.querySelector('.help-modal');
+            if (helpModal) {
+                if (darkModeSwitch.checked) {
+                    helpModal.classList.add('dark-mode');
+                } else {
+                    helpModal.classList.remove('dark-mode');
+                }
+            }
         });
     }
 
@@ -38,10 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         console.log('Button clicked'); // Debug line
         colorPickerPanel.style.display = colorPickerPanel.style.display === 'block' ? 'none' : 'block';
-        
-        if (colorPickerPanel.style.display === 'block') {
-            updateBackgroundColor(colorSlider.value);
-        }
     });
 
     // Close panel when clicking outside
@@ -55,73 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     colorPickerPanel.addEventListener('click', (e) => {
         e.stopPropagation();
     });
-
-    // Update background color on slider change
-    colorSlider.addEventListener('input', (e) => {
-        updateBackgroundColor(e.target.value);
-        saveColor(e.target.value);
-    });
-
-    // Función para guardar el color en localStorage
-    function saveColor(value) {
-        localStorage.setItem('backgroundColor', value);
-    }
-
-    // Función para obtener el color guardado
-    function getSavedColor() {
-        return localStorage.getItem('backgroundColor') || '100';
-    }
-
-    // Función para actualizar el color de fondo
-    function updateBackgroundColor(value) {
-        let backgroundColor;
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        
-        if (isDarkMode) {
-            // Nueva paleta de colores para modo oscuro (azul oscuro a negro)
-            const numericValue = parseInt(value);
-            if (numericValue <= 33) {
-                // De azul oscuro (rgb(26, 35, 60)) a azul más oscuro
-                const component = 60 - Math.round((numericValue / 33) * 30);
-                backgroundColor = `rgb(26, 35, ${component})`;
-            } else if (numericValue <= 66) {
-                // De azul más oscuro a gris muy oscuro
-                const progress = (numericValue - 33) / 33;
-                const r = Math.round(26 - (progress * 15));
-                const g = Math.round(35 - (progress * 25));
-                const b = Math.round(30 - (progress * 20));
-                backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            } else {
-                // De gris muy oscuro a negro
-                const component = Math.round(10 - ((numericValue - 66) / 34) * 10);
-                backgroundColor = `rgb(${component}, ${component}, ${component})`;
-            }
-        } else {
-            // Mantener la paleta original para modo claro
-            if (value <= 33) {
-                const component = Math.round((value / 33) * 255);
-                const blue = 255 - Math.round((value / 33) * 127);
-                backgroundColor = `rgb(${255 - component}, ${255 - component}, ${blue})`;
-            } else if (value <= 66) {
-                const progress = (value - 33) / 33;
-                const r = Math.round(26 + (progress * 102));
-                const g = Math.round(35 + (progress * 93));
-                const b = Math.round(126 + (progress * 2));
-                backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            } else {
-                const component = Math.round(((value - 66) / 34) * 128);
-                backgroundColor = `rgb(${128 - component}, ${128 - component}, ${128 - component})`;
-            }
-        }
-        
-        document.body.style.backgroundColor = backgroundColor;
-        saveColor(value);
-    }
-
-    // Inicializar con el color guardado
-    const savedColor = getSavedColor();
-    colorSlider.value = savedColor;
-    updateBackgroundColor(savedColor);
 
     // Animation controls
     const titleAnimation = document.getElementById('titleAnimation');

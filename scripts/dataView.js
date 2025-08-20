@@ -28,6 +28,31 @@ function setupDataTab() {
 
     updateSearchFields();
     showAllData();
+
+    // Escuchar cambios estructurales para refrescar el select
+    document.addEventListener('tableStructureChanged', () => {
+        refreshTableFilter();
+        updateSearchFields();
+        showAllData();
+    });
+}
+
+// Nuevo: repoblar el select de tablas preservando selección válida
+function refreshTableFilter(forcedSelected = null) {
+    const select = document.getElementById('table-filter');
+    if (!select || !window.schema || !schema.tables) return;
+    const prev = forcedSelected !== null ? forcedSelected : select.value;
+    const tableNames = Object.keys(schema.tables).filter(t => !schema.tables[t].isEnum);
+    const options = ['<option value="">Todas las tablas</option>'];
+    tableNames.forEach(t => {
+        options.push(`<option value="${t}" ${t === prev ? 'selected' : ''}>${t}</option>`);
+    });
+    select.innerHTML = options.join('');
+    // Si la tabla seleccionada ya no existe, limpiar campos
+    if (prev && !schema.tables[prev]) {
+        select.value = '';
+        updateSearchFields();
+    }
 }
 
 function updateSearchFields() {
@@ -69,12 +94,23 @@ function updateSearchFields() {
                     case 'BOOLEAN':
                         field.innerHTML = `
                             <label>${col.name}:</label>
-                            <select data-column="${col.name}">
-                                <option value="">Cualquier valor</option>
-                                <option value="true">Verdadero</option>
-                                <option value="false">Falso</option>
-                            </select>
+                            <input type="checkbox" data-column="${col.name}" class="tri-state-checkbox">
                         `;
+                        const checkbox = field.querySelector('input');
+                        checkbox.indeterminate = true; // Estado inicial: cualquiera
+                        checkbox.addEventListener('click', function() {
+                            // Ciclo: indeterminado -> marcado -> desmarcado -> indeterminado
+                            if (this.indeterminate) {
+                                this.checked = true;
+                                this.indeterminate = false;
+                            } else if (this.checked) {
+                                this.checked = false;
+                                this.indeterminate = false;
+                            } else {
+                                this.checked = false;
+                                this.indeterminate = true;
+                            }
+                        });
                         return;
                 }
                 if (!field.innerHTML) {
@@ -99,7 +135,11 @@ function applySearch() {
         const searchCriteria = {};
         document.querySelectorAll('#search-fields input, #search-fields select').forEach(input => {
             const value = input.value.trim();
-            if (value) {
+            if (input.type === 'checkbox') {
+                if (!input.indeterminate) { // Solo filtrar si no está en estado indeterminado
+                    searchCriteria[input.dataset.column] = input.checked;
+                }
+            } else if (value) {
                 searchCriteria[input.dataset.column] = value;
             }
         });
@@ -151,26 +191,38 @@ function showAllData() {
     }
 }
 
+const PAGE_SIZE = 50;
+let currentPageByTable = {};
+
 function createTableDataSection(tableName, container, data = null) {
     try {
         const result = data || alasql(`SELECT * FROM ${tableName}`);
         if (result.length === 0) return;
 
+        // Paginación
+        if (!currentPageByTable[tableName]) currentPageByTable[tableName] = 1;
+        const currentPage = currentPageByTable[tableName];
+        const totalRows = result.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const end = start + PAGE_SIZE;
+        const pageData = result.slice(start, end);
+
         const section = document.createElement('div');
         section.className = 'data-section';
-        
+
         const pkColumn = schema.tables[tableName].columns.find(col => col.pk);
         if (!pkColumn) return;
 
         section.innerHTML = `<div class="data-table-title">${tableName}</div>`;
-        
+
         const grid = document.createElement('div');
         grid.className = 'data-grid';
 
-        result.forEach(row => {
+        pageData.forEach(row => {
             const block = document.createElement('div');
             block.className = 'data-block';
-            
+
             const pkValue = row[pkColumn.name];
             let detailsHtml = '';
 
@@ -198,11 +250,11 @@ function createTableDataSection(tableName, container, data = null) {
                 if (!e.target.closest('button')) {
                     const details = block.querySelector('.data-details');
                     const wasHidden = details.style.display === 'none' || !details.style.display;
-                    
+
                     grid.querySelectorAll('.data-details').forEach(d => {
                         d.style.display = 'none';
                     });
-                    
+
                     details.style.display = wasHidden ? 'block' : 'none';
                 }
             });
@@ -211,6 +263,33 @@ function createTableDataSection(tableName, container, data = null) {
         });
 
         section.appendChild(grid);
+
+        // Controles de paginación
+        const pagination = document.createElement('div');
+        pagination.className = 'pagination';
+        if (currentPage > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Anterior';
+            prevBtn.onclick = () => {
+                currentPageByTable[tableName]--;
+                container.innerHTML = '';
+                createTableDataSection(tableName, container, result);
+            };
+            pagination.appendChild(prevBtn);
+        }
+        pagination.appendChild(document.createTextNode(` Página ${currentPage} de ${totalPages} `));
+        if (currentPage < totalPages) {
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Siguiente';
+            nextBtn.onclick = () => {
+                currentPageByTable[tableName]++;
+                container.innerHTML = '';
+                createTableDataSection(tableName, container, result);
+            };
+            pagination.appendChild(nextBtn);
+        }
+        section.appendChild(pagination);
+
         container.appendChild(section);
     } catch (error) {
         console.error(`Error al cargar datos de ${tableName}:`, error);
@@ -222,10 +301,19 @@ function deleteRecord(tableName, pkValue, event) {
     if (confirm(`¿Estás seguro de que deseas eliminar este registro?`)) {
         try {
             const pkColumn = schema.tables[tableName].columns.find(col => col.pk);
-            alasql(`DELETE FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkValue]);
-            showAllData(); // Refrescar la vista
+            
+            // Convert pkValue to the correct type
+            let pkVal = pkValue;
+            if (pkColumn.type === 'INT' || pkColumn.type === 'FLOAT') {
+                pkVal = Number(pkValue);
+            }
+            
+            alasql(`DELETE FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkVal]);
+            showAllData(); // Refresh the view
+            showNotification('Registro eliminado correctamente', 'success');
         } catch (error) {
-            alert('Error al eliminar el registro: ' + error.message);
+            showNotification('Error al eliminar el registro: ' + error.message, 'error');
+            console.error('Delete error:', error);
         }
     }
 }
@@ -233,64 +321,212 @@ function deleteRecord(tableName, pkValue, event) {
 function editRecord(tableName, pkValue, event) {
     event.stopPropagation();
     const pkColumn = schema.tables[tableName].columns.find(col => col.pk);
-    const record = alasql(`SELECT * FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkValue])[0];
-    
+    let pkVal = pkValue;
+    if (pkColumn.type === 'INT' || pkColumn.type === 'FLOAT') {
+        pkVal = Number(pkValue);
+    }
+    const record = alasql(`SELECT * FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkVal])[0];
+
+    if (!record) {
+        alert('No se encontró el registro para editar.');
+        return;
+    }
+
     let html = `<div class="edit-form">`;
-    schema.tables[tableName].columns.forEach(col => {
-        if (col.pk) {
-            html += `<div class="input-field">
-                <label>${col.name}:</label>
-                <input type="text" value="${record[col.name]}" disabled 
-                    title="Las claves primarias no se pueden editar">
-            </div>`;
-        } else {
-            let input = '';
-            if (schema.tables[col.type]?.isEnum) {
-                input = `<select name="${col.name}">
-                    <option value="">NULL</option>
-                    ${schema.tables[col.type].values.map(value => 
-                        `<option value="${value}" ${record[col.name] === value ? 'selected' : ''}>${value}</option>`
-                    ).join('')}
-                </select>`;
+
+    // Si hay layout personalizado, úsalo
+    if (window.customInsertLayouts && window.customInsertLayouts[tableName]) {
+        const tempDiv = document.createElement('div');
+        tempDiv.className = 'insert-fields';
+
+        // Genera todos los campos estándar
+        schema.tables[tableName].columns.forEach(col => {
+            let inputHtml = '';
+            if (col.pk) {
+                inputHtml = `<input type="text" value="${record[col.name]}" disabled title="Las claves primarias no se pueden editar">`;
+            } else if (schema.tables[col.type]?.isEnum) {
+                const options = schema.tables[col.type].values
+                    .map(value => `<option value="${value}" ${record[col.name] === value ? 'selected' : ''}>${value}</option>`)
+                    .join('');
+                inputHtml = `<select name="${col.name}"><option value="">Seleccione...</option>${options}</select>`;
             } else {
                 const value = record[col.name] !== null ? record[col.name] : '';
                 switch (col.type) {
-                    case 'BOOLEAN':
-                        input = `<select name="${col.name}">
-                            <option value="true" ${value ? 'selected' : ''}>Verdadero</option>
-                            <option value="false" ${!value ? 'selected' : ''}>Falso</option>
-                        </select>`;
-                        break;
                     case 'DATE':
-                        input = `<input type="date" name="${col.name}" value="${value}">`;
-                        break;
+                        inputHtml = `<input type="date" name="${col.name}" value="${value}">`; break;
                     case 'INT':
-                        input = `<input type="number" name="${col.name}" value="${value}" step="1">`;
-                        break;
+                        inputHtml = `<input type="text" name="${col.name}" value="${value}" class="numeric-input integer-input" inputmode="numeric">`; break;
                     case 'FLOAT':
-                        input = `<input type="number" name="${col.name}" value="${value}" step="0.01">`;
-                        break;
+                        inputHtml = `<input type="text" name="${col.name}" value="${value}" class="numeric-input float-input" inputmode="decimal">`; break;
+                    case 'BOOLEAN':
+                        inputHtml = `<input type="checkbox" name="${col.name}" ${record[col.name] ? 'checked' : ''}>`; break;
                     default:
-                        input = `<input type="text" name="${col.name}" value="${value}">`;
+                        inputHtml = `<input type="text" name="${col.name}" value="${value}">`;
                 }
             }
-            html += `<div class="input-field"><label>${col.name}:</label>${input}</div>`;
+            tempDiv.innerHTML += `<div class="input-field"><label>${col.name}:</label>${inputHtml}</div>`;
+        });
+
+        // Aplica el layout personalizado
+        try {
+            const content = window.customInsertLayouts[tableName];
+            const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+            const existingFields = new Map();
+            tempDiv.querySelectorAll('.input-field').forEach(fieldDiv => {
+                const input = fieldDiv.querySelector('input, select, textarea');
+                if (input && (input.name || input.getAttribute('name'))) {
+                    const fieldName = input.name || input.getAttribute('name');
+                    existingFields.set(fieldName, fieldDiv.outerHTML);
+                }
+            });
+
+            let customHtml = '';
+            for (let i = 1; i < lines.length - 1; i++) {
+                const line = lines[i];
+                if (line.startsWith('+++')) {
+                    customHtml += `<div class="insertion-secondary-header"><label>${line.substring(3).trim()}</label></div>`;
+                } else if (line.startsWith('++')) {
+                    customHtml += `<div class="insertion-header"><label>${line.substring(2).trim()}</label></div>`;
+                } else if (line.startsWith('+')) {
+                    customHtml += `<div class="insertion-subtitle"><label>${line.substring(1).trim()}</label></div>`;
+                } else if (line.startsWith('-')) {
+                    const fieldName = line.substring(1).trim();
+                    if (existingFields.has(fieldName)) {
+                        customHtml += existingFields.get(fieldName);
+                        existingFields.delete(fieldName); // Para no repetir campos
+                    }
+                }
+            }
+            html += customHtml;
+
+            // Añade los campos que no se incluyeron en el layout personalizado
+            existingFields.forEach(fieldHtml => {
+                html += fieldHtml;
+            });
+        } catch (error) {
+            console.error('Error applying custom layout to edit form:', error);
+            html += tempDiv.innerHTML;
         }
-    });
+    } else {
+        // Layout estándar: muestra todos los campos
+        schema.tables[tableName].columns.forEach(col => {
+            let inputHtml = '';
+            if (col.pk) {
+                inputHtml = `<input type="text" value="${record[col.name]}" disabled title="Las claves primarias no se pueden editar">`;
+            } else if (schema.tables[col.type]?.isEnum) {
+                const options = schema.tables[col.type].values
+                    .map(value => `<option value="${value}" ${record[col.name] === value ? 'selected' : ''}>${value}</option>`)
+                    .join('');
+                inputHtml = `<select name="${col.name}"><option value="">Seleccione...</option>${options}</select>`;
+            } else {
+                const value = record[col.name] !== null ? record[col.name] : '';
+                switch (col.type) {
+                    case 'DATE':
+                        inputHtml = `<input type="date" name="${col.name}" value="${value}">`; break;
+                    case 'INT':
+                        inputHtml = `<input type="text" name="${col.name}" value="${value}" class="numeric-input integer-input" inputmode="numeric">`; break;
+                    case 'FLOAT':
+                        inputHtml = `<input type="text" name="${col.name}" value="${value}" class="numeric-input float-input" inputmode="decimal">`; break;
+                    case 'BOOLEAN':
+                        inputHtml = `<input type="checkbox" name="${col.name}" ${record[col.name] ? 'checked' : ''}>`; break;
+                    default:
+                        inputHtml = `<input type="text" name="${col.name}" value="${value}">`;
+                }
+            }
+            html += `<div class="input-field"><label>${col.name}:</label>${inputHtml}</div>`;
+        });
+    }
+
     html += `</div>`;
 
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'block';
     modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content edit-modal-content">
             <span class="close" onclick="this.closest('.modal').remove()">×</span>
             <h2>Editar Registro</h2>
-            ${html}
-            <button onclick="saveEditedRecord('${tableName}', '${pkValue}', this.closest('.modal'))">Guardar</button>
+            <div class="edit-form-scrollable-content">
+                ${html}
+            </div>
+            <div class="modal-buttons">
+                <button onclick="saveEditedRecord('${tableName}', '${pkValue}', this.closest('.modal'))">Guardar</button>
+            </div>
         </div>
     `;
     document.body.appendChild(modal);
+    
+    // Configurar validación numérica para los campos del modal
+    setupNumericValidationForModal(modal);
+}
+
+function setupNumericValidationForModal(modal) {
+    // Validación para campos de enteros en el modal
+    modal.querySelectorAll('.integer-input').forEach(input => {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value;
+            value = value.replace(/[^0-9-]/g, '');
+            
+            if (value.includes('-')) {
+                const parts = value.split('-');
+                if (parts[0] === '') {
+                    value = '-' + parts.slice(1).join('');
+                } else {
+                    value = value.replace(/-/g, '');
+                }
+            }
+            
+            e.target.value = value;
+        });
+        
+        input.addEventListener('keypress', function(e) {
+            const char = String.fromCharCode(e.which);
+            const currentValue = e.target.value;
+            
+            if (e.which < 32) return;
+            if (/[0-9]/.test(char)) return;
+            if (char === '-' && currentValue.length === 0 && !currentValue.includes('-')) return;
+            
+            e.preventDefault();
+        });
+    });
+
+    // Validación para campos de flotantes en el modal
+    modal.querySelectorAll('.float-input').forEach(input => {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value;
+            value = value.replace(/[^0-9.,-]/g, '');
+            value = value.replace(/,/g, '.');
+            
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            if (value.includes('-')) {
+                const minusParts = value.split('-');
+                if (minusParts[0] === '') {
+                    value = '-' + minusParts.slice(1).join('');
+                } else {
+                    value = value.replace(/-/g, '');
+                }
+            }
+            
+            e.target.value = value;
+        });
+        
+        input.addEventListener('keypress', function(e) {
+            const char = String.fromCharCode(e.which);
+            const currentValue = e.target.value;
+            
+            if (e.which < 32) return;
+            if (/[0-9]/.test(char)) return;
+            if ((char === '.' || char === ',') && !currentValue.includes('.')) return;
+            if (char === '-' && currentValue.length === 0) return;
+            
+            e.preventDefault();
+        });
+    });
 }
 
 function saveEditedRecord(tableName, pkValue, modal) {
@@ -303,13 +539,26 @@ function saveEditedRecord(tableName, pkValue, modal) {
             if (!col.pk) {
                 const input = modal.querySelector(`[name="${col.name}"]`);
                 if (input) {
+                    if (col.type === 'BOOLEAN') {
+                        updates.push(`${col.name} = ?`);
+                        values.push(input.checked);
+                        return; // Continuar con el siguiente campo
+                    }
+
                     let value = input.value.trim();
                     // Si el valor está vacío, asignar NULL
                     if (value === '') {
                         updates.push(`${col.name} = NULL`);
                     } else {
-                        if (col.type === 'BOOLEAN') {
-                            value = value === 'true';
+                        // Convertir el valor al tipo de dato correcto
+                        switch (col.type) {
+                            case 'INT':
+                                value = parseInt(value, 10);
+                                break;
+                            case 'FLOAT':
+                                value = parseFloat(value);
+                                break;
+                            // Para STRING, DATE y Enums, el valor de texto es adecuado
                         }
                         updates.push(`${col.name} = ?`);
                         values.push(value);
@@ -318,7 +567,13 @@ function saveEditedRecord(tableName, pkValue, modal) {
             }
         });
 
-        values.push(pkValue); // Valor para WHERE
+        let pkVal = pkValue;
+        // Convertir el valor de la clave primaria a su tipo correcto
+        if (pkColumn.type === 'INT' || pkColumn.type === 'FLOAT') {
+            pkVal = Number(pkValue);
+        }
+
+        values.push(pkVal); // Valor para WHERE
         const query = `UPDATE ${tableName} SET ${updates.join(', ')} WHERE ${pkColumn.name} = ?`;
         alasql(query, values);
         
@@ -354,22 +609,22 @@ function downloadInsertions() {
                 if (data.length > 0) {
                     hasData = true;
                     insertionsSQL += `-- Inserciones para tabla ${tableName}\n`;
-                    data.forEach(row => {
-                        const columns = [];
-                        const values = [];
-                        
-                        Object.entries(row).forEach(([col, val]) => {
-                            columns.push(col);
-                            if (val === null || val === undefined || val === '') {
-                                values.push('NULL');
-                            } else {
-                                values.push(typeof val === 'string' ? `'${val}'` : val);
-                            }
-                        });
+                    
+                    const columns = Object.keys(data[0]);
+                    insertionsSQL += `INSERT INTO ${tableName} (${columns.join(', ')})\nVALUES\n`;
 
-                        insertionsSQL += `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${values.join(', ')});\n`;
+                    const valuesList = data.map(row => {
+                        const values = columns.map(col => {
+                            const val = row[col];
+                            if (val === null || val === undefined || val === '') {
+                                return 'NULL';
+                            }
+                            return typeof val === 'string' ? `'${val.replace(/'/g, "''")}'` : val;
+                        });
+                        return `    (${values.join(', ')})`;
                     });
-                    insertionsSQL += '\n';
+
+                    insertionsSQL += valuesList.join(',\n') + ';\n\n';
                 }
             } catch (error) {
                 console.error(`Error al procesar tabla ${tableName}:`, error);

@@ -1,0 +1,19 @@
+/* === SCHEMA LAYOUT === */
+.schema-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .schema-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .predefined-enums-container {
+        height: auto;
+        max-height: 400px;
+    }
+}

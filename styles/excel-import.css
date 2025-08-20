@@ -1,0 +1,99 @@
+/* === EXCEL IMPORT === */
+.excel-import-controls {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.excel-import-controls input[type="number"] {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+}
+
+.excel-grid {
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+    max-height: calc(100vh - 300px);
+    position: relative;
+}
+
+.excel-grid table {
+    width: auto;  /* Cambiado de 100% a auto */
+    border-collapse: collapse;
+    min-width: 100%; /* Asegura que ocupa al menos el ancho disponible */
+}
+
+.excel-grid th {
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: 0.8rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    white-space: nowrap; /* Evita que los encabezados se partan */
+}
+
+.excel-grid td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem;
+    min-width: 150px;
+    max-width: 300px; /* Limitar el ancho máximo de las celdas */
+    white-space: nowrap; /* Mantener el contenido en una línea */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Mostrar ... si el contenido es muy largo */
+}
+
+.excel-grid td:focus {
+    white-space: normal; /* Permitir múltiples líneas al editar */
+    overflow: visible;
+}
+
+.suggestion-tooltip {
+    position: absolute;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    max-width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.suggestion-title {
+    padding: 8px 12px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-gray-bg-medium);
+}
+
+.suggestion-list {
+    padding: 4px 0;
+}
+
+.suggestion-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.suggestion-item .highlight {
+    background-color: var(--color-tooltip-bg);
+    font-weight: bold;
+}

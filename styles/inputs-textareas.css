@@ -1,0 +1,38 @@
+/* === INPUTS & TEXTAREAS === */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    padding: 0.8rem;
+    border: 2px solid var(--color-border);
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    transition: var(--transition);
+    width: 100%;
+    max-width: 300px;
+}
+
+textarea {
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    background-color: var(--color-gray-bg-light);
+    padding: 1rem;
+    line-height: 1.4;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+    background-color: var(--color-gray-medium) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+}

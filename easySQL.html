@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1.0">
+    <title>easySQL - Gestión de Bases de Datos Simplificada</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="modern-header.css">
+    <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.2/dist/alasql.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.0/dist/vis-network.min.js"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="scripts/textFormatter.js"></script>
+    <script src="scripts/editFormFormatter.js"></script>
+    <link rel="stylesheet" href="styles/checkboxes.css">
+    <link rel="icon" type="image/png" href="styles/eSQLlogo.png">
+    <!-- Google Fonts - Inter para un look más moderno -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .insertion-subtitle {
+            font-weight: 600;
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 2px solid var(--color-border);
+            text-align: left;
+            font-size: var(--font-size-lg);
+            color: var(--color-primary);
+        }
+        #top-bar {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ccc;
+        }
+        /* Eliminados bloques .dark-mode (ya no hay modo oscuro) */
+        /* Forzar (redundante) headings blancos si se carga antes que modern-header.css */
+        h1, h2, h3, h4 { color: #ffffff !important; }
+    </style>
+</head>
+<body>
+    <!-- Add background container matching landing page -->
+    <div class="background-container">
+        <div class="gradient-bg">
+            <div class="floating-shapes"></div>
+        </div>
+    </div>
+    
+    <div class="top-bar">
+        <h1 class="logo-text">
+            <a href="home.html" style="text-decoration: none; color: inherit;">easySQL</a>
+        </h1>
+        <nav class="tab-nav">
+            <a href="#" class="tab-nav-item active" onclick="showTab('esquema')">Esquema</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('inserciones')">Inserciones</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('datos')">Datos</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('consultas')">Consultas</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('mapa')">Mapa</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('graficos')">Gráficos</a>
+            <a href="#" class="tab-nav-item" onclick="showTab('excelImport')">Excel Import</a>
+        </nav>
+    </div>
+    <div class="background-circles"></div>
+    <!-- Menú de pestañas eliminado -->
+    <!-- Nueva lógica de navegación -->
+    <div id="esquema" class="tab-content active">
+        <div id="buttons-container">
+            <button onclick="openCreateTableModal()">Crear Tabla</button>
+            <select id="tableDropdown"></select>
+            <button onclick="editTable()">Editar/Borrar Tabla</button>
+            <button onclick="openCreateEnumModal()">Crear Enum</button>
+            <select id="enumDropdown"></select>
+            <button onclick="openDeleteEnumModal(document.getElementById('enumDropdown').value)">Borrar Enum</button>
+            <button onclick="openEditEnumModal()">Editar Enum</button>
+            <button onclick="downloadSQL()">Descargar SQL</button>
+            <button onclick="document.getElementById('sqlFileInput').click()">Cargar SQL</button>
+            <input type="file" id="sqlFileInput" style="display: none" accept=".sql" onchange="loadSQL(event)">
+        </div>
+        <h2 id="mapita">Mapa de Clases</h2>
+        <div class="schema-layout">
+            <div id="network"></div>
+            <div class="predefined-enums-container">
+                <h3>Enums Predefinidos</h3>
+                <div id="predefinedEnumsList"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Pestaña Inserciones -->
+    <div id="inserciones" class="tab-content">
+        <!-- El contenido se generará dinámicamente -->
+    </div>
+    <!-- Pestaña Datos -->
+    <div id="datos" class="tab-content">
+        <h2>Datos Insertados</h2>
+        <div class="search-header">
+            <h3>Buscar y filtrar</h3>
+        </div>
+        <div class="data-actions">
+            <button onclick="downloadInsertions()">Descargar Inserciones</button>
+            <button onclick="document.getElementById('insertionsFileInput').click()">Cargar Inserciones</button>
+            <input type="file" id="insertionsFileInput" style="display: none" accept=".sql" onchange="loadInsertions(event)">
+        </div>
+        <div id="data-container"></div>
+    </div>
+    <!-- Pestaña Consultas -->
+    <div id="consultas" class="tab-content">
+        <h2>Consultas con IA</h2>
+        <div class="ia-query-container">
+            <div class="ia-input-group centered">
+                <label for="apiKey">API Key de IA (ej. Gemini):</label>
+                <input type="password" id="apiKey" placeholder="Pega tu API Key aquí para usar la IA">
+            </div>
+            <div class="ia-input-group centered">
+                <label for="naturalQuery">Pregunta en lenguaje natural:</label>
+                <textarea id="naturalQuery" rows="4" placeholder="Ej: ¿Cuántas víctimas había en Barcelona en 2023?"></textarea>
+                <button onclick="generateAIQuery()">Generar Consulta SQL</button>
+            </div>
+            <div class="ia-input-group centered">
+                <label for="generatedSql">Consulta SQL generada (editable):</label>
+                <textarea id="generatedSql" rows="6" placeholder="Aquí aparecerá la consulta SQL generada..."></textarea>
+                <button onclick="executeGeneratedSQL()">Ejecutar Consulta</button>
+            </div>
+            <div class="ia-output">
+                <label>Resultado de la consulta:</label>
+                <pre id="sqlResult"></pre>
+            </div>
+        </div>
+    </div>
+    <!-- Pestaña Mapa -->
+    <div id="mapa" class="tab-content">
+        <div class="map-controls">
+            <select id="mapaTableSelect">
+                <option value="">Selecciona una tabla</option>
+            </select>
+            <select id="mapaColumnSelect" disabled>
+                <option value="">Selecciona una columna</option>
+            </select>
+            <button onclick="actualizarMapa()">Actualizar Mapa</button>
+        </div>
+        <div id="mapaContainer" style="height: calc(100vh - 250px);"></div>
+    </div>
+    <!-- Pestaña Gráficos -->
+    <div id="graficos" class="tab-content">
+        <div class="graficos-selectors">
+            <select id="graficoTableSelect">
+                <option value="">Selecciona una tabla</option>
+            </select>
+            <select id="graficoColumnSelect" disabled>
+                <option value="">Selecciona una columna</option>
+            </select>
+            <select id="graficoTipoSelect">
+                <option value="">Selecciona un tipo de gráfico</option>
+                <option value="pie">Circular</option>
+                <option value="semicircle">Semicírculo</option>
+                <option value="column">Barras</option>
+                <option value="line">Líneas</option>
+            </select>
+            <button onclick="generarGrafico()">Generar Gráfico</button>
+        </div>
+        <div id="graficos-container">
+            <!-- Aquí se insertarán los gráficos dinámicamente -->
+        </div>
+    </div>
+    <!-- Nueva pestaña Excel Import -->
+    <div id="excelImport" class="tab-content">
+        <div class="excel-import-controls">
+            <select id="excelTableSelect" onchange="setupExcelGrid()">
+                <option value="">Selecciona una tabla</option>
+            </select>
+            <input type="number" id="rowCount" min="10" max="1000" value="100" 
+                title="Número de filas (10-1000)"
+                style="width: 100px;"
+                onchange="setupExcelGrid()">
+            <button onclick="validateAndImportData()">Guardar Datos</button>
+            <button onclick="loadExistingData()">Modificar Datos Ya Insertados</button>
+            <button onclick="clearGrid()">Limpiar Todo</button>
+        </div>
+        <div id="excelGrid" class="excel-grid"></div>
+    </div>
+    <!-- Modal para crear tabla -->
+    <div id="createTableModal" class="modal">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh; max-width: 800px; width: 90%;">
+            <span class="close" onclick="closeCreateTableModal()">×</span>
+            <h2>Crear Nueva Tabla</h2>
+            <label for="tableName">Nombre de la tabla:</label>
+            <input type="text" id="tableName" class="table-name-input" placeholder="ej. estudiantes"><br><br>
+            <label for="columnsElements">Elementos columnas:</label>
+            <div id="columnsContainer"></div>
+            <button onclick="addColumnInput()">Añadir Elemento</button><br><br>
+            <button onclick="createTableFromForm()">Crear Tabla</button>
+        </div>
+    </div>
+    <!-- Modal para editar tabla -->
+    <div id="editTableModal" class="modal">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh; max-width: 800px; width: 90%;">
+            <span class="close" onclick="closeEditTableModal()">×</span>
+            <h2>Editar Tabla</h2>
+            <label for="columnsElements">Elementos columnas:</label>
+            <div id="editColumnsContainer"></div>
+            <button onclick="addColumnInputEdit()">Añadir Elemento</button><br><br>
+            <button onclick="saveTableChanges()">Guardar Cambios</button>
+            <button onclick="deleteTableFromModal()">Borrar Tabla</button>
+        </div>
+    </div>
+    <!-- Modal para crear enum -->
+    <div id="createEnumModal" class="modal">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh;">
+            <span class="close" onclick="closeCreateEnumModal()">×</span>
+            <h2>Crear Nuevo Enum</h2>
+            <label for="enumName">Nombre del Enum:</label>
+            <input type="text" id="enumName" class="table-name-input" placeholder="ej. calidadTV"><br><br>
+            <h3>Valores</h3>
+            <div id="enumValuesContainer"></div>
+            <button onclick="addEnumValueInputCreate()">Añadir Valor</button><br><br>
+            <button onclick="createEnumFromForm()">Crear Enum</button>
+        </div>
+    </div>
+    <!-- Modal para editar enums -->
+    <div id="editEnumModal" class="modal">
+        <div class="modal-content" style="margin-top: 5vh; margin-bottom: 10vh;">
+            <span class="close" onclick="closeEditEnumModal()">×</span>
+            <h2>Editar Enum</h2>
+            <label for="editEnumName">Nombre del Enum:</label>
+            <input type="text" id="editEnumName" class="table-name-input" readonly><br><br>
+            <h3>Valores</h3>
+            <div id="editEnumValuesContainer"></div>
+            <button onclick="addEnumValueInput()">Añadir Valor</button><br><br>
+            <button onclick="saveEnumChanges()">Guardar Cambios</button>
+        </div>
+    </div>
+    <!-- Modal para relaciones -->
+    <div id="relationshipModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRelationshipModal()">×</span>
+            <h2>Crear Relación</h2>
+            <label for="relationshipName">Nombre de la Relación:</label>
+            <input type="text" id="relationshipName" placeholder="ej. Relación1"><br><br>
+            <label for="relationshipTable1">Tabla 1:</label>
+            <select id="relationshipTable1"></select><br><br>
+            <label for="relationshipTable2">Tabla 2:</label>
+            <select id="relationshipTable2"></select><br><br>
+            <label for="relationshipType">Tipo:</label>
+            <select id="relationshipType">
+                <option value="1:1">1:1</option>
+                <option value="n:1">n:1</option>
+                <option value="1:n">1:n</option>
+                <option value="n:n">n:n</option>
+            </select><br><br>
+            <label for="relationshipDirection">Dirección:</label>
+            <select id="relationshipDirection">
+                <option value="bidirectional">Bidireccional</option>
+                <option value="forward">Hacia adelante</option>
+                <option value="backward">Hacia atrás</option>
+            </select><br><br>
+            <button onclick="saveRelationship()">Guardar Relación</button>
+        </div>
+    </div>
+    <!-- Scripts -->
+    <script src="scripts/notifications.js"></script>
+    <script src="scripts/warningDialog.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/tableDataMigrator.js"></script>
+    <script src="scripts/createTable.js"></script>
+    <script src="scripts/editTable.js"></script>
+    <script src="scripts/deleteTable.js"></script>
+    <script src="scripts/editEnum.js"></script>
+    <script src="scripts/createEnum.js"></script>
+    <script src="scripts/insertions.js"></script>
+    <script src="scripts/tabs.js"></script>
+    <script src="scripts/dataView.js"></script>
+    <script src="scripts/mapa.js"></script>
+    <script src="scripts/graficos.js"></script>
+    <script src="scripts/animations.js"></script>
+    <script src="scripts/excelImport.js"></script>
+    <script src="scripts/predefinedEnums.js"></script>
+    <script src="scripts/mapCoordinates.js"></script>
+    <script src="scripts/colorTheme.js"></script>
+    <script src="scripts/help.js"></script>
+    <script src="eSQL/custom-insert.js"></script>
+    <!-- Añadir antes de cerrar el body -->
+    <link rel="stylesheet" href="styles/insertions.css">
+    <script src="scripts/labelScroller.js"></script>
+    <script src="scripts/topBarLayout.js"></script>
+    <script src="scripts/logoAnimation.js"></script>
+    <script>
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                document.querySelector('.background-circles').innerHTML = '';
+            }
+        });
+
+        // Update showTab function for new navigation
+        let dataTabInitialized = false;
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const navItems = document.querySelectorAll('.tab-nav-item');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-nav-item[onclick="showTab('${tabName}')"]`).classList.add('active');
+            
+            if (tabName === 'datos') {
+                if (!dataTabInitialized && typeof setupDataTab === 'function') {
+                    setupDataTab();
+                    dataTabInitialized = true;
+                } else {
+                    if (typeof refreshTableFilter === 'function') refreshTableFilter();
+                    if (typeof updateSearchFields === 'function') updateSearchFields();
+                }
+                if (typeof showAllData === 'function') {
+                    showAllData();
+                }
+            } else if (tabName === 'mapa') {
+                initMap && initMap();
+            } else if (tabName === 'inserciones') {
+                setupInsertionsTab && setupInsertionsTab();
+                if (window.customInsertLayouts) {
+                    for (const tableName in window.customInsertLayouts) {
+                        applyCustomInsertLayout(window.customInsertLayouts[tableName]);
+                    }
+                }
+            } else if (tabName === 'excelImport') {
+                const currentTable = document.getElementById('excelTableSelect').value;
+                if (!currentTable) {
+                    updateTableSelect && updateTableSelect();
+                }
+            }
+        }
+
+        // Opcional: pre-cargar el data tab si ya existen tablas al inicio
+        window.addEventListener('DOMContentLoaded', () => {
+            if (Object.keys(window.schema?.tables || {}).some(t => !schema.tables[t].isEnum)) {
+                // Dejar que el usuario abra la pestaña cuando quiera; no forzamos.
+            }
+        });
+    </script>
+    <style>
+/* Estilos para el menú de ayuda */
+.help-navigation {
+    background: linear-gradient(135deg, #f5edff 0%, #e4cdff 100%);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.help-navigation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;  /* Centra el contenido horizontalmente */
+    padding: 1rem 1.5rem;
+    margin: 0.5rem 0;
+    background: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #7e3f7a;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(155,79,150,0.08);
+    text-align: center;  /* Centra el texto */
+}
+
+.nav-item:hover {
+    transform: translateX(5px);
+    background: #f8f2ff;
+    box-shadow: 0 4px 12px rgba(155,79,150,0.12);
+}
+
+.nav-item.active {
+    background: #9b4f96;
+    color: #fff;
+}
+
+.feature-list {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-item h4 {
+    color: #9b4f96;
+    margin-bottom: 0.5rem;
+}
+
+.feature-item p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #666;
+}
+
+.faq-columns {
+    display: flex;
+    gap: 2rem;
+}
+
+.faq-column {
+    flex: 1;
+}
+
+.faq-column h4 {
+    color: #9b4f96;
+    border-bottom: 2px solid #f5edff;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.faq-item {
+    margin-bottom: 1.5rem;
+}
+
+.faq-item strong {
+    display: block;
+    color: #7e3f7a;
+    margin-bottom: 0.3rem;
+}
+
+.faq-item p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #666;
+    margin: 0;
+}
+
+/* Estilos para la nueva pestaña de Consultas con IA */
+.ia-query-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+.ia-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.ia-input-group.centered {
+    align-items: center;
+}
+.ia-input-group.centered input,
+.ia-input-group.centered textarea {
+    width: 80%;
+    max-width: 800px;
+}
+.ia-input-group.centered button {
+    width: auto;
+    align-self: center;
+    margin-top: 0.5rem;
+}
+.column-order-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: 5px;
+}
+.move-col-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-primary);
+    padding: 0;
+    width: 24px;
+    height: 16px;
+    font-size: 10px;
+    line-height: 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+.move-col-btn:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+.move-col-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+.column-input {
+    transition: all 0.3s ease-in-out;
+}
+.ia-input-group label {
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+/* Update body styling to match landing page */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: #ffffff;
+    overflow-x: hidden;
+    background: #000814;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+    </style>
+</body>
+</html>

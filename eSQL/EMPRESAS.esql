@@ -1,0 +1,13 @@
+$EMPRESAS
++Información de la empresa
+++Idenitficador de la empresa
+-ID
++++Este nombre puede ser modificado en los proximos años
+-NOMBRE
++Información del gerente
+-DNI
++Datos fiscales
+-DINERO
++Datos trabajadores
+-EDAD_MEDIA
+###

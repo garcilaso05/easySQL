@@ -1,0 +1,177 @@
+/* === MODERN MODALS === */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: var(--color-bg-secondary);
+    margin: 5% auto;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-xl);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    position: relative;
+    animation: slideInScale 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInScale {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Botón de cierre del modal mejorado */
+.close {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    font-size: var(--font-size-xl);
+    font-weight: bold;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--color-bg-hover);
+    opacity: 1 !important; /* Forzar opacidad completa */
+}
+
+.close:hover {
+    background: var(--color-error);
+    color: var(--color-white);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    opacity: 1 !important; /* Mantener opacidad en hover */
+}
+
+.close:active {
+    transform: scale(0.9) rotate(90deg);
+    opacity: 1 !important; /* Mantener opacidad en active */
+}
+
+.modal-content h2 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-primary);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--color-border);
+    font-weight: 600;
+}
+
+.modal-content h3 {
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+/* Input groups en modales */
+.modal-content label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-base);
+    transition: all var(--transition-fast);
+    background: var(--color-bg-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Botones en footer del modal */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.modal-footer button {
+    min-width: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-footer button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.modal-footer button:hover::before {
+    left: 100%;
+}
+
+/* Animaciones específicas para botones de modal */
+.modal-content button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-content button:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.modal-content button:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Modal responsivo */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 2% auto;
+        padding: var(--spacing-lg);
+        width: 95%;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+}
