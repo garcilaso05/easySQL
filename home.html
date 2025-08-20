@@ -6,6 +6,7 @@
     <title>easySQL - Migración de Datos Simplificada</title>
     <link rel="stylesheet" href="styles/landing.css">
     <link rel="stylesheet" href="styles/landing-animations.css">
+    <link rel="stylesheet" href="styles/modals-landing.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -53,9 +54,9 @@
                             <button class="cta-primary" onclick="showTab('getting-started')">
                                 Comenzar Migración
                             </button>
-                            <a href="easySQL.html" class="cta-secondary">
+                            <button class="cta-secondary" onclick="openLoginModal()">
                                 Probar Demo
-                            </a>
+                            </button>
                         </div>
                     </div>
                     <div class="hero-visual">
@@ -179,9 +180,9 @@
                                 <strong>Nivel requerido:</strong> No es muy complejo, pero puede requerir 
                                 ciertos conocimientos básicos de bases de datos.
                             </div>
-                            <a href="easySQL.html" class="path-button primary">
+                            <button type="button" class="path-button primary" onclick="openLoginModal()">
                                 Acceder a la Aplicación
-                            </a>
+                            </button>
                         </div>
                     </div>
 
@@ -250,26 +251,23 @@
                 <button class="modal-close" onclick="closeContactModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Nuestro equipo te ayudará a migrar tus datos de manera profesional.</p>
-                <form class="contact-form">
-                    <div class="form-group">
-                        <label for="company">Nombre de la empresa</label>
-                        <input type="text" id="company" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="contact">Persona de contacto</label>
-                        <input type="text" id="contact" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="data-description">Describe brevemente tus datos</label>
-                        <textarea id="data-description" rows="3" placeholder="Ej: Tenemos Excel con clientes, PDFs con facturas, base de datos Access antigua..."></textarea>
-                    </div>
-                    <button type="submit" class="submit-btn">Enviar Solicitud</button>
-                </form>
+                <div class="contact-content">
+                    <h4>🚀 ¡Hablemos de tu proyecto!</h4>
+                    <p>
+                        Nuestro equipo de expertos está listo para ayudarte con la migración 
+                        de tus datos. Cuéntanos sobre tu proyecto y te proporcionaremos una 
+                        solución personalizada.
+                    </p>
+                    <p>
+                        Haz clic en el botón de abajo para enviar un correo directamente 
+                        a nuestro equipo técnico.
+                    </p>
+                    <a href="mailto:easysql.team@gmail.com?subject=Consulta sobre migración de datos&body=Hola equipo de easySQL,%0D%0A%0D%0AEstoy interesado/a en sus servicios de migración de datos.%0D%0A%0D%0AMi empresa: %0D%0ATipo de datos: %0D%0AVolumen aproximado: %0D%0A%0D%0AGracias!" 
+                       class="email-button">
+                        <span class="email-icon">📧</span>
+                        Enviar Correo Electrónico
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -279,71 +277,71 @@
         <div class="modal-content login-modal">
             <div class="modal-header login-header">
                 <h3>Acceso a easySQL</h3>
-                <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+                <button class="modal-close" onclick="closeLoginModal()">×</button>
             </div>
             <div class="modal-body login-body">
-                <p class="login-subtitle">Elige cómo quieres acceder a la plataforma</p>
                 
-                <div class="login-options">
-                    <!-- Option 1: Upload eSQL file -->
-                    <div class="login-option">
-                        <div class="option-icon">
-                            <div class="file-upload-icon">📁</div>
-                        </div>
-                        <h4>Cargar Archivo eSQL</h4>
-                        <p>Si ya tienes un archivo eSQL de un proyecto anterior, súbelo para continuar trabajando.</p>
-                        <div class="upload-area" onclick="document.getElementById('esqlFileInput').click()">
-                            <div class="upload-content">
-                                <div class="upload-icon">⬆️</div>
-                                <span>Seleccionar archivo .esql</span>
+                <div class="login-container">
+                    <div class="login-options" id="loginOptions">
+                        <!-- Left Option: Upload File -->
+                        <div class="login-option">
+                            <div class="option-icon">
+                                <div class="file-upload-icon">📁</div>
                             </div>
-                            <input type="file" id="esqlFileInput" accept=".esql" style="display: none;">
+                            <h4>Cargar Archivo eSQL</h4>
+                            <p>Si ya tienes un archivo eSQL de un proyecto anterior, súbelo para continuar trabajando.</p>
+                            <!-- Navigation Button for Left Option -->
+                            <button class="navigation-button nav-left" id="navLeft" onclick="showFileUpload()">￫</button>
                         </div>
+
+                        <!-- Right Option: New User -->
+                        <div class="login-option">
+                            <div class="option-icon">
+                                <div class="new-user-icon">👤</div>
+                            </div>
+                            <h4>Nuevo Usuario</h4>
+                            <p>Comienza desde cero y crea tu primera base de datos con nuestras herramientas.</p>
+                            <!-- Navigation Button for Right Option -->
+                            <button class="navigation-button nav-right" id="navRight" onclick="showNewUser()">￩</button>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="divider" id="divider"></div>
+
+                    <!-- Step Content for File Upload -->
+                    <div class="step-content left" id="fileUploadStep">
+                        <h4>Subir Archivo eSQL</h4>
+                        
+                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('esqlFileInput').click()">
+                            <div class="upload-content">
+                                <div class="upload-icon">📁</div>
+                                <span>Seleccionar archivo .easySQL</span>
+                            </div>
+                            <input type="file" id="esqlFileInput" accept=".easysql" style="display: none;">
+                        </div>
+                        
                         <div class="file-info" id="fileInfo" style="display: none;">
                             <span class="file-name"></span>
                             <button class="remove-file" onclick="removeFile()">✕</button>
                         </div>
-                        <button class="login-btn primary" id="uploadBtn" disabled onclick="handleEsqlLogin()">
+                        
+                        <button class="step-button" id="uploadBtn" disabled onclick="handleEsqlLogin()">
                             Acceder con Archivo
                         </button>
                     </div>
 
-                    <!-- Divider -->
-                    <div class="login-divider">
-                        <div class="divider-line"></div>
-                        <span class="divider-text">O</span>
-                        <div class="divider-line"></div>
-                    </div>
-
-                    <!-- Option 2: New user -->
-                    <div class="login-option">
-                        <div class="option-icon">
-                            <div class="new-user-icon">👤</div>
-                        </div>
-                        <h4>Nuevo Usuario</h4>
-                        <p>Comienza desde cero y crea tu primera base de datos con nuestras herramientas.</p>
-                        <div class="features-preview">
-                            <div class="preview-item">
-                                <span class="preview-check">✓</span>
-                                <span>Creación de tablas intuitiva</span>
-                            </div>
-                            <div class="preview-item">
-                                <span class="preview-check">✓</span>
-                                <span>Importación desde Excel</span>
-                            </div>
-                            <div class="preview-item">
-                                <span class="preview-check">✓</span>
-                                <span>Visualizaciones automáticas</span>
-                            </div>
-                        </div>
-                        <button class="login-btn secondary" onclick="handleNewUserLogin()">
+                    <!-- Step Content for New User -->
+                    <div class="step-content right" id="newUserStep">
+                        <h4>Clave de Licencia</h4>
+                        <p>Introduce tu clave de licencia para comenzar</p>
+                        
+                        <input type="text" class="license-input" id="licenseKey" placeholder="Clave de licencia" value="000000">
+                        
+                        <button class="step-button" onclick="handleNewUserLogin()">
                             Empezar como Nuevo Usuario
                         </button>
                     </div>
-                </div>
-
-                <div class="login-footer">
-                    <p>¿Necesitas ayuda? <a href="#" onclick="showTab('getting-started'); closeLoginModal();">Consulta nuestra guía</a></p>
                 </div>
             </div>
         </div>
@@ -376,36 +374,163 @@
         // Modal functionality
         function openContactModal() {
             document.getElementById('contactModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
         function closeContactModal() {
             document.getElementById('contactModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
         // Login Modal functionality
         function openLoginModal() {
             document.getElementById('loginModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
         function closeLoginModal() {
             document.getElementById('loginModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
             resetLoginModal();
         }
 
+        // Login animation functionality
+        let currentStep = 'none';
+
+        function showFileUpload() {
+            const loginOptions = document.getElementById('loginOptions');
+            const fileUploadStep = document.getElementById('fileUploadStep');
+            const newUserStep = document.getElementById('newUserStep');
+            const navLeft = document.getElementById('navLeft');
+            const navRight = document.getElementById('navRight');
+            const divider = document.getElementById('divider');
+            
+            // Hide divider and right button
+            divider.style.opacity = '0';
+            navRight.style.opacity = '0';
+            navRight.style.pointerEvents = 'none';
+            
+            // Slide right to show left content (content moves right, left option stays)
+            loginOptions.classList.add('slide-right');
+            
+            // Change left button direction and function
+            navLeft.innerHTML = '￩'; // was ←
+            navLeft.onclick = goBack;
+            
+            setTimeout(() => {
+                fileUploadStep.classList.add('active');
+                newUserStep.classList.remove('active');
+                currentStep = 'file';
+            }, 400);
+        }
+
+        function showNewUser() {
+            const loginOptions = document.getElementById('loginOptions');
+            const fileUploadStep = document.getElementById('fileUploadStep');
+            const newUserStep = document.getElementById('newUserStep');
+            const navLeft = document.getElementById('navLeft');
+            const navRight = document.getElementById('navRight');
+            const divider = document.getElementById('divider');
+            
+            // Hide divider and left button
+            divider.style.opacity = '0';
+            navLeft.style.opacity = '0';
+            navLeft.style.pointerEvents = 'none';
+            
+            // Slide left to show right content (content moves left, right option stays)
+            loginOptions.classList.add('slide-left');
+            
+            // Change right button direction and function
+            navRight.innerHTML = '￫'; // was →
+            navRight.onclick = goBack;
+            
+            setTimeout(() => {
+                newUserStep.classList.add('active');
+                fileUploadStep.classList.remove('active');
+                currentStep = 'user';
+            }, 400);
+        }
+
+        function goBack() {
+            const loginOptions = document.getElementById('loginOptions');
+            const fileUploadStep = document.getElementById('fileUploadStep');
+            const newUserStep = document.getElementById('newUserStep');
+            const navLeft = document.getElementById('navLeft');
+            const navRight = document.getElementById('navRight');
+            const divider = document.getElementById('divider');
+            
+            // Hide step content
+            fileUploadStep.classList.remove('active');
+            newUserStep.classList.remove('active');
+            
+            // Reset navigation buttons
+            navLeft.innerHTML = '￫';  // reset
+            navLeft.onclick = showFileUpload;
+            navRight.innerHTML = '￩'; // reset
+            navRight.onclick = showNewUser;
+            
+            setTimeout(() => {
+                // Reset slide position
+                loginOptions.classList.remove('slide-left', 'slide-right');
+                
+                // Show divider and buttons
+                divider.style.opacity = '1';
+                navLeft.style.opacity = '1';
+                navRight.style.opacity = '1';
+                navLeft.style.pointerEvents = 'auto';
+                navRight.style.pointerEvents = 'auto';
+                
+                currentStep = 'none';
+            }, 200);
+        }
+
         function resetLoginModal() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            
             document.getElementById('esqlFileInput').value = '';
-            document.getElementById('fileInfo').style.display = 'none';
+            fileInfo.style.display = 'none';
+            uploadArea.style.display = 'block'; // Make sure upload area is visible
             document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('licenseKey').value = '000000';
+            
+            // Reset all states
+            const loginOptions = document.getElementById('loginOptions');
+            const fileUploadStep = document.getElementById('fileUploadStep');
+            const newUserStep = document.getElementById('newUserStep');
+            const navLeft = document.getElementById('navLeft');
+            const navRight = document.getElementById('navRight');
+            const divider = document.getElementById('divider');
+            
+            loginOptions.classList.remove('slide-left', 'slide-right');
+            fileUploadStep.classList.remove('active');
+            newUserStep.classList.remove('active');
+            
+            navLeft.innerHTML = '￫';
+            navRight.innerHTML = '￩';
+            navLeft.onclick = showFileUpload;
+            navRight.onclick = showNewUser;
+            
+            divider.style.opacity = '1';
+            navLeft.style.opacity = '1';
+            navRight.style.opacity = '1';
+            navLeft.style.pointerEvents = 'auto';
+            navRight.style.pointerEvents = 'auto';
+            
+            currentStep = 'none';
         }
 
         // File upload handling
         document.getElementById('esqlFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                const uploadArea = document.getElementById('uploadArea');
                 const fileInfo = document.getElementById('fileInfo');
                 const fileName = fileInfo.querySelector('.file-name');
                 const uploadBtn = document.getElementById('uploadBtn');
                 
+                // Hide upload area and show file info
+                uploadArea.style.display = 'none';
                 fileName.textContent = file.name;
                 fileInfo.style.display = 'flex';
                 uploadBtn.disabled = false;
@@ -413,27 +538,132 @@
         });
 
         function removeFile() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            // Clear file input
             document.getElementById('esqlFileInput').value = '';
-            document.getElementById('fileInfo').style.display = 'none';
+            
+            // Show upload area and hide file info
+            uploadArea.style.display = 'block';
+            fileInfo.style.display = 'none';
+            uploadBtn.disabled = true;
+        }
+
+        function resetLoginModal() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            document.getElementById('esqlFileInput').value = '';
+            fileInfo.style.display = 'none';
+            uploadArea.style.display = 'block'; // Make sure upload area is visible
             document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('licenseKey').value = '000000';
+            
+            // Reset all states
+            const loginOptions = document.getElementById('loginOptions');
+            const fileUploadStep = document.getElementById('fileUploadStep');
+            const newUserStep = document.getElementById('newUserStep');
+            const navLeft = document.getElementById('navLeft');
+            const navRight = document.getElementById('navRight');
+            const divider = document.getElementById('divider');
+            
+            loginOptions.classList.remove('slide-left', 'slide-right');
+            fileUploadStep.classList.remove('active');
+            newUserStep.classList.remove('active');
+            
+            navLeft.innerHTML = '￫';
+            navRight.innerHTML = '￩';
+            navLeft.onclick = showFileUpload;
+            navRight.onclick = showNewUser;
+            
+            divider.style.opacity = '1';
+            navLeft.style.opacity = '1';
+            navRight.style.opacity = '1';
+            navLeft.style.pointerEvents = 'auto';
+            navRight.style.pointerEvents = 'auto';
+            
+            currentStep = 'none';
         }
 
-        function handleEsqlLogin() {
-            const file = document.getElementById('esqlFileInput').files[0];
+        // File upload handling
+        document.getElementById('esqlFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
             if (file) {
-                // TODO: Handle eSQL file processing
-                console.log('Processing eSQL file:', file.name);
-                // For now, just redirect to main app
-                window.location.href = 'easySQL.html';
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInfo = document.getElementById('fileInfo');
+                const fileName = fileInfo.querySelector('.file-name');
+                const uploadBtn = document.getElementById('uploadBtn');
+                
+                // Hide upload area and show file info
+                uploadArea.style.display = 'none';
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'flex';
+                uploadBtn.disabled = false;
             }
+        });
+
+        function removeFile() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            // Clear file input
+            document.getElementById('esqlFileInput').value = '';
+            
+            // Show upload area and hide file info
+            uploadArea.style.display = 'block';
+            fileInfo.style.display = 'none';
+            uploadBtn.disabled = true;
         }
 
-        function handleNewUserLogin() {
-            // TODO: Handle new user setup
-            console.log('Setting up new user');
-            // For now, just redirect to main app
-            window.location.href = 'easySQL.html';
+        function resetLoginModal() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            document.getElementById('esqlFileInput').value = '';
+            fileInfo.style.display = 'none';
+            uploadArea.style.display = 'block'; // Make sure upload area is visible
+            document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('licenseKey').value = '000000';
+            
+            // Reset all states
+            const loginOptions = document.getElementById('loginOptions');
+            const fileUploadStep = document.getElementById('fileUploadStep');
+            const newUserStep = document.getElementById('newUserStep');
+            const navLeft = document.getElementById('navLeft');
+            const navRight = document.getElementById('navRight');
+            const divider = document.getElementById('divider');
+            
+            loginOptions.classList.remove('slide-left', 'slide-right');
+            fileUploadStep.classList.remove('active');
+            newUserStep.classList.remove('active');
+            
+            navLeft.innerHTML = '￫';
+            navRight.innerHTML = '￩';
+            navLeft.onclick = showFileUpload;
+            navRight.onclick = showNewUser;
+            
+            divider.style.opacity = '1';
+            navLeft.style.opacity = '1';
+            navRight.style.opacity = '1';
+            navLeft.style.pointerEvents = 'auto';
+            navRight.style.pointerEvents = 'auto';
+            
+            currentStep = 'none';
         }
+
+        // Update the demo button event
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update any existing demo button events
+            const demoButtons = document.querySelectorAll('.cta-secondary');
+            demoButtons.forEach(button => {
+                if (button.textContent.includes('Demo')) {
+                    button.onclick = openLoginModal;
+                }
+            });
+        });
 
         // Update the access button to open login modal instead
         document.querySelector('.access-btn').addEventListener('click', function(e) {
@@ -451,6 +681,28 @@
             if (event.target === loginModal) {
                 closeLoginModal();
             }
+        }
+
+        // Prevent body scrolling when modal is open
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            resetLoginModal();
+        }
+
+        function openContactModal() {
+            document.getElementById('contactModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
         // Form submission

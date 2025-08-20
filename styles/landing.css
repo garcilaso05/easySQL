@@ -161,17 +161,8 @@ body {
 }
 
 .nav-btn {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 600;
-    padding: 1rem 2rem;
-    border-radius: 15px;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: inherit;
-    position: relative;
-    overflow: hidden;
+    background: transparent;
+    background-color: transparent;
 }
 
 .nav-btn::before {
@@ -189,9 +180,11 @@ body {
     left: 100%;
 }
 
+/* Forzar transparencia también en hover y active */
 .nav-btn:hover,
 .nav-btn.active {
-    background: rgba(0, 102, 255, 0.15);
+    background: transparent;
+    background-color: transparent;
     color: var(--electric-blue);
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
@@ -222,6 +215,8 @@ body {
     background: linear-gradient(135deg, var(--electric-blue), var(--primary-blue));
     opacity: 0;
     transition: opacity 0.3s;
+    z-index: -1;              /* Coloca el overlay detrás del texto */
+    pointer-events: none;
 }
 
 .access-btn:hover::before {
@@ -233,6 +228,12 @@ body {
     box-shadow: 
         0 20px 40px rgba(0, 102, 255, 0.6),
         0 0 30px rgba(0, 204, 255, 0.4);
+}
+
+.access-btn,
+.access-btn:hover,
+.access-btn:focus {
+    color: var(--text-white);
 }
 
 /* Main Content */
@@ -414,6 +415,33 @@ body {
     filter: drop-shadow(0 0 20px rgba(0, 204, 255, 0.6));
 }
 
+/* Ocultar visual de transformación cuando no hay ancho suficiente */
+@media (max-width: 1200px) {
+    .hero-visual {
+        display: none;
+    }
+}
+
+/* Fallback: si hay ancho pero poca altura, apilar y mostrar flecha hacia abajo */
+@media (max-height: 650px) and (min-width: 1201px) {
+    .data-transformation {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    .data-transformation .arrow {
+        font-size: 0;
+        position: relative;
+    }
+    .data-transformation .arrow::after {
+        content: '↓';
+        font-size: 3rem;
+        display: block;
+        color: var(--electric-blue);
+        animation: arrowPulse 2s infinite;
+        filter: drop-shadow(0 0 20px rgba(0, 204, 255, 0.6));
+    }
+}
+
 /* Features Section */
 .features-section {
     margin-bottom: 8rem;
@@ -560,7 +588,6 @@ body {
     border-radius: 15px;
     padding: 2rem;
     color: var(--text-white) !important;
-    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.1);
 }
 
 /* Getting Started Section */
@@ -774,420 +801,49 @@ body {
     font-size: 0.95rem;
 }
 
-/* Modal - keeping existing styles but updating colors */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-}
-
-.modal-content {
-    background: rgba(0, 8, 20, 0.95);
-    backdrop-filter: blur(30px);
-    margin: 5% auto;
-    padding: 0;
-    border: 1px solid rgba(0, 102, 255, 0.3);
-    border-radius: 25px;
-    width: 90%;
-    max-width: 550px;
-    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5);
-}
-
-/* Login Modal Styles */
-.login-modal {
-    max-width: 700px;
-    width: 95%;
-}
-
-.login-header {
-    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
-    border-bottom: none;
-    border-radius: 25px 25px 0 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.login-header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    animation: rotate 20s linear infinite;
-}
-
-.login-header h3 {
-    position: relative;
-    z-index: 1;
-    font-size: 1.8rem;
-    font-weight: 700;
-}
-
-.login-header .modal-close {
-    position: relative;
-    z-index: 1;
-}
-
-.login-body {
-    padding: 3rem;
-}
-
-.login-subtitle {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 3rem;
-    font-size: 1.1rem;
-}
-
-.login-options {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 2rem;
-    align-items: start;
-    margin-bottom: 2rem;
-}
-
-.login-option {
-    background: rgba(0, 102, 255, 0.05);
-    border: 1px solid rgba(0, 102, 255, 0.15);
-    border-radius: 20px;
-    padding: 2.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.login-option::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 204, 255, 0.1), transparent);
-    transition: left 0.6s;
-}
-
-.login-option:hover::before {
-    left: 100%;
-}
-
-.login-option:hover {
-    transform: translateY(-5px);
-    border-color: rgba(0, 204, 255, 0.3);
-    box-shadow: 0 15px 40px rgba(0, 102, 255, 0.2);
-}
-
-.option-icon {
-    margin-bottom: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-
-.file-upload-icon,
-.new-user-icon {
-    font-size: 3rem;
-    background: linear-gradient(135deg, var(--electric-blue), var(--primary-blue));
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
-}
-
-.login-option h4 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-white);
-    margin-bottom: 1rem;
-    position: relative;
-    z-index: 1;
-}
-
-.login-option > p {
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-    position: relative;
-    z-index: 1;
-}
-
-.upload-area {
-    background: rgba(0, 102, 255, 0.1);
-    border: 2px dashed rgba(0, 204, 255, 0.4);
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-}
-
-.upload-area:hover {
-    background: rgba(0, 102, 255, 0.15);
-    border-color: var(--electric-blue);
-    transform: scale(1.02);
-}
-
-.upload-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.upload-icon {
-    font-size: 2rem;
-    color: var(--electric-blue);
-}
-
-.upload-area span {
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-}
-
-.file-info {
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-
-.file-name {
-    color: var(--text-white);
-    font-weight: 500;
-}
-
-.remove-file {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0.25rem;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.remove-file:hover {
-    background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-}
-
-.features-preview {
-    margin-bottom: 2rem;
-    position: relative;
-    z-index: 1;
-}
-
-.preview-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.95rem;
-}
-
-.preview-check {
-    color: var(--electric-blue);
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.login-btn {
-    width: 100%;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 1rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: inherit;
-    position: relative;
-    z-index: 1;
-}
-
-.login-btn.primary {
-    background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
-    color: var(--text-white);
-    box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
-}
-
-.login-btn.primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 35px rgba(0, 102, 255, 0.5);
-}
-
-.login-btn.primary:disabled {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.4);
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.login-btn.secondary {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--electric-blue);
-    border: 2px solid rgba(0, 204, 255, 0.3);
-}
-
-.login-btn.secondary:hover {
-    background: rgba(0, 204, 255, 0.1);
-    border-color: var(--electric-blue);
-    transform: translateY(-2px);
-}
-
-.login-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.divider-line {
-    width: 1px;
-    height: 40px;
-    background: linear-gradient(to bottom, transparent, rgba(0, 204, 255, 0.5), transparent);
-}
-
-.divider-text {
-    background: rgba(0, 102, 255, 0.1);
-    color: var(--electric-blue);
-    padding: 0.5rem 1rem;
-    border-radius: 50%;
-    font-weight: 700;
-    border: 1px solid rgba(0, 204, 255, 0.3);
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.login-footer {
-    text-align: center;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(0, 102, 255, 0.1);
-}
-
-.login-footer p {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-.login-footer a {
-    color: var(--electric-blue);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.login-footer a:hover {
-    color: var(--text-white);
-}
-
-/* Responsive design for login modal */
-@media (max-width: 768px) {
-    .login-modal {
-        width: 95%;
-        margin: 2% auto;
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
     }
-
-    .login-body {
-        padding: 2rem;
-    }
-
-    .login-options {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .login-divider {
-        flex-direction: row;
-    }
-
-    .divider-line {
-        width: 40px;
-        height: 1px;
-        background: linear-gradient(to right, transparent, rgba(0, 204, 255, 0.5), transparent);
-    }
-
-    .login-option {
-        padding: 2rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        gap: 1.5rem;
-        text-align: center;
-        padding: 2rem;
+@keyframes meshMove {
+    0% {
+        background-position: 0% 0%;
     }
-
-    .nav {
-        flex-direction: column;
-        width: 100%;
-        gap: 1rem;
+    100% {
+        background-position: 100% 100%;
     }
+}
 
-    .hero-section {
-        grid-template-columns: 1fr;
-        gap: 3rem;
-        padding: 3rem 2rem;
-        text-align: center;
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
     }
-
-    .hero-title {
-        font-size: 2.5rem;
+    100% {
+        transform: rotate(360deg);
     }
+}
 
-    .cta-buttons {
-        flex-direction: column;
-        align-items: center;
+@keyframes neonPulse {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(0, 204, 255, 0.8), 0 0 20px rgba(0, 204, 255, 0.6), 0 0 30px rgba(0, 204, 255, 0.4);
     }
-
-    .features-grid {
-        grid-template-columns: 1fr;
+    50% {
+        text-shadow: 0 0 20px rgba(0, 204, 255, 1), 0 0 40px rgba(0, 204, 255, 0.8), 0 0 60px rgba(0, 204, 255, 0.6);
     }
+}
 
-    .paths-section {
-        grid-template-columns: 1fr;
+@keyframes arrowPulse {
+    0%, 100% {
+        transform: translateY(0);
     }
-
-    .path-option {
-        min-width: unset;
-    }
-
-    .data-transformation {
-        flex-direction: column;
-        gap: 2rem;
-    }
-
-    .arrow {
-        transform: rotate(90deg);
+    50% {
+        transform: translateY(-10px);
     }
 }

@@ -1,0 +1,674 @@
+/* Modal - keeping existing styles but updating colors */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+}
+
+.modal-content {
+    background: rgba(0, 8, 20, 0.95);
+    backdrop-filter: blur(30px);
+    position: absolute;            /* Center relative to viewport */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;                     /* Remove vertical margin centering hack */
+    max-height: 90vh;              /* Slightly reduced to give breathing room */
+    width: 90%;
+    border: 1px solid rgba(0, 102, 255, 0.3);
+    border-radius: 25px;
+    overflow: hidden; /* Prevent entire modal from scrolling */
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Center modal content on viewport */
+/* Ensure login modal variant also centers & adapts */
+.login-modal {
+    max-width: 900px;
+    width: min(95%, 900px);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-header {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    border-bottom: none;
+    border-radius: 25px 25px 0 0;
+    position: relative;
+    overflow: hidden;
+    padding: 0.75rem 3rem; /* Reduced from 1rem to 0.75rem */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.login-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: rotate 20s linear infinite;
+}
+
+.login-header h3 {
+    position: relative;
+    z-index: 1;
+    font-size: 1.4rem; /* Reduced from 1.8rem to 1.4rem */
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+    color: var(--text-white);
+}
+
+.login-header .modal-close {
+    position: absolute;
+    top: 1rem; /* Reduced from 1.5rem to 1rem */
+    right: 1.5rem;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 35px; /* Reduced from 40px to 35px */
+    height: 35px; /* Reduced from 40px to 35px */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem; /* Reduced from 1.2rem to 1rem */
+    font-weight: bold;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.login-header .modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.login-header .modal-close:active {
+    transform: scale(0.95) rotate(90deg);
+}
+
+.login-body {
+    padding: 1.5rem 2rem;
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+}
+
+.login-subtitle {
+    display: none;
+}
+
+.login-container {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 102, 255, 0.2);
+    background: rgba(0, 102, 255, 0.02);
+    margin-bottom: 1rem;
+}
+
+.login-options {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.login-options.slide-left {
+    transform: translateX(-50%);
+}
+
+.login-options.slide-right {
+    transform: translateX(50%);
+}
+
+.login-option {
+    width: 50%;
+    height: 100%;
+    background: rgba(0, 102, 255, 0.05);
+    border: none;
+    border-radius: 0;
+    padding: 2rem 2rem 4rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.login-option:first-child {
+    border-right: 1px solid rgba(0, 102, 255, 0.15);
+}
+
+.login-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 204, 255, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.login-option:hover::before {
+    left: 100%;
+}
+
+.option-icon {
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.file-upload-icon,
+.new-user-icon {
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--electric-blue), var(--primary-blue));
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+}
+
+.login-option h4 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.login-option p {
+    color: var(--text-white);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+    opacity: 0.9;
+}
+
+.navigation-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 2rem; /* Aumentado para emoji */
+    cursor: pointer;
+    transition: all 0.4s ease;
+    z-index: 20;
+    box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navigation-button:hover {
+    transform: translateX(-50%) scale(1.1);
+    filter: drop-shadow(0 0 10px rgba(0,204,255,0.8));
+    box-shadow: 0 8px 25px rgba(0, 102, 255, 0.6);
+}
+
+.nav-left {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.nav-right {
+    bottom: 20px;
+    right: 50%;
+    left: auto;
+    transform: translateX(50%);
+}
+
+.nav-left:hover {
+    transform: translateX(-50%) scale(1.1);
+}
+
+.nav-right:hover {
+    transform: translateX(50%) scale(1.1);
+}
+
+.divider {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--electric-blue), transparent);
+    transform: translateX(-50%);
+    z-index: 15;
+    transition: opacity 0.3s ease;
+}
+
+.step-content {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background: rgba(0, 102, 255, 0.08);
+    padding: 3rem;
+    z-index: 25;
+    border-radius: 20px;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 102, 255, 0.2);
+}
+
+.step-content.active {
+    display: flex;
+    animation: slideInContent 0.6s ease;
+}
+
+.step-content.left {
+    left: 0;
+}
+
+.step-content.right {
+    right: 0;
+}
+
+.step-content h4 {
+    color: var(--text-white);
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.step-content p {
+    color: var(--text-white);
+    margin-bottom: 2rem;
+    text-align: center;
+    opacity: 0.9;
+}
+
+/* Hide the description text for file upload step */
+.step-content.left p {
+    display: none;
+}
+
+.upload-area {
+    background: rgba(0, 102, 255, 0.1);
+    border: 2px dashed rgba(0, 204, 255, 0.4);
+    border-radius: 12px;
+    padding: 1.5rem; /* Reduced from 2rem */
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 250px; /* Reduced from 300px */
+}
+
+.upload-area:hover {
+    background: rgba(0, 102, 255, 0.15);
+    border-color: var(--electric-blue);
+    transform: scale(1.02);
+}
+
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.upload-icon {
+    font-size: 1.5rem; /* Reduced from 2rem */
+    color: var(--electric-blue);
+}
+
+.upload-area span {
+    color: var(--text-white);
+    font-weight: 500;
+    font-size: 0.9rem; /* Made text smaller */
+}
+
+.file-info {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 250px; /* Match upload area width */
+}
+
+.file-name {
+    color: var(--text-white);
+    font-weight: 500;
+    font-size: 0.9rem;
+    flex: 1;
+    margin-right: 0.5rem;
+    word-break: break-all; /* Handle long filenames */
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.remove-file:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.login-footer {
+    display: none;
+}
+
+/* Contact Modal Styles */
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    border-bottom: none;
+    border-radius: 25px 25px 0 0;
+    position: relative;
+    overflow: hidden;
+    padding: 1.5rem 3rem; /* Keep original size for contact modal */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: rotate 20s linear infinite;
+}
+
+.modal-header h3 {
+    position: relative;
+    z-index: 1;
+    font-size: 1.6rem; /* Slightly smaller than original */
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+    color: var(--text-white);
+}
+
+.modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-body {
+    padding: 2rem 3rem;
+    color: var(--text-white);
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* === FIX: aislar estilos globales de botones para no romper .modal-close y .navigation-button === */
+/* Reemplazar antigua regla 'button { ... }' */
+button:not(.modal-close):not(.navigation-button):not(.remove-file) {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+    color: var(--text-white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-family: inherit;
+    box-shadow: 0 6px 20px rgba(0, 102, 255, 0.3);
+}
+
+button:not(.modal-close):not(.navigation-button):not(.remove-file):hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 102, 255, 0.5);
+}
+
+button:not(.modal-close):not(.navigation-button):not(.remove-file):disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* === Animaciones específicas restauradas/mejoradas === */
+@keyframes navArrowIdle {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-4px); }
+}
+
+@keyframes navArrowIdleRight {
+    0%,100% { transform: translateX(50%) translateY(0); }
+    50% { transform: translateX(50%) translateY(-4px); }
+}
+
+@keyframes closePulse {
+    0%,100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+    50% { box-shadow: 0 0 8px rgba(255,255,255,0.35); }
+}
+
+/* === Botón de cierre (modal-close + variante login) === */
+.modal-close,
+.login-header .modal-close {
+    /* asegurar que padding global no afecte */
+    padding: 0;
+    line-height: 1;
+    font-weight: 600;
+    font-family: inherit;
+    backdrop-filter: blur(10px);
+    transform: none;
+    transform-origin: center;
+    animation: closePulse 5s ease-in-out infinite;
+}
+
+.modal-close:hover,
+.login-header .modal-close:hover {
+    /* mantener rotación previa */
+    transform: scale(1.1) rotate(90deg);
+}
+
+.modal-close:active,
+.login-header .modal-close:active {
+    transform: scale(0.9) rotate(90deg);
+}
+
+/* === Flechas de navegación === */
+.navigation-button {
+    /* evitar herencia de padding global */
+    padding: 0;
+    line-height: 1;
+    font-weight: 600;
+    font-family: inherit;
+    transform-origin: center;
+    animation: navArrowIdle 3s ease-in-out infinite;
+}
+
+.nav-right {
+    animation: navArrowIdleRight 3s ease-in-out infinite;
+}
+
+/* Hover con scale sin perder el translate original */
+.navigation-button:hover {
+    filter: drop-shadow(0 0 10px rgba(0,204,255,0.8));
+}
+
+/* Estado activo (click) */
+.navigation-button:active {
+    transform: translateX(-50%) scale(0.9);
+}
+
+.nav-right:active {
+    transform: translateX(50%) scale(0.9);
+}
+
+/* Accesibilidad foco */
+.navigation-button:focus-visible,
+.modal-close:focus-visible {
+    outline: 2px solid var(--electric-blue);
+    outline-offset: 2px;
+}
+
+/* === Ajustes de la X para asegurar centrado visual === */
+.modal-close span,
+.modal-close::before {
+    pointer-events: none;
+}
+
+/* (Opcional) efecto brillo al pasar por encima */
+.modal-close:hover {
+    box-shadow: 0 0 12px rgba(255,255,255,0.4);
+}
+
+/* === Mini ajuste del botón remove-file para que no herede estilos globales grandes === */
+.remove-file {
+    padding: 0.25rem !important;
+    width: auto;
+    height: auto;
+    box-shadow: none !important;
+    background: none !important;
+}
+
+.remove-file:hover {
+    transform: scale(1.1);
+}
+
+/* === Estilos restaurados/mejorados para el campo de clave de licencia === */
+.license-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.85rem 1rem;
+    border: 2px solid rgba(0, 102, 255, 0.35);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,102,255,0.12), rgba(0,204,255,0.10));
+    backdrop-filter: blur(6px);
+    color: var(--text-white);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    transition: border-color .3s, box-shadow .3s, background .3s;
+    box-shadow: 0 4px 18px rgba(0,102,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.license-input:focus {
+    border-color: var(--electric-blue);
+    box-shadow: 0 0 0 3px rgba(0,204,255,0.15), 0 8px 28px rgba(0,102,255,0.35);
+    outline: none;
+    background: linear-gradient(135deg, rgba(0,102,255,0.2), rgba(0,204,255,0.18));
+}
+
+.license-input::placeholder {
+    color: rgba(255,255,255,0.45);
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+.license-input:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    filter: grayscale(20%);
+}
+
+/* Modo error (por si lo usas luego) */
+.license-input.error {
+    border-color: #ff4d4d;
+    box-shadow: 0 0 0 3px rgba(255,77,77,0.15), 0 8px 25px rgba(255,77,77,0.3);
+}
+
+/* Extra safety for very short viewports: allow a bit more vertical space */
+@media (max-height: 600px) {
+    .modal-content {
+        max-height: 94vh;
+    }
+}
+
+/* On ultra narrow devices prevent overflow cutoff */
+@media (max-width: 420px) {
+    .modal-content {
+        border-radius: 18px;
+        width: 94%;
+    }
+}
