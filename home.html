@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easySQL - Migración de Datos Simplificada</title>
+    <link rel="stylesheet" href="styles/landing.css">
+    <link rel="stylesheet" href="styles/landing-animations.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-container">
+        <div class="gradient-bg"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>easySQL</h1>
+                <span class="tagline">Data Migration Made Simple</span>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="overview">Inicio</button>
+                <button class="nav-btn" data-tab="getting-started">¿Cómo empezar?</button>
+                <a href="easySQL.html" class="access-btn">Acceder a la App</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <!-- Overview Tab -->
+            <section id="overview" class="tab-content active">
+                <div class="hero-section">
+                    <div class="hero-content">
+                        <h2 class="hero-title">
+                            Transforma el <span class="highlight">caos de datos</span> 
+                            en bases de datos <span class="highlight">organizadas</span>
+                        </h2>
+                        <p class="hero-description">
+                            easySQL es la solución definitiva para migrar los datos caóticos que se acumulan 
+                            en tu empresa a lo largo de los años hacia bases de datos estructuradas, 
+                            consultables y fáciles de usar.
+                        </p>
+                        <div class="cta-buttons">
+                            <button class="cta-primary" onclick="showTab('getting-started')">
+                                Comenzar Migración
+                            </button>
+                            <a href="easySQL.html" class="cta-secondary">
+                                Probar Demo
+                            </a>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="data-transformation">
+                            <div class="chaos-data">
+                                <div class="file-icon">📄</div>
+                                <div class="file-icon">📊</div>
+                                <div class="file-icon">📋</div>
+                                <div class="file-icon">💾</div>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div class="organized-data">
+                                <div class="database-icon">🗄️</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-section">
+                    <h3 class="section-title">¿Por qué elegir easySQL?</h3>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🔄</div>
+                            <h4>Migración Inteligente</h4>
+                            <p>Convertimos tus datos dispersos en Excel, CSV, documentos y sistemas legacy en bases de datos SQL estructuradas.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🔍</div>
+                            <h4>Búsqueda Simplificada</h4>
+                            <p>Encuentra información específica en segundos con nuestras herramientas de búsqueda intuitivas.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🎨</div>
+                            <h4>Interfaz Intuitiva</h4>
+                            <p>No necesitas ser programador. Nuestra interfaz está diseñada para cualquier usuario de empresa.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <h4>Seguridad Total</h4>
+                            <p>Tus datos se entregan en un archivo comprimido y cifrado que solo tú puedes acceder.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📈</div>
+                            <h4>Escalabilidad</h4>
+                            <p>Tu base de datos crece contigo. Añade nuevos datos y tablas sin perder la organización.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🤖</div>
+                            <h4>IA Integrada</h4>
+                            <p>Consulta tus datos en lenguaje natural usando nuestra integración con inteligencia artificial.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-section">
+                    <h3 class="section-title">El Resultado Final</h3>
+                    <div class="result-card">
+                        <div class="result-content">
+                            <h4>Tu Paquete de Datos Completo</h4>
+                            <p>Al finalizar el proceso, recibirás un archivo comprimido y cifrado que incluye:</p>
+                            <ul class="result-list">
+                                <li>🗄️ Tablas SQL estructuradas con todos tus datos</li>
+                                <li>📊 Datos extraídos y limpiados</li>
+                                <li>📎 Archivos referenciados organizados</li>
+                                <li>🎨 Logo y personalización de tu empresa</li>
+                                <li>🤖 Configuración de API para IA</li>
+                                <li>⚙️ Archivos de personalización</li>
+                            </ul>
+                            <p class="result-highlight">
+                                <strong>Acceso universal:</strong> Desde cualquier lugar del mundo, 
+                                podrás acceder de forma segura para consultar, editar, insertar datos 
+                                y hacer crecer tu empresa de manera <em>easy</em>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started Tab -->
+            <section id="getting-started" class="tab-content">
+                <div class="getting-started-hero">
+                    <h2 class="hero-title">
+                        Empezar es <span class="highlight">easy</span>
+                    </h2>
+                    <p class="hero-description">
+                        Elige el camino que mejor se adapte a tus necesidades y recursos.
+                    </p>
+                </div>
+
+                <div class="paths-section">
+                    <div class="path-option">
+                        <div class="path-header">
+                            <div class="path-icon">🛠️</div>
+                            <h3>Opción 1: Hazlo Tú Mismo</h3>
+                            <span class="path-badge">Recomendado para equipos técnicos</span>
+                        </div>
+                        <div class="path-content">
+                            <p>
+                                Obtén acceso completo a nuestra aplicación y migra tus datos 
+                                usando nuestras herramientas intuitivas.
+                            </p>
+                            <div class="path-features">
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Acceso completo a la plataforma</span>
+                                </div>
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Herramientas de migración guiadas</span>
+                                </div>
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Soporte técnico incluido</span>
+                                </div>
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Control total sobre el proceso</span>
+                                </div>
+                            </div>
+                            <div class="path-note">
+                                <strong>Nivel requerido:</strong> No es muy complejo, pero puede requerir 
+                                ciertos conocimientos básicos de bases de datos.
+                            </div>
+                            <a href="easySQL.html" class="path-button primary">
+                                Acceder a la Aplicación
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="path-option">
+                        <div class="path-header">
+                            <div class="path-icon">👥</div>
+                            <h3>Opción 2: Lo Hacemos Nosotros</h3>
+                            <span class="path-badge">Recomendado para empresas</span>
+                        </div>
+                        <div class="path-content">
+                            <p>
+                                Nuestro equipo de expertos se encarga de migrar todos tus datos 
+                                mientras tú te enfocas en tu negocio.
+                            </p>
+                            <div class="path-features">
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Migración completa por expertos</span>
+                                </div>
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Análisis de datos incluido</span>
+                                </div>
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Personalización avanzada</span>
+                                </div>
+                                <div class="path-feature">
+                                    <span class="feature-check">✓</span>
+                                    <span>Capacitación del equipo</span>
+                                </div>
+                            </div>
+                            <div class="path-note">
+                                <strong>Perfecto para:</strong> Empresas que quieren resultados 
+                                profesionales sin invertir tiempo interno en el proceso.
+                            </div>
+                            <button class="path-button secondary" onclick="openContactModal()">
+                                Contactar con Nosotros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guarantee-section">
+                    <div class="guarantee-card">
+                        <h4>🎯 Garantía de Resultado</h4>
+                        <p>
+                            Independientemente del camino que elijas, obtendrás el mismo resultado final: 
+                            un archivo comprimido y cifrado con toda tu información organizada y lista para usar.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 easySQL. Transformando datos, simplificando empresas.</p>
+        </footer>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Contacta con Nosotros</h3>
+                <button class="modal-close" onclick="closeContactModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Nuestro equipo te ayudará a migrar tus datos de manera profesional.</p>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <label for="company">Nombre de la empresa</label>
+                        <input type="text" id="company" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact">Persona de contacto</label>
+                        <input type="text" id="contact" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="data-description">Describe brevemente tus datos</label>
+                        <textarea id="data-description" rows="3" placeholder="Ej: Tenemos Excel con clientes, PDFs con facturas, base de datos Access antigua..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Enviar Solicitud</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content login-modal">
+            <div class="modal-header login-header">
+                <h3>Acceso a easySQL</h3>
+                <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+            </div>
+            <div class="modal-body login-body">
+                <p class="login-subtitle">Elige cómo quieres acceder a la plataforma</p>
+                
+                <div class="login-options">
+                    <!-- Option 1: Upload eSQL file -->
+                    <div class="login-option">
+                        <div class="option-icon">
+                            <div class="file-upload-icon">📁</div>
+                        </div>
+                        <h4>Cargar Archivo eSQL</h4>
+                        <p>Si ya tienes un archivo eSQL de un proyecto anterior, súbelo para continuar trabajando.</p>
+                        <div class="upload-area" onclick="document.getElementById('esqlFileInput').click()">
+                            <div class="upload-content">
+                                <div class="upload-icon">⬆️</div>
+                                <span>Seleccionar archivo .esql</span>
+                            </div>
+                            <input type="file" id="esqlFileInput" accept=".esql" style="display: none;">
+                        </div>
+                        <div class="file-info" id="fileInfo" style="display: none;">
+                            <span class="file-name"></span>
+                            <button class="remove-file" onclick="removeFile()">✕</button>
+                        </div>
+                        <button class="login-btn primary" id="uploadBtn" disabled onclick="handleEsqlLogin()">
+                            Acceder con Archivo
+                        </button>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="login-divider">
+                        <div class="divider-line"></div>
+                        <span class="divider-text">O</span>
+                        <div class="divider-line"></div>
+                    </div>
+
+                    <!-- Option 2: New user -->
+                    <div class="login-option">
+                        <div class="option-icon">
+                            <div class="new-user-icon">👤</div>
+                        </div>
+                        <h4>Nuevo Usuario</h4>
+                        <p>Comienza desde cero y crea tu primera base de datos con nuestras herramientas.</p>
+                        <div class="features-preview">
+                            <div class="preview-item">
+                                <span class="preview-check">✓</span>
+                                <span>Creación de tablas intuitiva</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-check">✓</span>
+                                <span>Importación desde Excel</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-check">✓</span>
+                                <span>Visualizaciones automáticas</span>
+                            </div>
+                        </div>
+                        <button class="login-btn secondary" onclick="handleNewUserLogin()">
+                            Empezar como Nuevo Usuario
+                        </button>
+                    </div>
+                </div>
+
+                <div class="login-footer">
+                    <p>¿Necesitas ayuda? <a href="#" onclick="showTab('getting-started'); closeLoginModal();">Consulta nuestra guía</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        // Event listeners for nav buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.getAttribute('data-tab');
+                showTab(tabName);
+            });
+        });
+
+        // Modal functionality
+        function openContactModal() {
+            document.getElementById('contactModal').style.display = 'block';
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').style.display = 'none';
+        }
+
+        // Login Modal functionality
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            resetLoginModal();
+        }
+
+        function resetLoginModal() {
+            document.getElementById('esqlFileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('uploadBtn').disabled = true;
+        }
+
+        // File upload handling
+        document.getElementById('esqlFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileInfo = document.getElementById('fileInfo');
+                const fileName = fileInfo.querySelector('.file-name');
+                const uploadBtn = document.getElementById('uploadBtn');
+                
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'flex';
+                uploadBtn.disabled = false;
+            }
+        });
+
+        function removeFile() {
+            document.getElementById('esqlFileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('uploadBtn').disabled = true;
+        }
+
+        function handleEsqlLogin() {
+            const file = document.getElementById('esqlFileInput').files[0];
+            if (file) {
+                // TODO: Handle eSQL file processing
+                console.log('Processing eSQL file:', file.name);
+                // For now, just redirect to main app
+                window.location.href = 'easySQL.html';
+            }
+        }
+
+        function handleNewUserLogin() {
+            // TODO: Handle new user setup
+            console.log('Setting up new user');
+            // For now, just redirect to main app
+            window.location.href = 'easySQL.html';
+        }
+
+        // Update the access button to open login modal instead
+        document.querySelector('.access-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            openLoginModal();
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const contactModal = document.getElementById('contactModal');
+            const loginModal = document.getElementById('loginModal');
+            if (event.target === contactModal) {
+                closeContactModal();
+            }
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+        }
+
+        // Form submission
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.');
+            closeContactModal();
+        });
+    </script>
+</body>
+</html>
