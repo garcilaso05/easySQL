@@ -45,3 +45,7 @@ export async function unpackEasysqlWeb(easysqlBlob, password) {
 // Uso: 
 // const files = await unpackEasysqlWeb(blob, 'clave');
 // files[0].name, files[0].blob
+
+if (typeof window !== 'undefined') {
+    window.unpackEasysqlWeb = unpackEasysqlWeb;
+}
