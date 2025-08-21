@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="scripts/packEasysql.js"></script>
 </head>
 <body>
     <div class="background-container">
@@ -236,6 +237,70 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Gestor easySQL -->
+            <section id="esql-manager" class="tab-content esql-manager" style="display:none;">
+                <h2 class="hero-title" style="font-size:2.2rem; margin-bottom:2rem;">
+                    Gestor <span class="highlight">easySQL</span>
+                </h2>
+                <div class="esql-grid">
+                    <div class="esql-card">
+                        <h4>Datos de la Empresa</h4>
+                        <small>Información básica</small>
+                        <input id="empresaNombre" type="text" placeholder="Nombre de la empresa" maxlength="120">
+                        <textarea id="empresaDescripcion" placeholder="Descripción (máx 500 carácteres)" maxlength="500"></textarea>
+                        <div class="char-counter" id="descCounter">0 / 500</div>
+                        <input id="logoFile" type="file" accept="image/png">
+                        <div class="warning-note" style="margin-top:.85rem;">
+                            El logo debe ser .png. La descripción se incluirá en el archivo .bsql.
+                        </div>
+                    </div>
+                    <div class="esql-card" id="devCard">
+                        <h4>Desarrolladores</h4>
+                        <span class="badge-limit" id="devLimitBadge">0 / 3</span>
+                        <small>Máx 3 usuarios</small>
+                        <div class="role-list" id="devList"></div>
+                        <button id="addDevBtn" class="add-btn" type="button">+ Añadir Dev</button>
+                    </div>
+                    <div class="esql-card" id="adminCard">
+                        <h4>Administradores</h4>
+                        <span class="badge-limit" id="adminLimitBadge">0 / 10</span>
+                        <small>Máx 10 usuarios</small>
+                        <div class="role-list" id="adminList"></div>
+                        <button id="addAdminBtn" class="add-btn" type="button">+ Añadir Admin</button>
+                    </div>
+                    <div class="esql-card">
+                        <h4>Estado de Archivos</h4>
+                        <small>Fuentes de datos</small>
+                        <div class="inline-flags">
+                            <label><input type="checkbox" id="chkTablas" disabled> Tablas SQL recibidas</label>
+                            <label><input type="checkbox" id="chkInserciones" disabled> Inserciones SQL recibidas</label>
+                        </div>
+                        <div class="warning-note" style="margin-top:1rem;">
+                            Al acceder por licencia inicial todavía no has cargado archivos
+                            de tablas ni inserciones. Podrás añadirlos más adelante.
+                        </div>
+                        <h4 style="margin-top:1.75rem;">Contraseña Maestra</h4>
+                        <small>Cifrado del paquete</small>
+                        <div class="master-pass">
+                            <input id="masterPass" type="password" placeholder="Contraseña / Frase secreta">
+                            <input id="masterPass2" type="password" placeholder="Repite la contraseña">
+                            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                            <div class="strength-text" id="strengthText">Fuerza: -</div>
+                            <div class="warning-note">
+                                Mínimo 8 caracteres. Recomendada frase fácil de recordar con
+                                números y caracteres especiales. Anótala en un lugar seguro
+                                (no se puede recuperar).
+                            </div>
+                        </div>
+                        <div class="download-area">
+                            <button id="generateBtn" class="generate-btn" type="button" disabled>
+                                Crear Archivo easySQL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <footer class="footer">
@@ -344,6 +409,20 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="packOverlay" style="display:none;position:fixed;inset:0;backdrop-filter:blur(8px);background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;">
+        <div style="width:min(420px,90%);background:rgba(0,20,40,.85);border:1px solid rgba(0,204,255,.3);padding:2rem 2.2rem;border-radius:22px;font-family:inherit;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.4);">
+            <h3 style="margin:0 0 1rem;font-size:1.15rem;letter-spacing:.5px;display:flex;align-items:center;gap:.6rem;">
+                <span style="font-size:1.4rem;">🔐</span> Generando archivo cifrado
+            </h3>
+            <p id="packStatus" style="margin:.25rem 0 1.2rem;font-size:.8rem;letter-spacing:.5px;color:rgba(255,255,255,.7);">Preparando...</p>
+            <div style="height:10px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden;position:relative;margin-bottom:.9rem;">
+                <div id="packBar" style="height:100%;width:0;background:linear-gradient(90deg,#0066ff,#00ccff,#00ffbb);background-size:200% 100%;animation:shift 2.5s linear infinite;"></div>
+            </div>
+            <style>@keyframes shift{0%{background-position:0 0}100%{background-position:200% 0}}</style>
+            <button id="cancelPackBtn" type="button" style="margin-top:.5rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:.55rem 1rem;font-size:.7rem;border-radius:8px;cursor:not-allowed;opacity:.5;">Cancelar (no disponible)</button>
         </div>
     </div>
 
@@ -551,109 +630,6 @@
             uploadBtn.disabled = true;
         }
 
-        function resetLoginModal() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInfo = document.getElementById('fileInfo');
-            
-            document.getElementById('esqlFileInput').value = '';
-            fileInfo.style.display = 'none';
-            uploadArea.style.display = 'block'; // Make sure upload area is visible
-            document.getElementById('uploadBtn').disabled = true;
-            document.getElementById('licenseKey').value = '000000';
-            
-            // Reset all states
-            const loginOptions = document.getElementById('loginOptions');
-            const fileUploadStep = document.getElementById('fileUploadStep');
-            const newUserStep = document.getElementById('newUserStep');
-            const navLeft = document.getElementById('navLeft');
-            const navRight = document.getElementById('navRight');
-            const divider = document.getElementById('divider');
-            
-            loginOptions.classList.remove('slide-left', 'slide-right');
-            fileUploadStep.classList.remove('active');
-            newUserStep.classList.remove('active');
-            
-            navLeft.innerHTML = '￫';
-            navRight.innerHTML = '￩';
-            navLeft.onclick = showFileUpload;
-            navRight.onclick = showNewUser;
-            
-            divider.style.opacity = '1';
-            navLeft.style.opacity = '1';
-            navRight.style.opacity = '1';
-            navLeft.style.pointerEvents = 'auto';
-            navRight.style.pointerEvents = 'auto';
-            
-            currentStep = 'none';
-        }
-
-        // File upload handling
-        document.getElementById('esqlFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const uploadArea = document.getElementById('uploadArea');
-                const fileInfo = document.getElementById('fileInfo');
-                const fileName = fileInfo.querySelector('.file-name');
-                const uploadBtn = document.getElementById('uploadBtn');
-                
-                // Hide upload area and show file info
-                uploadArea.style.display = 'none';
-                fileName.textContent = file.name;
-                fileInfo.style.display = 'flex';
-                uploadBtn.disabled = false;
-            }
-        });
-
-        function removeFile() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInfo = document.getElementById('fileInfo');
-            const uploadBtn = document.getElementById('uploadBtn');
-            
-            // Clear file input
-            document.getElementById('esqlFileInput').value = '';
-            
-            // Show upload area and hide file info
-            uploadArea.style.display = 'block';
-            fileInfo.style.display = 'none';
-            uploadBtn.disabled = true;
-        }
-
-        function resetLoginModal() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInfo = document.getElementById('fileInfo');
-            
-            document.getElementById('esqlFileInput').value = '';
-            fileInfo.style.display = 'none';
-            uploadArea.style.display = 'block'; // Make sure upload area is visible
-            document.getElementById('uploadBtn').disabled = true;
-            document.getElementById('licenseKey').value = '000000';
-            
-            // Reset all states
-            const loginOptions = document.getElementById('loginOptions');
-            const fileUploadStep = document.getElementById('fileUploadStep');
-            const newUserStep = document.getElementById('newUserStep');
-            const navLeft = document.getElementById('navLeft');
-            const navRight = document.getElementById('navRight');
-            const divider = document.getElementById('divider');
-            
-            loginOptions.classList.remove('slide-left', 'slide-right');
-            fileUploadStep.classList.remove('active');
-            newUserStep.classList.remove('active');
-            
-            navLeft.innerHTML = '￫';
-            navRight.innerHTML = '￩';
-            navLeft.onclick = showFileUpload;
-            navRight.onclick = showNewUser;
-            
-            divider.style.opacity = '1';
-            navLeft.style.opacity = '1';
-            navRight.style.opacity = '1';
-            navLeft.style.pointerEvents = 'auto';
-            navRight.style.pointerEvents = 'auto';
-            
-            currentStep = 'none';
-        }
-
         // Update the demo button event
         document.addEventListener('DOMContentLoaded', function() {
             // Update any existing demo button events
@@ -705,12 +681,219 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Form submission
-        document.querySelector('.contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.');
-            closeContactModal();
+        // Form submission (proteger si no existe el formulario)
+        const contactForm = document.querySelector('.contact-form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.');
+                closeContactModal();
+            });
+        }
+
+        // Añadir handlers de descripción
+        const descEl = document.getElementById('empresaDescripcion');
+        const counter = document.getElementById('descCounter');
+        descEl?.addEventListener('input', () => {
+            counter.textContent = `${descEl.value.length} / 500`;
         });
+
+        // Gestión roles
+        const devList = document.getElementById('devList');
+        const adminList = document.getElementById('adminList');
+        const devLimitBadge = document.getElementById('devLimitBadge');
+        const adminLimitBadge = document.getElementById('adminLimitBadge');
+        const addDevBtn = document.getElementById('addDevBtn');
+        const addAdminBtn = document.getElementById('addAdminBtn');
+
+        function updateBadges() {
+            devLimitBadge.textContent = `${devList.children.length} / 3`;
+            adminLimitBadge.textContent = `${adminList.children.length} / 10`;
+            addDevBtn.disabled = devList.children.length >= 3;
+            addAdminBtn.disabled = adminList.children.length >= 10;
+        }
+        function makeRow(listEl) {
+            const row = document.createElement('div');
+            row.className = 'role-row';
+            row.innerHTML = `
+                <input type="text" placeholder="usuario" maxlength="32">
+                <input type="password" placeholder="contraseña" maxlength="64">
+                <button type="button" title="Eliminar">✕</button>
+            `;
+            row.querySelector('button').onclick = () => { row.remove(); updateBadges(); validateGenerate(); };
+            listEl.appendChild(row);
+            updateBadges();
+        }
+        addDevBtn?.addEventListener('click', ()=>{ makeRow(devList); validateGenerate(); });
+        addAdminBtn?.addEventListener('click', ()=>{ makeRow(adminList); validateGenerate(); });
+
+        // Password strength
+        const master1 = document.getElementById('masterPass');
+        const master2 = document.getElementById('masterPass2');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+        function scorePass(p) {
+            let score = 0;
+            if (p.length >= 8) score+=15;
+            if (p.length >= 12) score+=10;
+            if (p.length >= 16) score+=10;
+            if (/[a-z]/.test(p)) score+=15;
+            if (/[A-Z]/.test(p)) score+=15;
+            if (/\d/.test(p)) score+=15;
+            if (/[^A-Za-z0-9]/.test(p)) score+=20;
+            if (/\s/.test(p) && p.length >= 16) score+=10; // frase con espacios
+            return Math.min(score,100);
+        }
+        function renderStrength() {
+            const v = master1.value;
+            const s = scorePass(v);
+            strengthFill.style.width = s + '%';
+            let level = 'Débil';
+            if (s >= 80) level = 'Muy Fuerte';
+            else if (s >= 60) level = 'Fuerte';
+            else if (s >= 40) level = 'Media';
+            strengthText.textContent = `Fuerza: ${level} (${s}%)`;
+            validateGenerate();
+        }
+        master1?.addEventListener('input', renderStrength);
+        master2?.addEventListener('input', validateGenerate);
+
+        // Validación para habilitar botón generar
+        const empresaNombre = document.getElementById('empresaNombre');
+        const logoFile = document.getElementById('logoFile');
+        const generateBtn = document.getElementById('generateBtn');
+        [empresaNombre, logoFile].forEach(el=> el?.addEventListener('input', validateGenerate));
+        logoFile?.addEventListener('change', validateGenerate);
+
+        function validateGenerate() {
+            const nameOk = empresaNombre.value.trim().length > 0;
+            const logoOk = logoFile.files.length === 1 && /\.png$/i.test(logoFile.files[0].name);
+            const passOk = master1.value.length >= 8 && master1.value === master2.value;
+            // Usuarios: validar formatos (no vacío si existe)
+            let usersOk = true;
+            [...devList.children, ...adminList.children].forEach(r=>{
+                const inputs = r.querySelectorAll('input');
+                if (![...inputs].every(i=> i.value.trim().length>0)) usersOk=false;
+            });
+            generateBtn.disabled = !(nameOk && logoOk && passOk && usersOk);
+        }
+
+        // Construcción archivos
+        function buildAcceso(devs, admins) {
+            let out = '*dev\n';
+            devs.forEach(d=>{
+                out += '-' + d.user + '\n';
+                out += '+' + d.pass + '\n';
+            });
+            out += '*admin\n';
+            admins.forEach(a=>{
+                out += '-' + a.user + '\n';
+                out += '+' + a.pass + '\n';
+            });
+            out += '*consultor\n';
+            return out;
+        }
+        function buildEmpresa(nombre, descripcion) {
+            return `*nombre\n${nombre}\n*descripcion\n${descripcion}\n`;
+        }
+
+        // Helper: esperar a que packEasysqlWeb esté listo
+        function ensurePackEasysqlReady() {
+            if (typeof packEasysqlWeb === 'function') return Promise.resolve();
+            return new Promise(resolve => {
+                window.addEventListener('packEasysqlReady', () => resolve(), { once: true });
+            });
+        }
+
+        const overlay = document.getElementById('packOverlay');
+        const packBar = document.getElementById('packBar');
+        const packStatus = document.getElementById('packStatus');
+
+        function showOverlay() {
+            overlay.style.display = 'flex';
+            packBar.style.width = '0%';
+            packStatus.textContent = 'Preparando archivos...';
+        }
+        function hideOverlay() {
+            overlay.style.display = 'none';
+        }
+        function updateProgress(p) {
+            const pct = Math.round(p * 100);
+            packBar.style.width = pct + '%';
+            if (pct < 60) packStatus.textContent = 'Empaquetando (' + pct + '%)...';
+            else if (pct < 80) packStatus.textContent = 'Derivando clave segura...';
+            else if (pct < 93) packStatus.textContent = 'Cifrando contenido...';
+            else if (pct < 100) packStatus.textContent = 'Finalizando...';
+            else packStatus.textContent = 'Completado';
+        }
+
+        async function generatePackage() {
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generando...';
+            showOverlay();
+            try {
+                await ensurePackEasysqlReady();
+                const devs = [...devList.children].map(r=>{
+                    const [u,p] = r.querySelectorAll('input');
+                    return {user:u.value.trim(), pass:p.value};
+                });
+                const admins = [...adminList.children].map(r=>{
+                    const [u,p] = r.querySelectorAll('input');
+                    return {user:u.value.trim(), pass:p.value};
+                });
+                const acceso = buildAcceso(devs, admins);
+                const empresa = buildEmpresa(empresaNombre.value.trim(), document.getElementById('empresaDescripcion').value.trim());
+                const logo = logoFile.files[0];
+
+                const files = [
+                    {name:'ACCESO.asql', blob: new Blob([acceso], {type:'text/plain'})},
+                    {name:'EMPRESA.bsql', blob: new Blob([empresa], {type:'text/plain'})},
+                    {name: logo?.name?.endsWith('.png') ? logo.name : 'logo.png', blob: logo}
+                ];
+                const blob = await packEasysqlWeb(files, master1.value, updateProgress);
+                updateProgress(1);
+                const a = document.createElement('a');
+                a.download = (empresaNombre.value.trim().replace(/\s+/g,'_') || 'easySQL') + '.easysql';
+                a.href = URL.createObjectURL(blob);
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(a.href);
+                a.remove();
+            } catch (e) {
+                alert('Error al generar: ' + e.message);
+            } finally {
+                generateBtn.textContent = 'Crear Archivo easySQL';
+                hideOverlay();
+                validateGenerate();
+            }
+        }
+        // Reemplazar anterior listener (si ya existía)
+        generateBtn?.removeEventListener('click', generatePackage);
+        generateBtn?.addEventListener('click', generatePackage);
+
+        // Integrar con login licencia (SIN validación por ahora)
+        window.handleNewUserLogin = function() {
+            closeLoginModal();
+            document.querySelectorAll('.tab-content').forEach(t=> t.classList.remove('active'));
+            const mgr = document.getElementById('esql-manager');
+            mgr.style.display = 'block';
+            mgr.classList.add('active');
+            devList.innerHTML = '';
+            adminList.innerHTML = '';
+            updateBadges();
+            renderStrength();
+            counter.textContent = '0 / 500';
+        };
+
+        // Quitar estado error al cambiar la clave
+        document.getElementById('licenseKey')?.addEventListener('input', e=>{
+            e.target.classList.remove('error');
+        });
+
+        // Mantener funciones existentes (file upload path)
+        window.handleEsqlLogin = function() {
+            alert('Funcionalidad de carga de archivo se implementará posteriormente.');
+        };
     </script>
 </body>
 </html>

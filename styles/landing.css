@@ -801,6 +801,180 @@ body {
     font-size: 0.95rem;
 }
 
+.esql-manager {
+    background: rgba(0,102,255,0.05);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(0,102,255,0.2);
+    border-radius: 25px;
+    padding: 3rem;
+    margin-bottom: 4rem;
+}
+.esql-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+    margin-bottom: 2rem;
+}
+.esql-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(0,204,255,0.2);
+    border-radius: 18px;
+    padding: 1.75rem;
+    position: relative;
+}
+.esql-card h4 {
+    margin: 0 0 1rem;
+    color: var(--text-white);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.esql-card small {
+    display: block;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: .75rem;
+    font-size: .75rem;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+.esql-card input[type=text],
+.esql-card input[type=password],
+.esql-card input[type=file],
+.esql-card textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(0,204,255,0.25);
+    border-radius: 10px;
+    padding: .75rem .9rem;
+    color: #fff;
+    font: inherit;
+    resize: none;
+    outline: none;
+    transition: border .25s, box-shadow .25s;
+}
+.esql-card textarea { min-height: 140px; }
+.esql-card input:focus,
+.esql-card textarea:focus {
+    border-color: var(--electric-blue);
+    box-shadow: 0 0 0 3px rgba(0,204,255,0.2);
+}
+.char-counter {
+    font-size: .7rem;
+    color: rgba(255,255,255,.5);
+    text-align: right;
+    margin-top: .25rem;
+}
+.role-list { display:flex; flex-direction:column; gap:.5rem; }
+.role-row {
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap:.5rem;
+    align-items:center;
+}
+.role-row input {
+    font-size:.8rem;
+    padding:.55rem .6rem;
+}
+.role-row button {
+    background: rgba(239,68,68,0.15);
+    border:1px solid rgba(239,68,68,0.4);
+    color:#ffb4b4;
+    border-radius:8px;
+    cursor:pointer;
+    padding:.4rem .65rem;
+    font-size:.7rem;
+}
+.add-btn {
+    margin-top:.6rem;
+    background: linear-gradient(135deg,var(--primary-blue),var(--electric-blue));
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:.55rem .9rem;
+    cursor:pointer;
+    font-size:.7rem;
+    font-weight:600;
+}
+.inline-flags {
+    display:flex;
+    gap:1.25rem;
+    flex-wrap:wrap;
+    font-size:.8rem;
+    margin-top:.5rem;
+    color:rgba(255,255,255,0.8);
+}
+.inline-flags label { display:flex; gap:.4rem; align-items:center; }
+.master-pass {
+    display:grid;
+    gap:.75rem;
+    margin-top:1rem;
+}
+.strength-bar {
+    height:8px;
+    background:rgba(255,255,255,0.1);
+    border-radius:4px;
+    overflow:hidden;
+    position:relative;
+}
+.strength-fill {
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,#ff4d4f,#ffa940,#ffc53d,#73d13d,#36cfc9,#1890ff);
+    transition: width .35s;
+}
+.strength-text {
+    font-size:.7rem;
+    letter-spacing:.5px;
+    color:rgba(255,255,255,.7);
+}
+.download-area {
+    margin-top:1.5rem;
+    text-align:right;
+}
+.generate-btn {
+    background: linear-gradient(135deg,var(--primary-blue),var(--electric-blue));
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:1rem 2rem;
+    font-weight:700;
+    cursor:pointer;
+    font-size:.95rem;
+    box-shadow:0 10px 30px rgba(0,102,255,.4);
+    transition: transform .3s, box-shadow .3s;
+}
+.generate-btn:disabled {
+    opacity:.4;
+    cursor:not-allowed;
+    filter:grayscale(.5);
+    box-shadow:none;
+}
+.generate-btn:not(:disabled):hover {
+    transform:translateY(-3px);
+    box-shadow:0 18px 38px rgba(0,102,255,.55);
+}
+.badge-limit {
+    position:absolute;
+    top:.9rem;
+    right:.9rem;
+    font-size:.55rem;
+    background:rgba(0,0,0,.35);
+    padding:.25rem .5rem;
+    border-radius:30px;
+    letter-spacing:.5px;
+    color:rgba(255,255,255,.65);
+    font-weight:600;
+}
+.warning-note {
+    background:rgba(255,193,7,0.12);
+    border:1px solid rgba(255,193,7,0.35);
+    padding:.9rem 1rem;
+    border-radius:12px;
+    font-size:.7rem;
+    line-height:1.4;
+    color:rgba(255,255,255,.85);
+}
 @keyframes slideInUp {
     from {
         opacity: 0;
