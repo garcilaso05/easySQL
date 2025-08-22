@@ -414,6 +414,43 @@
         </div>
     </div>
 
+    <!-- NUEVO MODAL: Edición de datos importados -->
+    <div id="editImportedModal" class="modal">
+        <div class="modal-content" style="max-width:760px;width:95%;margin-top:5vh;">
+            <span class="modal-close" onclick="closeEditImportedModal()">×</span>
+            <h3>Editar Datos Importados</h3>
+            <p style="margin:.25rem 0 1rem;font-size:.75rem;opacity:.7;">
+                Solo puedes modificar la descripción y los usuarios (dev / admin). El nombre, logo y contraseña maestra permanecen iguales.
+            </p>
+            <div class="esql-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));">
+                <div class="esql-card">
+                    <h4>Empresa</h4>
+                    <small>Nombre (solo lectura)</small>
+                    <input id="impNombre" type="text" disabled>
+                    <small style="margin-top:.9rem;">Descripción</small>
+                    <textarea id="impDescripcion" maxlength="500"></textarea>
+                    <div class="char-counter" id="impDescCounter">0 / 500</div>
+                </div>
+                <div class="esql-card">
+                    <h4>Desarrolladores</h4>
+                    <small>Editar usuarios y contraseñas</small>
+                    <div id="impDevList" class="role-list"></div>
+                    <button type="button" class="add-btn" id="impAddDev">+ Añadir Dev</button>
+                </div>
+                <div class="esql-card">
+                    <h4>Administradores</h4>
+                    <small>Editar usuarios y contraseñas</small>
+                    <div id="impAdminList" class="role-list"></div>
+                    <button type="button" class="add-btn" id="impAddAdmin">+ Añadir Admin</button>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.4rem;">
+                <button type="button" onclick="closeEditImportedModal()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:.75rem 1.25rem;border-radius:10px;cursor:pointer;font-size:.75rem;">Cancelar</button>
+                <button type="button" id="downloadEditedBtn" class="generate-btn" style="font-size:.75rem;padding:.75rem 1.3rem;">Descargar nuevo .easySQL</button>
+            </div>
+        </div>
+    </div>
+
     <div id="packOverlay" style="display:none;position:fixed;inset:0;backdrop-filter:blur(8px);background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;">
         <div style="width:min(420px,90%);background:rgba(0,20,40,.85);border:1px solid rgba(0,204,255,.3);padding:2rem 2.2rem;border-radius:22px;font-family:inherit;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.4);">
             <h3 style="margin:0 0 1rem;font-size:1.15rem;letter-spacing:.5px;display:flex;align-items:center;gap:.6rem;">
@@ -965,6 +1002,211 @@
                 e.preventDefault();
             });
         });
+
+        /* ================== IMPORTAR / LOGIN CON ARCHIVO .easysql ================== */
+        // NUEVO: reemplaza / define handleEsqlLogin (acceso con archivo)
+        async function handleEsqlLogin() {
+            const fileInput = document.getElementById('esqlFileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Selecciona un archivo .easysql');
+                return;
+            }
+            const masterPass = prompt('Introduce la contraseña maestra del archivo:');
+            if (masterPass === null) return;
+            if (!masterPass) {
+                alert('Contraseña maestra obligatoria.');
+                return;
+            }
+            try {
+                const files = await window.unpackEasysqlWeb(file, masterPass);
+                const accesoFile = files.find(f => /ACCESO\.asql$/i.test(f.name));
+                const empresaFile = files.find(f => /EMPRESA\.bsql$/i.test(f.name));
+                const logoFile = files.find(f => /\.png$/i.test(f.name));
+
+                if (!accesoFile || !empresaFile) {
+                    alert('Archivo inválido: faltan ACCESO.asql o EMPRESA.bsql');
+                    return;
+                }
+
+                const accesoTxt = await accesoFile.blob.text();
+                const empresaTxt = await empresaFile.blob.text();
+                const { devUsers, adminUsers } = parseAcceso(accesoTxt);
+                const { nombreEmpresa, descripcion } = parseEmpresa(empresaTxt);
+
+                // Guardar en memoria global
+                window._importedData = {
+                    devUsers, adminUsers,
+                    nombreEmpresa,
+                    descripcion,
+                    masterPass,
+                    logoFile: logoFile ? logoFile.blob : null
+                };
+
+                // Pedir credenciales de usuario
+                const loginUser = prompt('Usuario:');
+                if (loginUser === null) return;
+                const loginPass = prompt('Contraseña:');
+                if (loginPass === null) return;
+
+                const devMatch = devUsers.find(u => u.user === loginUser && u.pass === loginPass);
+                const adminMatch = adminUsers.find(u => u.user === loginUser && u.pass === loginPass);
+
+                if (!devMatch && !adminMatch) {
+                    alert('Credenciales incorrectas.');
+                    return;
+                }
+
+                if (devMatch) {
+                    const wantsEdit = confirm('Acceso como desarrollador. ¿Deseas modificar descripción o usuarios antes de continuar?');
+                    if (wantsEdit) {
+                        openEditImportedModal();
+                        return; // No navegamos aún
+                    }
+                }
+
+                // Navegar normalmente a la app
+                window.location.href = 'easySQL.html';
+            } catch (e) {
+                alert('Error al abrir el archivo: ' + e.message);
+            }
+        }
+
+        // PARSER ACCESO.asql
+        function parseAcceso(txt) {
+            const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
+            const devUsers = [];
+            const adminUsers = [];
+            let mode = null;
+            for (let i=0;i<lines.length;i++) {
+                const line = lines[i];
+                if (/^\*dev$/i.test(line)) { mode = 'dev'; continue; }
+                if (/^\*admin$/i.test(line)) { mode = 'admin'; continue; }
+                if (/^\*consultor$/i.test(line)) { mode = null; continue; }
+                if (mode) {
+                    if (line.startsWith('-')) {
+                        const user = line.substring(1);
+                        const passLine = lines[i+1] || '';
+                        if (passLine.startsWith('+')) {
+                            const pass = passLine.substring(1);
+                            if (mode === 'dev') devUsers.push({ user, pass });
+                            else adminUsers.push({ user, pass });
+                        }
+                    }
+                }
+            }
+            return { devUsers, adminUsers };
+        }
+
+        // PARSER EMPRESA.bsql
+        function parseEmpresa(txt) {
+            const lines = txt.split(/\r?\n/);
+            let nombreEmpresa = '';
+            let descripcion = '';
+            let mode = null;
+            for (let i=0;i<lines.length;i++) {
+                const l = lines[i];
+                if (/^\*nombre$/i.test(l)) { mode='nombre'; continue; }
+                if (/^\*descripcion$/i.test(l)) { mode='desc'; continue; }
+                if (l.startsWith('*')) { mode=null; continue; }
+                if (mode === 'nombre' && !nombreEmpresa) nombreEmpresa = l.trim();
+                else if (mode === 'desc') {
+                    if (descripcion) descripcion += '\n';
+                    descripcion += l;
+                }
+            }
+            return { nombreEmpresa, descripcion: descripcion.trim() };
+        }
+
+        /* ============== MODAL EDICIÓN DATOS IMPORTADOS ============== */
+        function openEditImportedModal() {
+            if (!window._importedData) return;
+            const m = document.getElementById('editImportedModal');
+            document.getElementById('impNombre').value = window._importedData.nombreEmpresa || '';
+            document.getElementById('impDescripcion').value = window._importedData.descripcion || '';
+            document.getElementById('impDescCounter').textContent = (window._importedData.descripcion||'').length + ' / 500';
+
+            const devList = document.getElementById('impDevList');
+            const adminList = document.getElementById('impAdminList');
+            devList.innerHTML = '';
+            adminList.innerHTML = '';
+            window._importedData.devUsers.forEach(u=> addUserRow(devList, u.user, u.pass));
+            window._importedData.adminUsers.forEach(u=> addUserRow(adminList, u.user, u.pass));
+            m.style.display = 'block';
+            document.body.style.overflow='hidden';
+        }
+
+        function closeEditImportedModal() {
+            const m = document.getElementById('editImportedModal');
+            m.style.display='none';
+            document.body.style.overflow='auto';
+            // Tras cerrar sin descargar => continuar a app
+            if (!window._editedExportDone) {
+                window.location.href='easySQL.html';
+            }
+        }
+
+        function addUserRow(container, user='', pass='') {
+            const row = document.createElement('div');
+            row.className='role-row';
+            row.innerHTML = `
+                <input type="text" placeholder="usuario" maxlength="32" value="${user}">
+                <input type="password" placeholder="contraseña" maxlength="64" value="${pass}">
+                <button type="button" title="Eliminar">✕</button>
+            `;
+            row.querySelector('button').onclick = ()=> row.remove();
+            container.appendChild(row);
+        }
+
+        document.getElementById('impAddDev')?.addEventListener('click', ()=> addUserRow(document.getElementById('impDevList')));
+        document.getElementById('impAddAdmin')?.addEventListener('click', ()=> addUserRow(document.getElementById('impAdminList')));
+        document.getElementById('impDescripcion')?.addEventListener('input', e=>{
+            document.getElementById('impDescCounter').textContent = e.target.value.length + ' / 500';
+        });
+
+        // Descargar nuevo .easysql con cambios
+        document.getElementById('downloadEditedBtn')?.addEventListener('click', async ()=>{
+            if (!window._importedData) return;
+            const impDesc = document.getElementById('impDescripcion').value.trim().slice(0,500);
+            const devList = [...document.querySelectorAll('#impDevList .role-row')].map(r=>{
+                const [u,p] = r.querySelectorAll('input');
+                return {user:u.value.trim(), pass:p.value};
+            }).filter(x=> x.user && x.pass);
+            const adminList = [...document.querySelectorAll('#impAdminList .role-row')].map(r=>{
+                const [u,p] = r.querySelectorAll('input');
+                return {user:u.value.trim(), pass:p.value};
+            }).filter(x=> x.user && x.pass);
+
+            // Reconstruir ACCESO.asql y EMPRESA.bsql
+            const acceso = buildAcceso(devList, adminList);
+            const empresa = buildEmpresa(window._importedData.nombreEmpresa, impDesc);
+
+            const files = [
+                {name:'ACCESO.asql', blob:new Blob([acceso], {type:'text/plain'})},
+                {name:'EMPRESA.bsql', blob:new Blob([empresa], {type:'text/plain'})}
+            ];
+            if (window._importedData.logoFile) {
+                files.push({name:'logo.png', blob: window._importedData.logoFile});
+            }
+
+            try {
+                const blob = await packEasysqlWeb(files, window._importedData.masterPass, p=>{/* opcional progreso */});
+                const a = document.createElement('a');
+                a.download = (window._importedData.nombreEmpresa.replace(/\s+/g,'_')||'easySQL') + '.easysql';
+                a.href = URL.createObjectURL(blob);
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(a.href);
+                a.remove();
+                window._editedExportDone = true;
+                closeEditImportedModal();
+                window.location.href='easySQL.html';
+            } catch(e) {
+                alert('Error al generar nuevo archivo: ' + e.message);
+            }
+        });
+
+        /* ============== FIN LÓGICA IMPORTACIÓN ============== */
     </script>
 </body>
 </html>
