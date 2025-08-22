@@ -1,6 +1,6 @@
-import { 
-  doc, runTransaction, serverTimestamp,
-  collection, query, where, limit, getDocs
+import {
+  collection, query, where, limit, getDocs,
+  updateDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { db } from './firebase-init.js';
 
@@ -11,12 +11,6 @@ Flujo con tus reglas actuales:
      (no puedes distinguir "usada" vs "no existe" con ese código únicamente).
 - Regla update: permite transición usada:false -> usada:true agregando usadaEn (timestamp) y sin tocar otros campos.
 
-Transacción (runTransaction):
-  1. Internamente ejecuta BatchGetDocuments sobre:
-     projects/{projectId}/databases/(default)/documents/licencias/{codigo}
-  2. Si pasa reglas de lectura (usada == false), procede.
-  3. Ejecuta Commit con la mutación (UPDATE) marcando usada:true y usadaEn:serverTimestamp().
-
 Document path lógico: /licencias/{codigo}
 Document path REST completo usado por el SDK:
   projects/licencias-easysql/databases/(default)/documents/licencias/{codigo}
@@ -26,38 +20,31 @@ Si quieres diferenciar "ya usada" de "no existe" necesitarías:
   - Exponer un Cloud Function proxy.
 */
 
+// Busca licencia por campo "codigo"
 export async function validarLicencia(codigo) {
-  if (!codigo) throw new Error('Código vacío');
-
+  if (!codigo) return { exists: false, usable: false, ref: null };
   try {
-    // 1. Buscar el documento cuyo campo 'codigo' coincide
     const colRef = collection(db, 'licencias');
     const q = query(colRef, where('codigo', '==', codigo), limit(1));
-    const qSnap = await getDocs(q); // Usa reglas 'list'
-
-    if (qSnap.empty) return false; // No existe licencia con ese código
-
-    const docSnap = qSnap.docs[0];
-    const ref = docSnap.ref;
-
-    // (Si las reglas permiten ya filtrar usadas, este check es redundante)
-    if (docSnap.data().usada) return false;
-
-    // 2. Transacción para marcar usada de forma atómica
-    const ok = await runTransaction(db, async (tx) => {
-      const fresh = await tx.get(ref);
-      if (!fresh.exists()) return false;
-      const data = fresh.data();
-      if (data.usada) return false;
-      tx.update(ref, { usada: true, usadaEn: serverTimestamp() });
-      return true;
-    });
-
-    return ok;
+    const snap = await getDocs(q); // necesita regla list (limit <=1)
+    if (snap.empty) return { exists: false, usable: false, ref: null };
+    const docSnap = snap.docs[0];
+    const data = docSnap.data() || {};
+    const usable = data.usada === false;
+    return { exists: true, usable, ref: docSnap.ref };
   } catch (e) {
-    if (e.code === 'permission-denied') {
+    if (e.code === 'permission-denied')
       throw Object.assign(new Error('permission-denied'), { code: 'permission-denied' });
-    }
     throw e;
+  }
+}
+
+// Intenta marcar como usada (best-effort); no lanza si hay permiso denegado
+export async function marcarLicenciaUsada(ref) {
+  if (!ref) return;
+  try {
+    await updateDoc(ref, { usada: true, usadaEn: serverTimestamp() });
+  } catch (e) {
+    if (e.code !== 'permission-denied') console.warn('Fallo al marcar licencia usada:', e);
   }
 }

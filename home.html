@@ -893,10 +893,11 @@
             btn.textContent = 'Verificando...';
 
             try {
-                const { validarLicencia } = await import('./scripts/licenseService.js');
-                const ok = await validarLicencia(code);
-                if (ok) {
-                    // Acceso concedido
+                const { validarLicencia, marcarLicenciaUsada } = await import('./scripts/licenseService.js');
+                const res = await validarLicencia(code);
+
+                if (res.exists && res.usable) {
+                    // Acceso inmediato
                     closeLoginModal();
                     document.querySelectorAll('.tab-content').forEach(t=> t.classList.remove('active'));
                     const mgr = document.getElementById('esql-manager');
@@ -907,13 +908,15 @@
                     updateBadges();
                     renderStrength();
                     counter.textContent = '0 / 500';
+                    // Marcar usada (no bloquea UI si falla)
+                    marcarLicenciaUsada(res.ref);
                 } else {
-                    errEl.textContent = 'Licencia incorrecta o ya usada.';
+                    errEl.textContent = res.exists ? 'Licencia ya usada.' : 'Licencia inexistente.';
                     input.classList.add('error');
                 }
             } catch (e) {
-                // Errores comunes de reglas
                 if (e.code === 'permission-denied') {
+                    // Lectura denegada: tratamos como no válida (mostrar mensaje genérico)
                     errEl.textContent = 'Permisos Firestore denegados (revisa reglas).';
                 } else {
                     errEl.textContent = 'Error validando: ' + (e.message || e);
