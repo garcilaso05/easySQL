@@ -1,6 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+// Config pública de Firebase (no es secreto). Las reglas de Firestore controlan el acceso real.
 const firebaseConfig = {
   apiKey: "AIzaSyChCxRwuIdx4eDL2hZiIa_N-J1oezJefOQ",
   authDomain: "licencias-easysql.firebaseapp.com",
