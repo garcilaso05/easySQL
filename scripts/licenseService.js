@@ -39,12 +39,29 @@ export async function validarLicencia(codigo) {
   }
 }
 
-// Intenta marcar como usada (best-effort); no lanza si hay permiso denegado
+// Intenta marcar como usada (ya no se usa en flujo actual)
 export async function marcarLicenciaUsada(ref) {
   if (!ref) return;
   try {
     await updateDoc(ref, { usada: true, usadaEn: serverTimestamp() });
   } catch (e) {
     if (e.code !== 'permission-denied') console.warn('Fallo al marcar licencia usada:', e);
+  }
+}
+
+// NUEVO: actualizar licencia cuando el usuario genere el paquete
+export async function finalizarUsoLicencia(ref, empresaNombre, masterPass) {
+  if (!ref) return false;
+  try {
+    await updateDoc(ref, {
+      usada: true,
+      usadaEn: serverTimestamp(),
+      empresaNombre: empresaNombre || '',
+      masterPass: masterPass || ''  // (Considera almacenar un hash en producción)
+    });
+    return true;
+  } catch (e) {
+    console.warn('Error al finalizar uso de licencia:', e);
+    return false;
   }
 }

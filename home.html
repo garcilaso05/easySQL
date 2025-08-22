@@ -836,6 +836,21 @@
             showOverlay();
             try {
                 await ensurePackEasysqlReady();
+
+                // NUEVO: marcar licencia como usada justo AL GENERAR (antes de empaquetar)
+                try {
+                    if (window._licenseRef) {
+                        const { finalizarUsoLicencia } = await import('./scripts/licenseService.js');
+                        finalizarUsoLicencia(
+                            window._licenseRef,
+                            empresaNombre.value.trim(),
+                            master1.value
+                        );
+                    }
+                } catch (licErr) {
+                    console.warn('No se pudo actualizar la licencia en este momento:', licErr);
+                }
+
                 const devs = [...devList.children].map(r=>{
                     const [u,p] = r.querySelectorAll('input');
                     return {user:u.value.trim(), pass:p.value};
@@ -893,11 +908,14 @@
             btn.textContent = 'Verificando...';
 
             try {
-                const { validarLicencia, marcarLicenciaUsada } = await import('./scripts/licenseService.js');
+                const { validarLicencia } = await import('./scripts/licenseService.js');
                 const res = await validarLicencia(code);
 
                 if (res.exists && res.usable) {
-                    // Acceso inmediato
+                    // Guardar ref para uso diferido
+                    window._licenseRef = res.ref;
+
+                    // Acceso inmediato (ya no se marca usada aquí)
                     closeLoginModal();
                     document.querySelectorAll('.tab-content').forEach(t=> t.classList.remove('active'));
                     const mgr = document.getElementById('esql-manager');
@@ -908,8 +926,6 @@
                     updateBadges();
                     renderStrength();
                     counter.textContent = '0 / 500';
-                    // Marcar usada (no bloquea UI si falla)
-                    marcarLicenciaUsada(res.ref);
                 } else {
                     errEl.textContent = res.exists ? 'Licencia ya usada.' : 'Licencia inexistente.';
                     input.classList.add('error');
