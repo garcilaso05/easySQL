@@ -296,7 +296,6 @@
                             </div>
                             <h4>Cargar Archivo eSQL</h4>
                             <p>Si ya tienes un archivo eSQL de un proyecto anterior, súbelo para continuar trabajando.</p>
-                            <!-- Navigation Button for Left Option -->
                             <button class="navigation-button nav-left" id="navLeft" onclick="showFileUpload()">￫</button>
                         </div>
 
@@ -307,7 +306,6 @@
                             </div>
                             <h4>Nuevo Usuario</h4>
                             <p>Comienza desde cero y crea tu primera base de datos con nuestras herramientas.</p>
-                            <!-- Navigation Button for Right Option -->
                             <button class="navigation-button nav-right" id="navRight" onclick="showNewUser()">￩</button>
                         </div>
                     </div>
@@ -315,31 +313,103 @@
                     <!-- Divider -->
                     <div class="divider" id="divider"></div>
 
-                    <!-- Step Content for File Upload -->
+                    <!-- Step Content for File Upload - NUEVO SISTEMA DE PASOS -->
                     <div class="step-content left" id="fileUploadStep">
-                        <h4>Subir Archivo eSQL</h4>
-                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('esqlFileInput').click()">
-                            <div class="upload-content">
-                                <div class="upload-icon">📁</div>
-                                <span>Seleccionar archivo .easySQL</span>
+                        <!-- Paso 1: Subir archivo -->
+                        <div class="upload-step active" id="uploadFileStep">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <h4>Seleccionar Archivo</h4>
                             </div>
-                            <input type="file" id="esqlFileInput" accept=".easysql" style="display: none;">
-                        </div>
-                        <div class="file-info" id="fileInfo" style="display: none;">
-                            <span class="file-name"></span>
-                            <button class="remove-file" onclick="removeFile()">✕</button>
+                            <div class="upload-area" id="uploadArea" onclick="document.getElementById('esqlFileInput').click()">
+                                <div class="upload-content">
+                                    <div class="upload-icon">📁</div>
+                                    <span>Seleccionar archivo .easySQL</span>
+                                    <small>Arrastra y suelta o haz clic aquí</small>
+                                </div>
+                                <input type="file" id="esqlFileInput" accept=".easysql" style="display: none;">
+                            </div>
+                            <div class="file-info" id="fileInfo" style="display: none;">
+                                <div class="file-details">
+                                    <span class="file-icon">📄</span>
+                                    <span class="file-name"></span>
+                                    <span class="file-size"></span>
+                                </div>
+                                <button class="remove-file" onclick="removeFile()">✕</button>
+                            </div>
+                            <button class="step-button" id="continueToDecrypt" disabled onclick="showDecryptStep()">
+                                Continuar
+                            </button>
                         </div>
 
-                        <!-- NUEVOS CAMPOS DE AUTENTICACIÓN (sustituyen prompts) -->
-                        <div id="importAuthFields" style="display:none;margin-top:1rem;display:grid;gap:.6rem;">
-                            <input type="password" id="importMasterPass" placeholder="Contraseña maestra">
-                            <input type="text" id="importUser" placeholder="Usuario">
-                            <input type="password" id="importUserPass" placeholder="Contraseña usuario">
+                        <!-- Paso 2: Descifrar con clave maestra -->
+                        <div class="upload-step" id="decryptStep">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <h4>Descifrar Archivo</h4>
+                            </div>
+                            <div class="decrypt-content">
+                                <p>Introduce la clave maestra para descifrar el archivo</p>
+                                <div class="input-group">
+                                    <input type="password" id="importMasterPass" placeholder="Clave maestra">
+                                    <div class="input-status" id="decryptStatus"></div>
+                                </div>
+                            </div>
+                            <div class="step-actions">
+                                <button class="step-button secondary" onclick="goBackToUpload()">Atrás</button>
+                                <button class="step-button" id="decryptBtn" onclick="attemptDecrypt()">
+                                    Descifrar
+                                </button>
+                            </div>
                         </div>
 
-                        <button class="step-button" id="uploadBtn" disabled onclick="handleEsqlLogin()">
-                            Acceder con Archivo
-                        </button>
+                        <!-- Paso 3: Introducir credenciales -->
+                        <div class="upload-step" id="credentialsStep">
+                            <div class="step-header">
+                                <div class="step-number">3</div>
+                                <h4>Iniciar Sesión</h4>
+                            </div>
+                            <div class="credentials-content">
+                                <p>Introduce tus credenciales de usuario</p>
+                                <div class="input-group">
+                                    <input type="text" id="importUser" placeholder="Usuario">
+                                </div>
+                                <div class="input-group">
+                                    <input type="password" id="importUserPass" placeholder="Contraseña">
+                                    <div class="input-status" id="credentialsStatus"></div>
+                                </div>
+                            </div>
+                            <div class="step-actions">
+                                <button class="step-button secondary" onclick="goBackToDecrypt()">Atrás</button>
+                                <button class="step-button" id="loginBtn" onclick="attemptLogin()">
+                                    Iniciar Sesión
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Paso 4: Opciones para desarrolladores -->
+                        <div class="upload-step" id="developerOptionsStep">
+                            <div class="step-header">
+                                <div class="step-number">4</div>
+                                <h4>Seleccionar Acción</h4>
+                            </div>
+                            <div class="developer-content">
+                                <p>¿Qué deseas hacer?</p>
+                                <div class="developer-options">
+                                    <div class="developer-option" onclick="goToEditCompany()">
+                                        <div class="option-icon">⚙️</div>
+                                        <h5>Editar Empresa</h5>
+                                        <p>Modificar configuración, usuarios y datos de la empresa</p>
+                                    </div>
+                                    <div class="developer-option" onclick="goToApp()">
+                                        <div class="option-icon">🚀</div>
+                                        <h5>Acceder a la App</h5>
+                                        <p>Ir directamente a la aplicación easySQL</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="step-button secondary" onclick="goBackToCredentials()">Atrás</button>
+                        </div>
                     </div>
 
                     <!-- Step Content for New User -->
@@ -511,17 +581,27 @@
         }
 
         function resetLoginModal() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInfo = document.getElementById('fileInfo');
+            // Reset file upload
+            removeFile();
             
-            document.getElementById('esqlFileInput').value = '';
-            fileInfo.style.display = 'none';
-            uploadArea.style.display = 'block'; // Make sure upload area is visible
-            document.getElementById('uploadBtn').disabled = true;
-            document.getElementById('licenseKey').value = ''; // limpiamos (antes '000000')
+            // Reset all inputs
+            document.getElementById('importMasterPass').value = '';
+            document.getElementById('importUser').value = '';
+            document.getElementById('importUserPass').value = '';
+            document.getElementById('licenseKey').value = '';
             document.getElementById('licenseError').textContent = '';
             
-            // Reset all states
+            // Reset status messages
+            document.getElementById('decryptStatus').textContent = '';
+            document.getElementById('credentialsStatus').textContent = '';
+            
+            // Reset to initial state
+            hideAllUploadSteps();
+            document.getElementById('uploadFileStep').classList.add('active');
+            currentUploadStep = 'upload';
+            decryptedData = null;
+            
+            // Reset main modal state
             const loginOptions = document.getElementById('loginOptions');
             const fileUploadStep = document.getElementById('fileUploadStep');
             const newUserStep = document.getElementById('newUserStep');
@@ -547,28 +627,38 @@
             currentStep = 'none';
         }
 
-        // File upload handling
+        // File upload handling actualizado
         document.getElementById('esqlFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const uploadArea = document.getElementById('uploadArea');
                 const fileInfo = document.getElementById('fileInfo');
                 const fileName = fileInfo.querySelector('.file-name');
-                const uploadBtn = document.getElementById('uploadBtn');
+                const fileSize = fileInfo.querySelector('.file-size');
+                const continueBtn = document.getElementById('continueToDecrypt');
                 
+                // Formatear tamaño del archivo
+                const formatSize = (bytes) => {
+                    if (bytes === 0) return '0 Bytes';
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                };
+
                 // Hide upload area and show file info
                 uploadArea.style.display = 'none';
                 fileName.textContent = file.name;
+                fileSize.textContent = formatSize(file.size);
                 fileInfo.style.display = 'flex';
-                uploadBtn.disabled = false;
-                document.getElementById('importAuthFields').style.display = 'grid';
+                continueBtn.disabled = false;
             }
         });
 
         function removeFile() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInfo = document.getElementById('fileInfo');
-            const uploadBtn = document.getElementById('uploadBtn');
+            const continueBtn = document.getElementById('continueToDecrypt');
             
             // Clear file input
             document.getElementById('esqlFileInput').value = '';
@@ -576,25 +666,203 @@
             // Show upload area and hide file info
             uploadArea.style.display = 'block';
             fileInfo.style.display = 'none';
-            uploadBtn.disabled = true;
+            continueBtn.disabled = true;
+
+            // Reset to first step
+            goBackToUpload();
         }
 
-        // Update the demo button event
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update any existing demo button events
-            const demoButtons = document.querySelectorAll('.cta-secondary');
-            demoButtons.forEach(button => {
-                if (button.textContent.includes('Demo')) {
-                    button.onclick = openLoginModal;
-                }
-            });
-        });
+        // Variables globales para el manejo de pasos
+        let currentUploadStep = 'upload';
+        let decryptedData = null;
 
-        // Update the access button to open login modal instead
-        document.querySelector('.access-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            openLoginModal();
-        });
+        // Funciones para manejar los pasos del upload
+        function showDecryptStep() {
+            hideAllUploadSteps();
+            document.getElementById('decryptStep').classList.add('active');
+            currentUploadStep = 'decrypt';
+            document.getElementById('importMasterPass').focus();
+        }
+
+        function showCredentialsStep() {
+            hideAllUploadSteps();
+            document.getElementById('credentialsStep').classList.add('active');
+            currentUploadStep = 'credentials';
+            document.getElementById('importUser').focus();
+        }
+
+        function showDeveloperOptionsStep() {
+            hideAllUploadSteps();
+            document.getElementById('developerOptionsStep').classList.add('active');
+            currentUploadStep = 'options';
+        }
+
+        function hideAllUploadSteps() {
+            document.querySelectorAll('.upload-step').forEach(step => {
+                step.classList.remove('active');
+            });
+        }
+
+        function goBackToUpload() {
+            hideAllUploadSteps();
+            document.getElementById('uploadFileStep').classList.add('active');
+            currentUploadStep = 'upload';
+            document.getElementById('decryptStatus').textContent = '';
+            document.getElementById('importMasterPass').value = '';
+        }
+
+        function goBackToDecrypt() {
+            hideAllUploadSteps();
+            document.getElementById('decryptStep').classList.add('active');
+            currentUploadStep = 'decrypt';
+            document.getElementById('credentialsStatus').textContent = '';
+            document.getElementById('importUser').value = '';
+            document.getElementById('importUserPass').value = '';
+        }
+
+        function goBackToCredentials() {
+            hideAllUploadSteps();
+            document.getElementById('credentialsStep').classList.add('active');
+            currentUploadStep = 'credentials';
+        }
+
+        // Función para intentar descifrar
+        async function attemptDecrypt() {
+            const file = document.getElementById('esqlFileInput').files[0];
+            const masterPass = document.getElementById('importMasterPass').value.trim();
+            const statusEl = document.getElementById('decryptStatus');
+            const btn = document.getElementById('decryptBtn');
+
+            if (!masterPass) {
+                statusEl.textContent = 'Introduce la clave maestra';
+                statusEl.className = 'input-status error';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Descifrando...';
+            statusEl.textContent = 'Descifrando archivo...';
+            statusEl.className = 'input-status loading';
+
+            try {
+                const files = await window.unpackEasysqlWeb(file, masterPass);
+                const accesoFile = files.find(f => /ACCESO\.asql$/i.test(f.name));
+                const empresaFile = files.find(f => /EMPRESA\.bsql$/i.test(f.name));
+                const logoFile = files.find(f => /\.png$/i.test(f.name));
+
+                if (!accesoFile || !empresaFile) {
+                    throw new Error('Archivo inválido o corrupto');
+                }
+
+                const accesoTxt = await accesoFile.blob.text();
+                const empresaTxt = await empresaFile.blob.text();
+                const { devUsers, adminUsers } = parseAcceso(accesoTxt);
+                const { nombreEmpresa, descripcion } = parseEmpresa(empresaTxt);
+
+                decryptedData = {
+                    devUsers, adminUsers,
+                    nombreEmpresa, descripcion,
+                    masterPass,
+                    logoFile: logoFile ? logoFile.blob : null
+                };
+
+                statusEl.textContent = '✓ Archivo descifrado correctamente';
+                statusEl.className = 'input-status success';
+                
+                setTimeout(() => {
+                    showCredentialsStep();
+                }, 1000);
+
+            } catch (e) {
+                statusEl.textContent = 'Error: ' + e.message;
+                statusEl.className = 'input-status error';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Descifrar';
+            }
+        }
+
+        // Función para intentar login
+        async function attemptLogin() {
+            const loginUser = document.getElementById('importUser').value.trim();
+            const loginPass = document.getElementById('importUserPass').value.trim();
+            const statusEl = document.getElementById('credentialsStatus');
+            const btn = document.getElementById('loginBtn');
+
+            if (!loginUser || !loginPass) {
+                statusEl.textContent = 'Introduce usuario y contraseña';
+                statusEl.className = 'input-status error';
+                return;
+            }
+
+            if (!decryptedData) {
+                statusEl.textContent = 'Error: datos no disponibles';
+                statusEl.className = 'input-status error';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Verificando...';
+
+            const devMatch = decryptedData.devUsers.find(u => u.user === loginUser && u.pass === loginPass);
+            const adminMatch = decryptedData.adminUsers.find(u => u.user === loginUser && u.pass === loginPass);
+
+            if (!devMatch && !adminMatch) {
+                statusEl.textContent = 'Credenciales incorrectas';
+                statusEl.className = 'input-status error';
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesión';
+                return;
+            }
+
+            statusEl.textContent = '✓ Login exitoso';
+            statusEl.className = 'input-status success';
+
+            if (devMatch) {
+                // Desarrollador - mostrar opciones
+                setTimeout(() => {
+                    showDeveloperOptionsStep();
+                }, 1000);
+            } else {
+                // Admin - ir directo a la app
+                setTimeout(() => {
+                    window.location.href = 'easySQL.html';
+                }, 1000);
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Iniciar Sesión';
+        }
+
+        // Funciones para opciones de desarrollador
+        async function goToEditCompany() {
+            // Preparar datos para editarEmpresa.html
+            if (decryptedData.logoFile) {
+                const b64 = await new Promise(res => {
+                    const fr = new FileReader();
+                    fr.onload = () => res(fr.result);
+                    fr.readAsDataURL(decryptedData.logoFile);
+                });
+                decryptedData.logoB64 = b64;
+            }
+
+            const payload = {
+                devUsers: decryptedData.devUsers,
+                adminUsers: decryptedData.adminUsers,
+                nombreEmpresa: decryptedData.nombreEmpresa,
+                descripcion: decryptedData.descripcion,
+                masterPass: decryptedData.masterPass,
+                logoB64: decryptedData.logoB64 || null
+            };
+            
+            sessionStorage.setItem('importedData', JSON.stringify(payload));
+            closeLoginModal();
+            window.location.href = 'editarEmpresa.html';
+        }
+
+        function goToApp() {
+            window.location.href = 'easySQL.html';
+        }
 
         // Close modal when clicking outside
         window.onclick = function(event) {
@@ -899,62 +1167,8 @@
 
         /* ================== IMPORTAR / LOGIN CON ARCHIVO .easysql ================== */
         async function handleEsqlLogin() {
-            const file = document.getElementById('esqlFileInput').files[0];
-            if (!file) return;
-            const masterPass = document.getElementById('importMasterPass').value.trim();
-            const loginUser = document.getElementById('importUser').value.trim();
-            const loginPass = document.getElementById('importUserPass').value.trim();
-            if (!masterPass || !loginUser || !loginPass) return;
-            try {
-                const files = await window.unpackEasysqlWeb(file, masterPass);
-                const accesoFile = files.find(f => /ACCESO\.asql$/i.test(f.name));
-                const empresaFile = files.find(f => /EMPRESA\.bsql$/i.test(f.name));
-                const logoFile = files.find(f => /\.png$/i.test(f.name));
-                if (!accesoFile || !empresaFile) { alert('Archivo inválido.'); return; }
-                const accesoTxt = await accesoFile.blob.text();
-                const empresaTxt = await empresaFile.blob.text();
-                const { devUsers, adminUsers } = parseAcceso(accesoTxt);
-                const { nombreEmpresa, descripcion } = parseEmpresa(empresaTxt);
-
-                window._importedData = {
-                    devUsers, adminUsers,
-                    nombreEmpresa, descripcion,
-                    masterPass,
-                    logoFile: logoFile ? logoFile.blob : null
-                };
-
-                const devMatch = devUsers.find(u => u.user === loginUser && u.pass === loginPass);
-                const adminMatch = adminUsers.find(u => u.user === loginUser && u.pass === loginPass);
-
-                if (!devMatch && !adminMatch) { alert('Credenciales incorrectas.'); return; }
-
-                if (devMatch) {
-                    // Convertir logo a base64 (si existe) y guardar todo en sessionStorage
-                    if (logoFile) {
-                        const b64 = await new Promise(res=>{
-                            const fr = new FileReader();
-                            fr.onload = () => res(fr.result);
-                            fr.readAsDataURL(logoFile.blob);
-                        });
-                        window._logoB64 = b64;
-                    }
-                    const payload = {
-                        devUsers, adminUsers,
-                        nombreEmpresa, descripcion,
-                        masterPass,
-                        logoB64: window._logoB64 || null
-                    };
-                    sessionStorage.setItem('importedData', JSON.stringify(payload));
-                    closeLoginModal();
-                    window.location.href = 'editarEmpresa.html';
-                    return;
-                }
-
-                // Admin -> ir directo a la app
-                window.location.href = 'easySQL.html';
-            } catch(e) {
-                alert('Error: ' + e.message);
-            }
+            // Esta función ahora es manejada por el sistema de pasos
+            console.log('Esta función ha sido reemplazada por el sistema de pasos');
         }
 
         // PARSERS (se reutilizan)
