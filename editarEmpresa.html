@@ -9,6 +9,18 @@
 <script type="module" src="scripts/packEasysql.js"></script>
 </head>
 <body>
+<!-- Añadir el mismo fondo que home.html -->
+<div class="background-container">
+    <div class="gradient-bg"></div>
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+    </div>
+</div>
+
 <div class="container" style="padding-top:2rem;">
     <header class="header">
         <div class="logo">
@@ -24,18 +36,28 @@
         <p style="font-size:.7rem;opacity:.7;margin-top:-.5rem;margin-bottom:1.5rem;">
             No puedes modificar nombre, logo ni contraseña maestra.
         </p>
-        <div class="esql-grid">
+        <!-- Cambiar a grid de 2 columnas -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <!-- Nuevo card para mostrar logo y nombre -->
             <div class="esql-card">
-                <h4>Empresa</h4>
-                <small>Nombre (solo lectura)</small>
-                <input id="impNombre" type="text" disabled>
-                <small style="margin-top:.9rem;">Descripción</small>
-                <textarea id="impDescripcion" maxlength="500"></textarea>
+                <h4>Identidad Empresa</h4>
+                <small>Logo y nombre (solo lectura)</small>
+                <div style="text-align: center; margin: 1rem 0;">
+                    <div id="logoPreview" style="width: 80px; height: 80px; margin: 0 auto 1rem; border-radius: 12px; background: rgba(0,204,255,0.1); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,204,255,0.3);">
+                        <span style="font-size: 2rem;">🏢</span>
+                    </div>
+                    <input id="impNombre" type="text" disabled style="text-align: center; font-weight: 600; background: rgba(255,255,255,0.03);">
+                </div>
+            </div>
+            <div class="esql-card">
+                <h4>Descripción</h4>
+                <small>Información de la empresa</small>
+                <textarea id="impDescripcion" maxlength="500" style="min-height: 120px;"></textarea>
                 <div class="char-counter" id="impDescCounter">0 / 500</div>
             </div>
             <div class="esql-card">
                 <h4>Desarrolladores</h4>
-                <small>Editar usuarios y contraseñas</small>
+                <small>Editar usuarios y contraseñas (mínimo 1 requerido)</small>
                 <div id="impDevList" class="role-list"></div>
                 <button type="button" class="add-btn" id="impAddDev">+ Añadir Dev</button>
             </div>
@@ -46,7 +68,7 @@
                 <button type="button" class="add-btn" id="impAddAdmin">+ Añadir Admin</button>
             </div>
         </div>
-        <div class="download-area" style="text-align:right;">
+        <div class="download-area" style="text-align:right; margin-top: 2rem;">
             <button id="downloadEditedImportedBtn" class="generate-btn" type="button">
                 Descargar nuevo .easySQL
             </button>
@@ -79,8 +101,16 @@ function addRow(container, user='', pass=''){
     row.className='role-row';
     row.innerHTML=`<input type="text" placeholder="usuario" maxlength="32" value="${user}">
     <input type="password" placeholder="contraseña" maxlength="64" value="${pass}">
-    <button type="button" title="Eliminar">✕</button>`;
-    row.querySelector('button').onclick=()=>row.remove();
+    <button type="button" class="role-delete-btn" title="Eliminar">✕</button>`;
+    const deleteBtn = row.querySelector('button');
+    deleteBtn.onclick=()=>{
+        // Prevenir borrar si es el último dev
+        if (container === devList && devList.children.length <= 1) {
+            alert('Debe existir al menos un desarrollador');
+            return;
+        }
+        row.remove();
+    };
     container.appendChild(row);
 }
 
@@ -89,9 +119,21 @@ function loadData(){
     impNombre.value = importedData.nombreEmpresa||'';
     impDescripcion.value = importedData.descripcion||'';
     impDescCounter.textContent = (importedData.descripcion||'').length + ' / 500';
+    
+    // Cargar logo si existe
+    if (importedData.logoB64) {
+        const logoPreview = document.getElementById('logoPreview');
+        logoPreview.innerHTML = `<img src="${importedData.logoB64}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;">`;
+    }
+    
     devList.innerHTML=''; adminList.innerHTML='';
     (importedData.devUsers||[]).forEach(u=> addRow(devList,u.user,u.pass));
     (importedData.adminUsers||[]).forEach(u=> addRow(adminList,u.user,u.pass));
+    
+    // Asegurar al menos un dev
+    if (devList.children.length === 0) {
+        addRow(devList);
+    }
 }
 loadData();
 

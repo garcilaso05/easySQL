@@ -475,7 +475,7 @@
 
 /* Input groups */
 .input-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .input-group input {
@@ -524,20 +524,25 @@
 .step-actions {
     display: flex;
     gap: 1rem;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
 }
 
 .step-button {
     flex: 1;
-    padding: 1rem 1.5rem;
+    padding: 0.85rem 1.2rem;
     border-radius: 12px;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
     border: none;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .step-button:not(.secondary) {
@@ -572,55 +577,59 @@
 /* Developer options */
 .developer-content {
     text-align: center;
+    padding: 0 0.5rem;
 }
 
 .developer-content p {
     color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
 }
 
 .developer-options {
     display: grid;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    grid-template-columns: 1fr;
 }
 
 .developer-option {
     background: rgba(0, 204, 255, 0.05);
     border: 1px solid rgba(0, 204, 255, 0.2);
-    border-radius: 15px;
-    padding: 2rem;
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
+    min-height: auto;
 }
 
 .developer-option:hover {
     background: rgba(0, 204, 255, 0.1);
     border-color: rgba(0, 204, 255, 0.4);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(0, 102, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 102, 255, 0.2);
 }
 
 .developer-option .option-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    filter: drop-shadow(0 0 10px rgba(0, 204, 255, 0.5));
+    font-size: 1.8rem;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 0 8px rgba(0, 204, 255, 0.5));
 }
 
 .developer-option h5 {
     color: var(--text-white);
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
 }
 
 .developer-option p {
     color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
 /* Decrypt y credentials content */

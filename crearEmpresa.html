@@ -9,6 +9,18 @@
 <script type="module" src="scripts/packEasysql.js"></script>
 </head>
 <body>
+<!-- Añadir el mismo fondo que home.html -->
+<div class="background-container">
+    <div class="gradient-bg"></div>
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+    </div>
+</div>
+
 <div class="container" style="padding-top:2rem;">
     <header class="header">
         <div class="logo">
@@ -22,7 +34,8 @@
 
     <main>
         <h2 class="hero-title" style="font-size:2.2rem;margin:1rem 0 2rem;">Gestor <span class="highlight">easySQL</span></h2>
-        <div class="esql-grid">
+        <!-- Cambiar a grid de 2 columnas -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
             <div class="esql-card">
                 <h4>Datos de la Empresa</h4>
                 <small>Información básica</small>
@@ -37,7 +50,7 @@
             <div class="esql-card" id="devCard">
                 <h4>Desarrolladores</h4>
                 <span class="badge-limit" id="devLimitBadge">0 / 3</span>
-                <small>Máx 3 usuarios</small>
+                <small>Máx 3 usuarios (mínimo 1 requerido)</small>
                 <div class="role-list" id="devList"></div>
                 <button id="addDevBtn" class="add-btn" type="button">+ Añadir Dev</button>
             </div>
@@ -139,10 +152,27 @@ function makeRow(listEl){
     row.className='role-row';
     row.innerHTML=`<input type="text" placeholder="usuario" maxlength="32">
     <input type="password" placeholder="contraseña" maxlength="64">
-    <button type="button">✕</button>`;
-    row.querySelector('button').onclick=()=>{row.remove();updateBadges();validateGenerate();};
-    listEl.appendChild(row); updateBadges();
+    <button type="button" class="role-delete-btn">✕</button>`;
+    const deleteBtn = row.querySelector('button');
+    deleteBtn.onclick=()=>{
+        // Prevenir borrar si es el último dev
+        if (listEl === devList && devList.children.length <= 1) {
+            alert('Debe existir al menos un desarrollador');
+            return;
+        }
+        row.remove();
+        updateBadges();
+        validateGenerate();
+    };
+    listEl.appendChild(row); 
+    updateBadges();
 }
+// Agregar un dev por defecto al cargar
+document.addEventListener('DOMContentLoaded', () => {
+    makeRow(devList);
+    validateGenerate();
+});
+
 addDevBtn.addEventListener('click',()=>{makeRow(devList);validateGenerate();});
 addAdminBtn.addEventListener('click',()=>{makeRow(adminList);validateGenerate();});
 
@@ -172,7 +202,11 @@ function validateGenerate(){
     const nameOk = empresaNombre.value.trim().length>0;
     const logoOk = logoFile.files.length===1 && /\.png$/i.test(logoFile.files[0].name);
     const passOk = master1.value.length>=8 && master1.value===master2.value;
-    let usersOk = true;
+    
+    // Verificar que hay al menos un dev
+    const hasDevs = devList.children.length > 0;
+    let usersOk = hasDevs;
+    
     [...devList.children, ...adminList.children].forEach(r=>{
         const inputs=r.querySelectorAll('input');
         if (![...inputs].every(i=>i.value.trim())) usersOk=false;
