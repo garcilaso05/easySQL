@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>easySQL - Editar Empresa</title>
+<link rel="stylesheet" href="styles/landing.css">
+<link rel="stylesheet" href="styles/landing-animations.css">
+<link rel="stylesheet" href="styles/modals-landing.css">
+<script type="module" src="scripts/packEasysql.js"></script>
+</head>
+<body>
+<div class="container" style="padding-top:2rem;">
+    <header class="header">
+        <div class="logo">
+            <h1>easySQL</h1>
+            <span class="tagline">Editar Empresa</span>
+        </div>
+        <nav class="nav">
+            <a href="home.html" class="nav-btn">Inicio</a>
+        </nav>
+    </header>
+    <main>
+        <h2 class="hero-title" style="font-size:2rem;margin:1.5rem 0;">Editar Datos Importados</h2>
+        <p style="font-size:.7rem;opacity:.7;margin-top:-.5rem;margin-bottom:1.5rem;">
+            No puedes modificar nombre, logo ni contraseña maestra.
+        </p>
+        <div class="esql-grid">
+            <div class="esql-card">
+                <h4>Empresa</h4>
+                <small>Nombre (solo lectura)</small>
+                <input id="impNombre" type="text" disabled>
+                <small style="margin-top:.9rem;">Descripción</small>
+                <textarea id="impDescripcion" maxlength="500"></textarea>
+                <div class="char-counter" id="impDescCounter">0 / 500</div>
+            </div>
+            <div class="esql-card">
+                <h4>Desarrolladores</h4>
+                <small>Editar usuarios y contraseñas</small>
+                <div id="impDevList" class="role-list"></div>
+                <button type="button" class="add-btn" id="impAddDev">+ Añadir Dev</button>
+            </div>
+            <div class="esql-card">
+                <h4>Administradores</h4>
+                <small>Editar usuarios y contraseñas</small>
+                <div id="impAdminList" class="role-list"></div>
+                <button type="button" class="add-btn" id="impAddAdmin">+ Añadir Admin</button>
+            </div>
+        </div>
+        <div class="download-area" style="text-align:right;">
+            <button id="downloadEditedImportedBtn" class="generate-btn" type="button">
+                Descargar nuevo .easySQL
+            </button>
+        </div>
+    </main>
+    <footer class="footer"><p>&copy; 2024 easySQL.</p></footer>
+</div>
+
+<script>
+let importedRaw = sessionStorage.getItem('importedData');
+if (!importedRaw){
+    alert('No hay datos importados. Regresando.');
+    window.location.href='home.html';
+}
+let importedData = null;
+try{
+    importedData = JSON.parse(importedRaw);
+}catch(e){
+    alert('Datos corruptos.'); window.location.href='home.html';
+}
+
+const impNombre=document.getElementById('impNombre');
+const impDescripcion=document.getElementById('impDescripcion');
+const impDescCounter=document.getElementById('impDescCounter');
+const devList=document.getElementById('impDevList');
+const adminList=document.getElementById('impAdminList');
+
+function addRow(container, user='', pass=''){
+    const row=document.createElement('div');
+    row.className='role-row';
+    row.innerHTML=`<input type="text" placeholder="usuario" maxlength="32" value="${user}">
+    <input type="password" placeholder="contraseña" maxlength="64" value="${pass}">
+    <button type="button" title="Eliminar">✕</button>`;
+    row.querySelector('button').onclick=()=>row.remove();
+    container.appendChild(row);
+}
+
+function loadData(){
+    if (!importedData) return;
+    impNombre.value = importedData.nombreEmpresa||'';
+    impDescripcion.value = importedData.descripcion||'';
+    impDescCounter.textContent = (importedData.descripcion||'').length + ' / 500';
+    devList.innerHTML=''; adminList.innerHTML='';
+    (importedData.devUsers||[]).forEach(u=> addRow(devList,u.user,u.pass));
+    (importedData.adminUsers||[]).forEach(u=> addRow(adminList,u.user,u.pass));
+}
+loadData();
+
+document.getElementById('impAddDev').addEventListener('click', ()=> addRow(devList));
+document.getElementById('impAddAdmin').addEventListener('click', ()=> addRow(adminList));
+impDescripcion.addEventListener('input', e=>{
+    impDescCounter.textContent = e.target.value.length + ' / 500';
+});
+
+function buildAcceso(devs, admins){
+    let out='*dev\n';
+    devs.forEach(d=>{out+='-'+d.user+'\n+'+d.pass+'\n';});
+    out+='*admin\n';
+    admins.forEach(a=>{out+='-'+a.user+'\n+'+a.pass+'\n';});
+    out+='*consultor\n';
+    return out;
+}
+function buildEmpresa(nombre, descripcion){
+    return `*nombre\n${nombre}\n*descripcion\n${descripcion}\n`;
+}
+
+document.getElementById('downloadEditedImportedBtn').addEventListener('click', async ()=>{
+    try{
+        const devUsers=[...devList.querySelectorAll('.role-row')].map(r=>{
+            const [u,p]=r.querySelectorAll('input'); return {user:u.value.trim(), pass:p.value};
+        }).filter(x=>x.user&&x.pass);
+        const adminUsers=[...adminList.querySelectorAll('.role-row')].map(r=>{
+            const [u,p]=r.querySelectorAll('input'); return {user:u.value.trim(), pass:p.value};
+        }).filter(x=>x.user&&x.pass);
+        const acceso=buildAcceso(devUsers, adminUsers);
+        const empresa=buildEmpresa(importedData.nombreEmpresa, impDescripcion.value.trim().slice(0,500));
+        const files=[
+            {name:'ACCESO.asql', blob:new Blob([acceso], {type:'text/plain'})},
+            {name:'EMPRESA.bsql', blob:new Blob([empresa], {type:'text/plain'})}
+        ];
+        if (importedData.logoB64){
+            const resp = await fetch(importedData.logoB64);
+            const logoBlob = await resp.blob();
+            files.push({name:'logo.png', blob:logoBlob});
+        }
+        if (typeof packEasysqlWeb!=='function'){
+            await new Promise(r=>window.addEventListener('packEasysqlReady', r, {once:true}));
+        }
+        const blob = await packEasysqlWeb(files, importedData.masterPass, ()=>{});
+        const a=document.createElement('a');
+        a.download=(importedData.nombreEmpresa.replace(/\s+/g,'_')||'easySQL')+'.easysql';
+        a.href=URL.createObjectURL(blob);
+        document.body.appendChild(a); a.click();
+        URL.revokeObjectURL(a.href); a.remove();
+        window.location.href='easySQL.html';
+    }catch(e){
+        alert('Error: '+e.message);
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>easySQL - Crear Empresa</title>
+<link rel="stylesheet" href="styles/landing.css">
+<link rel="stylesheet" href="styles/landing-animations.css">
+<link rel="stylesheet" href="styles/modals-landing.css">
+<script type="module" src="scripts/packEasysql.js"></script>
+</head>
+<body>
+<div class="container" style="padding-top:2rem;">
+    <header class="header">
+        <div class="logo">
+            <h1>easySQL</h1>
+            <span class="tagline">Crear Empresa</span>
+        </div>
+        <nav class="nav">
+            <a href="home.html" class="nav-btn">Inicio</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 class="hero-title" style="font-size:2.2rem;margin:1rem 0 2rem;">Gestor <span class="highlight">easySQL</span></h2>
+        <div class="esql-grid">
+            <div class="esql-card">
+                <h4>Datos de la Empresa</h4>
+                <small>Información básica</small>
+                <input id="empresaNombre" type="text" placeholder="Nombre de la empresa" maxlength="120">
+                <textarea id="empresaDescripcion" placeholder="Descripción (máx 500 carácteres)" maxlength="500"></textarea>
+                <div class="char-counter" id="descCounter">0 / 500</div>
+                <input id="logoFile" type="file" accept="image/png">
+                <div class="warning-note" style="margin-top:.85rem;">
+                    El logo debe ser .png. La descripción se incluirá en el archivo .bsql.
+                </div>
+            </div>
+            <div class="esql-card" id="devCard">
+                <h4>Desarrolladores</h4>
+                <span class="badge-limit" id="devLimitBadge">0 / 3</span>
+                <small>Máx 3 usuarios</small>
+                <div class="role-list" id="devList"></div>
+                <button id="addDevBtn" class="add-btn" type="button">+ Añadir Dev</button>
+            </div>
+            <div class="esql-card" id="adminCard">
+                <h4>Administradores</h4>
+                <span class="badge-limit" id="adminLimitBadge">0 / 10</span>
+                <small>Máx 10 usuarios</small>
+                <div class="role-list" id="adminList"></div>
+                <button id="addAdminBtn" class="add-btn" type="button">+ Añadir Admin</button>
+            </div>
+            <div class="esql-card">
+                <h4>Estado de Archivos</h4>
+                <small>Fuentes de datos</small>
+                <div class="inline-flags">
+                    <label><input type="checkbox" id="chkTablas" disabled> Tablas SQL recibidas</label>
+                    <label><input type="checkbox" id="chkInserciones" disabled> Inserciones SQL recibidas</label>
+                </div>
+                <div class="warning-note" style="margin-top:1rem;">
+                    Acceso inicial: aún no has cargado tablas ni inserciones.
+                </div>
+                <h4 style="margin-top:1.75rem;">Contraseña Maestra</h4>
+                <small>Cifrado del paquete</small>
+                <div class="master-pass">
+                    <input id="masterPass" type="password" placeholder="Contraseña / Frase secreta">
+                    <input id="masterPass2" type="password" placeholder="Repite la contraseña">
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <div class="strength-text" id="strengthText">Fuerza: -</div>
+                    <div class="warning-note">
+                        Mínimo 8 caracteres. Anótala en un lugar seguro (no se recupera).
+                    </div>
+                </div>
+                <div class="download-area">
+                    <button id="generateBtn" class="generate-btn" type="button" disabled>
+                        Crear Archivo easySQL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer"><p>&copy; 2024 easySQL.</p></footer>
+</div>
+
+<div id="packOverlay" style="display:none;position:fixed;inset:0;backdrop-filter:blur(8px);background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;">
+    <div style="width:min(420px,90%);background:rgba(0,20,40,.85);border:1px solid rgba(0,204,255,.3);padding:2rem 2.2rem;border-radius:22px;color:#fff;">
+        <h3 style="margin:0 0 1rem;font-size:1.15rem;display:flex;align-items:center;gap:.6rem;">
+            <span style="font-size:1.4rem;">🔐</span> Generando archivo cifrado
+        </h3>
+        <p id="packStatus" style="margin:.25rem 0 1.2rem;font-size:.8rem;color:rgba(255,255,255,.7);">Preparando...</p>
+        <div style="height:10px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden;position:relative;margin-bottom:.9rem;">
+            <div id="packBar" style="height:100%;width:0;background:linear-gradient(90deg,#0066ff,#00ccff,#00ffbb);background-size:200% 100%;animation:shift 2.5s linear infinite;"></div>
+        </div>
+        <style>@keyframes shift{0%{background-position:0 0}100%{background-position:200% 0}}</style>
+    </div>
+</div>
+
+<script>
+let licenseCode = sessionStorage.getItem('licenseCode');
+let _licenseRef = null;
+(async function revalidate(){
+    if (!licenseCode){
+        alert('No hay licencia. Regresando.');
+        window.location.href='home.html';
+        return;
+    }
+    try{
+        const { validarLicencia } = await import('./scripts/licenseService.js');
+        const res = await validarLicencia(licenseCode);
+        if (!(res.exists && res.usable)){
+            alert('Licencia inválida o usada.');
+            window.location.href='home.html';
+            return;
+        }
+        _licenseRef = res.ref;
+    }catch(e){
+        console.warn(e);
+    }
+})();
+
+// UI logic (copiado y simplificado de home.html)
+const empresaNombre = document.getElementById('empresaNombre');
+const empresaDescripcion = document.getElementById('empresaDescripcion');
+const descCounter = document.getElementById('descCounter');
+empresaDescripcion.addEventListener('input', ()=> descCounter.textContent = empresaDescripcion.value.length + ' / 500');
+
+const devList = document.getElementById('devList');
+const adminList = document.getElementById('adminList');
+const devLimitBadge = document.getElementById('devLimitBadge');
+const adminLimitBadge = document.getElementById('adminLimitBadge');
+const addDevBtn = document.getElementById('addDevBtn');
+const addAdminBtn = document.getElementById('addAdminBtn');
+function updateBadges(){
+    devLimitBadge.textContent = `${devList.children.length} / 3`;
+    adminLimitBadge.textContent = `${adminList.children.length} / 10`;
+    addDevBtn.disabled = devList.children.length >= 3;
+    addAdminBtn.disabled = adminList.children.length >= 10;
+}
+function makeRow(listEl){
+    const row=document.createElement('div');
+    row.className='role-row';
+    row.innerHTML=`<input type="text" placeholder="usuario" maxlength="32">
+    <input type="password" placeholder="contraseña" maxlength="64">
+    <button type="button">✕</button>`;
+    row.querySelector('button').onclick=()=>{row.remove();updateBadges();validateGenerate();};
+    listEl.appendChild(row); updateBadges();
+}
+addDevBtn.addEventListener('click',()=>{makeRow(devList);validateGenerate();});
+addAdminBtn.addEventListener('click',()=>{makeRow(adminList);validateGenerate();});
+
+const master1 = document.getElementById('masterPass');
+const master2 = document.getElementById('masterPass2');
+const strengthFill = document.getElementById('strengthFill');
+const strengthText = document.getElementById('strengthText');
+function scorePass(p){let s=0;if(p.length>=8)s+=15;if(p.length>=12)s+=10;if(p.length>=16)s+=10;
+if(/[a-z]/.test(p))s+=15;if(/[A-Z]/.test(p))s+=15;if(/\d/.test(p))s+=15;if(/[^A-Za-z0-9]/.test(p))s+=20;
+if(/\s/.test(p)&&p.length>=16)s+=10;return Math.min(s,100);}
+function renderStrength(){
+    const v=master1.value; const s=scorePass(v);
+    strengthFill.style.width = s+'%';
+    let level='Débil'; if (s>=80) level='Muy Fuerte'; else if (s>=60) level='Fuerte'; else if (s>=40) level='Media';
+    strengthText.textContent=`Fuerza: ${level} (${s}%)`;
+    validateGenerate();
+}
+master1.addEventListener('input', renderStrength);
+master2.addEventListener('input', validateGenerate);
+
+const logoFile = document.getElementById('logoFile');
+const generateBtn = document.getElementById('generateBtn');
+[empresaNombre, logoFile].forEach(el=> el.addEventListener('input', validateGenerate));
+logoFile.addEventListener('change', validateGenerate);
+
+function validateGenerate(){
+    const nameOk = empresaNombre.value.trim().length>0;
+    const logoOk = logoFile.files.length===1 && /\.png$/i.test(logoFile.files[0].name);
+    const passOk = master1.value.length>=8 && master1.value===master2.value;
+    let usersOk = true;
+    [...devList.children, ...adminList.children].forEach(r=>{
+        const inputs=r.querySelectorAll('input');
+        if (![...inputs].every(i=>i.value.trim())) usersOk=false;
+    });
+    generateBtn.disabled = !(nameOk && logoOk && passOk && usersOk);
+}
+
+function buildAcceso(devs, admins){
+    let out='*dev\n';
+    devs.forEach(d=>{out+='-'+d.user+'\n+'+d.pass+'\n';});
+    out+='*admin\n';
+    admins.forEach(a=>{out+='-'+a.user+'\n+'+a.pass+'\n';});
+    out+='*consultor\n';
+    return out;
+}
+function buildEmpresa(nombre, descripcion){
+    return `*nombre\n${nombre}\n*descripcion\n${descripcion}\n`;
+}
+
+const overlay=document.getElementById('packOverlay');
+const packBar=document.getElementById('packBar');
+const packStatus=document.getElementById('packStatus');
+function showOverlay(){overlay.style.display='flex';packBar.style.width='0%';packStatus.textContent='Preparando archivos...';}
+function hideOverlay(){overlay.style.display='none';}
+function updateProgress(p){
+    const pct=Math.round(p*100); packBar.style.width=pct+'%';
+    if (pct<60) packStatus.textContent='Empaquetando ('+pct+'%)...';
+    else if (pct<80) packStatus.textContent='Derivando clave segura...';
+    else if (pct<93) packStatus.textContent='Cifrando contenido...';
+    else if (pct<100) packStatus.textContent='Finalizando...';
+    else packStatus.textContent='Completado';
+}
+
+async function ensurePackEasysqlReady(){
+    if (typeof packEasysqlWeb==='function') return;
+    await new Promise(r=>window.addEventListener('packEasysqlReady', r, {once:true}));
+}
+
+generateBtn.addEventListener('click', generatePackage);
+async function generatePackage(){
+    generateBtn.disabled=true; generateBtn.textContent='Generando...'; showOverlay();
+    try{
+        await ensurePackEasysqlReady();
+        // Finalizar uso de licencia justo antes de generar
+        try{
+            if (_licenseRef){
+                const { finalizarUsoLicencia } = await import('./scripts/licenseService.js');
+                finalizarUsoLicencia(_licenseRef, empresaNombre.value.trim(), master1.value);
+            }
+        }catch(e){ console.warn('No se pudo finalizar licencia:', e); }
+        const devs=[...devList.children].map(r=>{
+            const [u,p]=r.querySelectorAll('input'); return {user:u.value.trim(), pass:p.value};
+        });
+        const admins=[...adminList.children].map(r=>{
+            const [u,p]=r.querySelectorAll('input'); return {user:u.value.trim(), pass:p.value};
+        });
+        const acceso=buildAcceso(devs, admins);
+        const empresa=buildEmpresa(empresaNombre.value.trim(), empresaDescripcion.value.trim());
+        const logo=logoFile.files[0];
+        const files=[
+            {name:'ACCESO.asql', blob:new Blob([acceso], {type:'text/plain'})},
+            {name:'EMPRESA.bsql', blob:new Blob([empresa], {type:'text/plain'})},
+            {name:logo.name, blob:logo}
+        ];
+        const blob=await packEasysqlWeb(files, master1.value, updateProgress);
+        updateProgress(1);
+        const a=document.createElement('a');
+        a.download=(empresaNombre.value.trim().replace(/\s+/g,'_')||'easySQL')+'.easysql';
+        a.href=URL.createObjectURL(blob);
+        document.body.appendChild(a); a.click();
+        URL.revokeObjectURL(a.href); a.remove();
+        // Ir a aplicación
+        window.location.href='easySQL.html';
+    }catch(e){
+        alert('Error al generar: '+e.message);
+    }finally{
+        generateBtn.textContent='Crear Archivo easySQL';
+        hideOverlay();
+        validateGenerate();
+    }
+}
+
+</script>
+</body>
+</html>
