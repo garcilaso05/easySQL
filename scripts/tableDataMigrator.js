@@ -52,7 +52,7 @@ class TableDataMigrator {
      */
     getExistingData(tableName) {
         try {
-            return alasql(`SELECT * FROM ${tableName}`);
+            return ejecutarSQL(`SELECT * FROM ${tableName}`);
         } catch (error) {
             console.warn(`Could not retrieve data from ${tableName}:`, error);
             return [];
@@ -334,11 +334,11 @@ class TableDataMigrator {
         
         // Execute SQL commands
         try {
-            alasql(sqlCommands.dropTable);
-            alasql(sqlCommands.createTable);
+            ejecutarSQL(sqlCommands.dropTable);
+            ejecutarSQL(sqlCommands.createTable);
             
             sqlCommands.insertData.forEach(insertSQL => {
-                alasql(insertSQL);
+                ejecutarSQL(insertSQL);
             });
 
             console.log(`Successfully migrated table ${tableName} with ${migrationResult.migratedData.length} records`);

@@ -756,7 +756,7 @@ function validateAndImportData() {
     // Obtener todos los registros existentes por PK para comparar
     const existingRecords = new Map();
     try {
-        const currentData = alasql(`SELECT * FROM ${tableName}`);
+        const currentData = ejecutarSQL(`SELECT * FROM ${tableName}`);
         currentData.forEach(record => {
             existingRecords.set(record[pkColumn.name], record);
         });
@@ -866,7 +866,7 @@ function validateAndImportData() {
 
                     if (updateCols.length > 0) {
                         const updateQuery = `UPDATE ${tableName} SET ${updateCols.join(', ')} WHERE ${pkColumn.name} = ${typeof pkValue === 'string' ? `'${pkValue}'` : pkValue}`;
-                        alasql(updateQuery);
+                        ejecutarSQL(updateQuery);
                         row.style.backgroundColor = '#e3f2fd';
                         updatedCount++;
                     }
@@ -879,7 +879,7 @@ function validateAndImportData() {
                     });
                     
                     const query = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${vals.join(', ')})`;
-                    alasql(query);
+                    ejecutarSQL(query);
                     row.style.backgroundColor = '#e8f5e9';
                     successCount++;
                 }
@@ -937,7 +937,7 @@ function loadExistingData() {
 
     try {
         // Obtener datos existentes
-        const data = alasql(`SELECT * FROM ${tableName}`);
+        const data = ejecutarSQL(`SELECT * FROM ${tableName}`);
         if (data.length === 0) {
             alert('No hay datos insertados en esta tabla.');
             return;

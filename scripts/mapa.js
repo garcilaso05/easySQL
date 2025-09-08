@@ -66,7 +66,7 @@ function actualizarMapa() {
         // 3. Obtener los datos - primera consulta de prueba
         console.log('Intentando consulta de prueba...');
         const testQuery = `SELECT * FROM ${tableName} LIMIT 1`;
-        const testResult = alasql(testQuery);
+        const testResult = ejecutarSQL(testQuery);
         console.log('Datos de prueba:', testResult);
 
         // 4. Realizar la consulta principal
@@ -74,7 +74,7 @@ function actualizarMapa() {
         const query = `SELECT [${columnName}], COUNT(*) as total FROM ${tableName} GROUP BY [${columnName}]`;
         console.log('Query:', query);
         
-        const results = alasql(query);
+        const results = ejecutarSQL(query);
         console.log('Resultados:', results);
 
         if (results.length === 0) {

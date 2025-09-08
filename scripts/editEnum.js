@@ -138,7 +138,7 @@ function saveEnumChanges() {
                                 try {
                                     // Contar registros que se van a eliminar
                                     const countQuery = `SELECT COUNT(*) as count FROM ${tableName} WHERE ${column.name} = ?`;
-                                    const countResult = alasql(countQuery, [removedValue]);
+                                    const countResult = ejecutarSQL(countQuery, [removedValue]);
                                     const recordCount = countResult[0].count;
                                     
                                     if (recordCount > 0) {
@@ -147,7 +147,7 @@ function saveEnumChanges() {
                                         
                                         // Eliminar los registros
                                         const deleteQuery = `DELETE FROM ${tableName} WHERE ${column.name} = ?`;
-                                        alasql(deleteQuery, [removedValue]);
+                                        ejecutarSQL(deleteQuery, [removedValue]);
                                     }
                                 } catch (error) {
                                     console.error(`Error al limpiar datos en tabla ${tableName}, columna ${column.name}:`, error);
@@ -177,7 +177,7 @@ function saveEnumChanges() {
         for (const tableName of tablesToUpdate) {
             try {
                 // Obtener datos existentes
-                const existingData = alasql(`SELECT * FROM ${tableName}`);
+                const existingData = ejecutarSQL(`SELECT * FROM ${tableName}`);
                 
                 // Usar el migrador de datos para preservar mejor los datos
                 const migrator = new TableDataMigrator();
@@ -209,7 +209,7 @@ function saveEnumChanges() {
                 
                 // Fallback: método manual con corrección de SQL
                 try {
-                    const existingData = alasql(`SELECT * FROM ${tableName}`);
+                    const existingData = ejecutarSQL(`SELECT * FROM ${tableName}`);
                     const table = schema.tables[tableName];
                     
                     const columns = table.columns.map(col => {
@@ -235,8 +235,8 @@ function saveEnumChanges() {
                     }).join(', ');
 
                     // Recrear la tabla
-                    alasql(`DROP TABLE IF EXISTS ${tableName}`);
-                    alasql(`CREATE TABLE ${tableName} (${columns})`);
+                    ejecutarSQL(`DROP TABLE IF EXISTS ${tableName}`);
+                    ejecutarSQL(`CREATE TABLE ${tableName} (${columns})`);
 
                     // Reinsertar datos existentes con SQL corregido
                     if (existingData.length > 0) {
@@ -259,7 +259,7 @@ function saveEnumChanges() {
                             // Solo insertar si tenemos el número correcto de valores
                             if (values.length === columnNames.length) {
                                 const insertQuery = `INSERT INTO ${tableName} (${columnNames.join(', ')}) VALUES (${values.join(', ')})`;
-                                alasql(insertQuery);
+                                ejecutarSQL(insertQuery);
                             }
                         }
                     }

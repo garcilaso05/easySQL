@@ -54,6 +54,13 @@
         <h1 class="logo-text">
             <a href="home.html" style="text-decoration: none; color: inherit;">easySQL</a>
         </h1>
+        <div class="mode-switch-container">
+            <label class="switch">
+                <input type="checkbox" id="mode-switch" onchange="toggleDBMode()">
+                <span class="slider round"></span>
+            </label>
+            <span id="mode-label">Local</span>
+        </div>
         <nav class="tab-nav">
             <a href="#" class="tab-nav-item active" onclick="showTab('esquema')">Esquema</a>
             <a href="#" class="tab-nav-item" onclick="showTab('inserciones')">Inserciones</a>
@@ -78,7 +85,7 @@
             <button onclick="openEditEnumModal()">Editar Enum</button>
             <button onclick="downloadSQL()">Descargar SQL</button>
             <button onclick="document.getElementById('sqlFileInput').click()">Cargar SQL</button>
-            <input type="file" id="sqlFileInput" style="display: none" accept=".sql" onchange="loadSQL(event)">
+                        <input type="file" id="sqlFile" accept=".sql" onchange="loadSQL()" class="file-input sql-load-control">
         </div>
         <h2 id="mapita">Mapa de Clases</h2>
         <div class="schema-layout">
@@ -339,7 +346,139 @@
                 // Dejar que el usuario abra la pestaña cuando quiera; no forzamos.
             }
         });
+        
+        // Initialize DB mode
+        window.DB_MODE = 'local';
+        
+        // Toggle database mode function
+        function toggleDBMode() {
+            const modeSwitch = document.getElementById('mode-switch');
+            const modeLabel = document.getElementById('mode-label');
+            const sqlLoadControls = document.querySelectorAll('.sql-load-control');
+            
+            if (modeSwitch.checked) {
+                window.DB_MODE = 'online';
+                modeLabel.textContent = 'Online';
+                modeLabel.style.color = '#2196F3';
+                
+                // Disable SQL file loading controls
+                sqlLoadControls.forEach(control => {
+                    control.disabled = true;
+                });
+                
+                // Update schema from Supabase
+                if (window.getSchema) {
+                    window.getSchema().then(() => {
+                        console.log('Esquema actualizado desde Supabase');
+                        updateTablasSelector();
+                    }).catch(error => {
+                        console.error('Error actualizando esquema:', error);
+                        alert('Error conectando con Supabase. Verifique las credenciales en .easysql');
+                    });
+                }
+                
+            } else {
+                window.DB_MODE = 'local';
+                modeLabel.textContent = 'Local';
+                modeLabel.style.color = '#555';
+                
+                // Enable SQL file loading controls
+                sqlLoadControls.forEach(control => {
+                    control.disabled = false;
+                });
+            }
+            
+            console.log('Modo de BD cambiado a:', window.DB_MODE);
+        }
+        
+        // Update tables selector based on current schema
+        function updateTablasSelector() {
+            const selector = document.querySelector('select[onchange="cambiarTabla()"]');
+            if (selector && window.schema) {
+                // Clear existing options except the first one
+                while (selector.children.length > 1) {
+                    selector.removeChild(selector.lastChild);
+                }
+                
+                // Add tables from schema
+                window.schema.forEach(table => {
+                    const option = document.createElement('option');
+                    option.value = table.name;
+                    option.textContent = table.name;
+                    selector.appendChild(option);
+                });
+            }
+        }
+        
+        });
+        
+        // Check for imported data from sessionStorage and configure Supabase accordingly
+        window.addEventListener('DOMContentLoaded', function() {
+            const importedDataRaw = sessionStorage.getItem('importedData');
+            if (importedDataRaw) {
+                try {
+                    const importedData = JSON.parse(importedDataRaw);
+                    
+                    // Check for Supabase credentials and configure accordingly
+                    if (importedData.supabaseCredentials) {
+                        console.log('Configurando credenciales de Supabase desde datos importados...');
+                        try {
+                            window.initSupabaseFromObject(importedData.supabaseCredentials);
+                            window.DB_MODE = 'online';
+                            
+                            // Update mode switch UI
+                            const modeSwitch = document.getElementById('mode-switch');
+                            const modeLabel = document.getElementById('mode-label');
+                            if (modeSwitch && modeLabel) {
+                                modeSwitch.checked = true;
+                                modeLabel.textContent = 'Online';
+                                modeLabel.style.color = '#2196F3';
+                                
+                                // Disable SQL load controls
+                                const sqlLoadControls = document.querySelectorAll('.sql-load-control');
+                                sqlLoadControls.forEach(control => {
+                                    control.disabled = true;
+                                });
+                            }
+                            
+                            // Load schema from Supabase
+                            if (window.getSchema) {
+                                window.getSchema().then(() => {
+                                    console.log('Esquema cargado desde Supabase');
+                                    updateTablasSelector();
+                                }).catch(error => {
+                                    console.error('Error cargando esquema:', error);
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error configurando Supabase:', error);
+                            alert('Error configurando conexión con Supabase: ' + error.message);
+                        }
+                    } else {
+                        // Ensure local mode if no Supabase credentials
+                        window.DB_MODE = 'local';
+                        const modeSwitch = document.getElementById('mode-switch');
+                        const modeLabel = document.getElementById('mode-label');
+                        if (modeSwitch && modeLabel) {
+                            modeSwitch.checked = false;
+                            modeLabel.textContent = 'Local';
+                            modeLabel.style.color = '#555';
+                            
+                            // Enable SQL load controls
+                            const sqlLoadControls = document.querySelectorAll('.sql-load-control');
+                            sqlLoadControls.forEach(control => {
+                                control.disabled = false;
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error procesando datos importados:', error);
+                }
+            }
+        });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
+    <script type="module" src="ejecutarSQL.js"></script>
     <style>
 /* Estilos para el menú de ayuda */
 .help-navigation {
@@ -503,6 +642,81 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
+}
+
+/* Mode Switch Styles */
+.mode-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+#mode-label {
+    font-weight: bold;
+    color: #555;
+}
+
+.sql-load-control:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
     </style>
 </body>

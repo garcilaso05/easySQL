@@ -67,6 +67,15 @@
                 <div id="impAdminList" class="role-list"></div>
                 <button type="button" class="add-btn" id="impAddAdmin">+ Añadir Admin</button>
             </div>
+            <div class="esql-card">
+                <h4>Credenciales Supabase (Opcional)</h4>
+                <small>Para modo online con base de datos remota</small>
+                <input id="impSupabaseUrl" type="url" placeholder="https://tu-proyecto.supabase.co" maxlength="200">
+                <input id="impSupabaseKey" type="text" placeholder="Clave anónima de Supabase" maxlength="500">
+                <div class="warning-note" style="margin-top:1rem;">
+                    Si se completan, se habilitará el modo online. Opcional para uso local únicamente.
+                </div>
+            </div>
         </div>
         <div class="download-area" style="text-align:right; margin-top: 2rem;">
             <button id="downloadEditedImportedBtn" class="generate-btn" type="button">
@@ -95,6 +104,8 @@ const impDescripcion=document.getElementById('impDescripcion');
 const impDescCounter=document.getElementById('impDescCounter');
 const devList=document.getElementById('impDevList');
 const adminList=document.getElementById('impAdminList');
+const impSupabaseUrl=document.getElementById('impSupabaseUrl');
+const impSupabaseKey=document.getElementById('impSupabaseKey');
 
 function addRow(container, user='', pass=''){
     const row=document.createElement('div');
@@ -133,6 +144,12 @@ function loadData(){
     // Asegurar al menos un dev
     if (devList.children.length === 0) {
         addRow(devList);
+    }
+    
+    // Cargar credenciales Supabase si existen
+    if (importedData.supabaseCredentials) {
+        impSupabaseUrl.value = importedData.supabaseCredentials.SUPABASE_URL || '';
+        impSupabaseKey.value = importedData.supabaseCredentials.SUPABASE_KEY || '';
     }
 }
 loadData();
@@ -174,6 +191,21 @@ document.getElementById('downloadEditedImportedBtn').addEventListener('click', a
             const logoBlob = await resp.blob();
             files.push({name:'logo.png', blob:logoBlob});
         }
+        
+        // Añadir credenciales Supabase actualizadas si están presentes
+        const supabaseUrl = impSupabaseUrl.value.trim();
+        const supabaseKey = impSupabaseKey.value.trim();
+        if (supabaseUrl && supabaseKey) {
+            const supabaseConfig = {
+                SUPABASE_URL: supabaseUrl,
+                SUPABASE_KEY: supabaseKey
+            };
+            files.push({
+                name: 'EMPRESA.ssql',
+                blob: new Blob([JSON.stringify(supabaseConfig, null, 2)], {type: 'application/json'})
+            });
+        }
+        
         if (typeof packEasysqlWeb!=='function'){
             await new Promise(r=>window.addEventListener('packEasysqlReady', r, {once:true}));
         }

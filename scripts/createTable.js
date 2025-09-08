@@ -194,7 +194,7 @@ function createTableFromForm() {
     const query = `CREATE TABLE ${tableName} (${columns.map(col => col.definition).join(', ')})`;
 
     try {
-        alasql(query);
+        ejecutarSQL(query);
         schema.tables[tableName] = {
             columns: columns.map(({name, type, pk, notNull}) => ({
                 name, 

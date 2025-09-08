@@ -316,7 +316,7 @@ function insertData(tableName, continueInserting) {
                 
                 // Validación especial para PK duplicada
                 if (column.pk && validatedValue !== null) {
-                    const existingRecords = alasql(`SELECT * FROM ${tableName} WHERE ${column.name} = ?`, [validatedValue]);
+                    const existingRecords = ejecutarSQL(`SELECT * FROM ${tableName} WHERE ${column.name} = ?`, [validatedValue]);
                     if (existingRecords.length > 0) {
                         throw new Error(`Ya existe un registro con la clave primaria "${validatedValue}" en el campo "${column.name}". Las claves primarias deben ser únicas.`);
                     }
@@ -342,7 +342,7 @@ function insertData(tableName, continueInserting) {
         const query = `INSERT INTO ${tableName} (${columnNames.join(', ')}) VALUES (${columnValues.join(', ')})`;
 
         try {
-            alasql(query);
+            ejecutarSQL(query);
         } catch (sqlError) {
             // Si hay un error de SQL inesperado, traducirlo
             let friendlyMessage = `Error al insertar los datos: ${sqlError.message}`;
@@ -441,7 +441,7 @@ function submitInsertForm(tableName) {
         const query = `INSERT INTO ${tableName} (${columns}) VALUES (${valuePlaceholders})`;
         
         try {
-            alasql(query, Object.values(values));
+            ejecutarSQL(query, Object.values(values));
         } catch (sqlError) {
             // Traducir errores de SQL a mensajes amigables
             let friendlyMessage = `Error al insertar los datos: ${sqlError.message}`;

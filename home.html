@@ -749,6 +749,7 @@
                 const accesoFile = files.find(f => /ACCESO\.asql$/i.test(f.name));
                 const empresaFile = files.find(f => /EMPRESA\.bsql$/i.test(f.name));
                 const logoFile = files.find(f => /\.png$/i.test(f.name));
+                const ssqlFile = files.find(f => /\.ssql$/i.test(f.name));
 
                 if (!accesoFile || !empresaFile) {
                     throw new Error('Archivo inválido o corrupto');
@@ -765,6 +766,20 @@
                     masterPass,
                     logoFile: logoFile ? logoFile.blob : null
                 };
+
+                // Procesar credenciales de Supabase si existen
+                if (ssqlFile) {
+                    try {
+                        const ssqlContent = await ssqlFile.blob.text();
+                        const supabaseConfig = JSON.parse(ssqlContent);
+                        if (supabaseConfig.SUPABASE_URL && supabaseConfig.SUPABASE_KEY) {
+                            decryptedData.supabaseCredentials = supabaseConfig;
+                            console.log('Credenciales de Supabase encontradas en el archivo');
+                        }
+                    } catch (error) {
+                        console.warn('Error procesando archivo .ssql:', error);
+                    }
+                }
 
                 statusEl.textContent = '✓ Archivo descifrado correctamente';
                 statusEl.className = 'input-status success';
@@ -852,7 +867,8 @@
                 nombreEmpresa: decryptedData.nombreEmpresa,
                 descripcion: decryptedData.descripcion,
                 masterPass: decryptedData.masterPass,
-                logoB64: decryptedData.logoB64 || null
+                logoB64: decryptedData.logoB64 || null,
+                supabaseCredentials: decryptedData.supabaseCredentials || null
             };
             
             sessionStorage.setItem('importedData', JSON.stringify(payload));
@@ -861,6 +877,18 @@
         }
 
         function goToApp() {
+            // Preparar datos para easySQL.html incluyendo credenciales de Supabase
+            const payload = {
+                devUsers: decryptedData.devUsers,
+                adminUsers: decryptedData.adminUsers,
+                nombreEmpresa: decryptedData.nombreEmpresa,
+                descripcion: decryptedData.descripcion,
+                masterPass: decryptedData.masterPass,
+                supabaseCredentials: decryptedData.supabaseCredentials || null
+            };
+            
+            sessionStorage.setItem('importedData', JSON.stringify(payload));
+            closeLoginModal();
             window.location.href = 'easySQL.html';
         }
 

@@ -62,7 +62,14 @@
                 <button id="addAdminBtn" class="add-btn" type="button">+ Añadir Admin</button>
             </div>
             <div class="esql-card">
-                <h4>Estado de Archivos</h4>
+                <h4>Credenciales Supabase (Opcional)</h4>
+                <small>Para modo online con base de datos remota</small>
+                <input id="supabaseUrl" type="url" placeholder="https://tu-proyecto.supabase.co" maxlength="200">
+                <input id="supabaseKey" type="text" placeholder="Clave anónima de Supabase" maxlength="500">
+                <div class="warning-note" style="margin-top:1rem;">
+                    Si se completan, se habilitará el modo online. Opcional para uso local únicamente.
+                </div>
+                <h4 style="margin-top:1.75rem;">Estado de Archivos</h4>
                 <small>Fuentes de datos</small>
                 <div class="inline-flags">
                     <label><input type="checkbox" id="chkTablas" disabled> Tablas SQL recibidas</label>
@@ -271,6 +278,21 @@ async function generatePackage(){
             {name:'EMPRESA.bsql', blob:new Blob([empresa], {type:'text/plain'})},
             {name:logo.name, blob:logo}
         ];
+        
+        // Añadir credenciales Supabase si están presentes
+        const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+        const supabaseKey = document.getElementById('supabaseKey').value.trim();
+        if (supabaseUrl && supabaseKey) {
+            const supabaseConfig = {
+                SUPABASE_URL: supabaseUrl,
+                SUPABASE_KEY: supabaseKey
+            };
+            files.push({
+                name: 'EMPRESA.ssql',
+                blob: new Blob([JSON.stringify(supabaseConfig, null, 2)], {type: 'application/json'})
+            });
+        }
+        
         const blob=await packEasysqlWeb(files, master1.value, updateProgress);
         updateProgress(1);
         const a=document.createElement('a');

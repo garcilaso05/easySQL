@@ -7,7 +7,7 @@ function openEditTableModal() {
 
     // Verificar si hay datos en la tabla
     try {
-        const tableData = alasql(`SELECT * FROM ${tableName}`);
+        const tableData = ejecutarSQL(`SELECT * FROM ${tableName}`);
         if (tableData.length > 0) {
             const message = 
                 'Esta tabla contiene datos insertados. La modificación puede causar:\n\n' +
@@ -91,7 +91,7 @@ function handleNotNullChange(checkbox, tableName, columnName) {
     // Esta función se llamará antes de permitir el cambio
     try {
         const query = `SELECT COUNT(*) as count FROM ${tableName} WHERE ${columnName} IS NULL`;
-        const result = alasql(query);
+        const result = ejecutarSQL(query);
         const nullCount = result[0].count;
 
         if (nullCount > 0) {
@@ -241,7 +241,7 @@ function deleteTableFromModal() {
     const tableName = document.getElementById('tableDropdown').value;
     if (tableName && confirm(`¿Estás seguro de que deseas borrar la tabla "${tableName}"?`)) {
         delete schema.tables[tableName];
-        alasql(`DROP TABLE ${tableName}`);
+        ejecutarSQL(`DROP TABLE ${tableName}`);
         updateClassMap();
         closeEditTableModal();
         alert(`Tabla "${tableName}" borrada exitosamente.`);

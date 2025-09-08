@@ -74,7 +74,7 @@ function generarGrafico() {
             GROUP BY ${columnName}
             ORDER BY Cantidad DESC
         `;
-        const result = alasql(query);
+        const result = ejecutarSQL(query);
         let datos = result.map(row => ({
             name: row[columnName] || 'No especificado',
             y: row.Cantidad

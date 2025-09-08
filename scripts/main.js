@@ -30,7 +30,7 @@ window.addEventListener("resize", () => {
 });
 
 function cargarTablaOAVD() {
-    alasql(`
+    ejecutarSQL(`
       DROP TABLE IF EXISTS OAVD;
       CREATE TABLE OAVD (ID INT, Ciudad STRING);
       INSERT INTO OAVD VALUES 
@@ -117,7 +117,7 @@ function executeGeneratedSQL() {
         return;
     }
     try {
-        const res = alasql(query);
+        const res = ejecutarSQL(query);
         
         // Formatear la salida
         if (Array.isArray(res)) {
@@ -320,7 +320,7 @@ async function downloadInsertions() {
     for (const tableName in schema.tables) {
         if (!schema.tables[tableName].isEnum) {
             try {
-                const data = alasql(`SELECT * FROM ${tableName}`);
+                const data = ejecutarSQL(`SELECT * FROM ${tableName}`);
                 if (data.length > 0) {
                     hasData = true;
                     break;
@@ -370,10 +370,10 @@ function loadSQL(event) {
             relationships.length = 0;
             
             // Limpiar todas las tablas existentes en alasql
-            const tables = alasql('SHOW TABLES');
+            const tables = ejecutarSQL('SHOW TABLES');
             tables.forEach(table => {
                 try {
-                    alasql(`DROP TABLE IF EXISTS ${table.tableName}`);
+                    ejecutarSQL(`DROP TABLE IF EXISTS ${table.tableName}`);
                 } catch (e) {
                     console.warn(`Error al borrar tabla ${table.tableName}:`, e);
                 }
@@ -388,7 +388,7 @@ function loadSQL(event) {
                     processEnum(block);
                     // También ejecutar la creación del enum en alasql
                     try {
-                        alasql(block);
+                        ejecutarSQL(block);
                     } catch (e) {
                         console.warn('Error al crear enum en alasql:', e);
                     }
@@ -401,7 +401,7 @@ function loadSQL(event) {
                     processTable(block);
                     // También ejecutar la creación de la tabla en alasql
                     try {
-                        alasql(block);
+                        ejecutarSQL(block);
                     } catch (e) {
                         console.warn('Error al crear tabla en alasql:', e);
                     }

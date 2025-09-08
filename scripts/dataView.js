@@ -163,7 +163,7 @@ function applySearch() {
                 query += ` WHERE ${whereClauses.join(' AND ')}`;
             }
 
-            const results = alasql(query);
+            const results = ejecutarSQL(query);
             createTableDataSection(selectedTable, resultsContainer, results);
         } catch (error) {
             resultsContainer.innerHTML = `<div class="error">Error en la búsqueda: ${error.message}</div>`;
@@ -196,7 +196,7 @@ let currentPageByTable = {};
 
 function createTableDataSection(tableName, container, data = null) {
     try {
-        const result = data || alasql(`SELECT * FROM ${tableName}`);
+        const result = data || ejecutarSQL(`SELECT * FROM ${tableName}`);
         if (result.length === 0) return;
 
         // Paginación
@@ -308,7 +308,7 @@ function deleteRecord(tableName, pkValue, event) {
                 pkVal = Number(pkValue);
             }
             
-            alasql(`DELETE FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkVal]);
+            ejecutarSQL(`DELETE FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkVal]);
             showAllData(); // Refresh the view
             showNotification('Registro eliminado correctamente', 'success');
         } catch (error) {
@@ -325,7 +325,7 @@ function editRecord(tableName, pkValue, event) {
     if (pkColumn.type === 'INT' || pkColumn.type === 'FLOAT') {
         pkVal = Number(pkValue);
     }
-    const record = alasql(`SELECT * FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkVal])[0];
+    const record = ejecutarSQL(`SELECT * FROM ${tableName} WHERE ${pkColumn.name} = ?`, [pkVal])[0];
 
     if (!record) {
         alert('No se encontró el registro para editar.');
@@ -575,7 +575,7 @@ function saveEditedRecord(tableName, pkValue, modal) {
 
         values.push(pkVal); // Valor para WHERE
         const query = `UPDATE ${tableName} SET ${updates.join(', ')} WHERE ${pkColumn.name} = ?`;
-        alasql(query, values);
+        ejecutarSQL(query, values);
         
         modal.remove();
         showAllData(); // Refrescar la vista
@@ -605,7 +605,7 @@ function downloadInsertions() {
     for (const tableName in schema.tables) {
         if (!schema.tables[tableName].isEnum) {
             try {
-                const data = alasql(`SELECT * FROM ${tableName}`);
+                const data = ejecutarSQL(`SELECT * FROM ${tableName}`);
                 if (data.length > 0) {
                     hasData = true;
                     insertionsSQL += `-- Inserciones para tabla ${tableName}\n`;
@@ -693,7 +693,7 @@ function loadInsertions(event) {
             for (const query of queries) {
                 try {
                     if (query) {
-                        alasql(query + ';');
+                        ejecutarSQL(query + ';');
                         successCount++;
                     }
                 } catch (error) {
