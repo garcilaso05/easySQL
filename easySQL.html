@@ -267,6 +267,7 @@
         </div>
     </div>
     <!-- Scripts -->
+    <script src="scripts/globalUtils.js"></script>
     <script src="scripts/notifications.js"></script>
     <script src="scripts/warningDialog.js"></script>
     <script src="scripts/main.js"></script>
@@ -288,6 +289,45 @@
     <script src="scripts/colorTheme.js"></script>
     <script src="scripts/help.js"></script>
     <script src="eSQL/custom-insert.js"></script>
+    
+    <!-- Load ejecutarSQL module and make functions globally available -->
+    <script type="module">
+        // Import ejecutarSQL module
+        import('./ejecutarSQL.js').then(module => {
+            // Make functions globally available
+            window.ejecutarSQL = module.ejecutarSQL;
+            window.initSupabaseFromObject = module.initSupabaseFromObject;
+            window.loadCredentialsFromFile = module.loadCredentialsFromFile;
+            window.getSchema = module.getSchema;
+            window.loadSchemaFromSupabase = module.loadSchemaFromSupabase;
+            window.processEasysqlFile = module.processEasysqlFile;
+            
+            console.log('ejecutarSQL module loaded and functions made global');
+            
+            // Dispatch event to signal module is ready
+            window.dispatchEvent(new CustomEvent('ejecutarSQLReady'));
+            
+        }).catch(error => {
+            console.error('Error loading ejecutarSQL module:', error);
+            // Fallback to local mode
+            window.DB_MODE = 'local';
+            window.ejecutarSQL = function(sql, params = []) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        if (typeof alasql === 'function') {
+                            const result = alasql(sql, params);
+                            resolve(result);
+                        } else {
+                            reject(new Error('alasql no está disponible'));
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            };
+            window.dispatchEvent(new CustomEvent('ejecutarSQLReady'));
+        });
+    </script>
     <!-- Añadir antes de cerrar el body -->
     <link rel="stylesheet" href="styles/insertions.css">
     <script src="scripts/labelScroller.js"></script>
@@ -414,6 +454,15 @@
         
         // Check for imported data from sessionStorage and configure Supabase accordingly
         window.addEventListener('DOMContentLoaded', function() {
+            // Wait for ejecutarSQL module to be ready
+            if (window.ejecutarSQL) {
+                initializeWithImportedData();
+            } else {
+                window.addEventListener('ejecutarSQLReady', initializeWithImportedData);
+            }
+        });
+        
+        function initializeWithImportedData() {
             const importedDataRaw = sessionStorage.getItem('importedData');
             if (importedDataRaw) {
                 try {
@@ -423,32 +472,38 @@
                     if (importedData.supabaseCredentials) {
                         console.log('Configurando credenciales de Supabase desde datos importados...');
                         try {
-                            window.initSupabaseFromObject(importedData.supabaseCredentials);
-                            window.DB_MODE = 'online';
-                            
-                            // Update mode switch UI
-                            const modeSwitch = document.getElementById('mode-switch');
-                            const modeLabel = document.getElementById('mode-label');
-                            if (modeSwitch && modeLabel) {
-                                modeSwitch.checked = true;
-                                modeLabel.textContent = 'Online';
-                                modeLabel.style.color = '#2196F3';
+                            if (typeof window.initSupabaseFromObject === 'function') {
+                                window.initSupabaseFromObject(importedData.supabaseCredentials);
+                                window.DB_MODE = 'online';
                                 
-                                // Disable SQL load controls
-                                const sqlLoadControls = document.querySelectorAll('.sql-load-control');
-                                sqlLoadControls.forEach(control => {
-                                    control.disabled = true;
-                                });
-                            }
-                            
-                            // Load schema from Supabase
-                            if (window.getSchema) {
-                                window.getSchema().then(() => {
-                                    console.log('Esquema cargado desde Supabase');
-                                    updateTablasSelector();
-                                }).catch(error => {
-                                    console.error('Error cargando esquema:', error);
-                                });
+                                // Update mode switch UI
+                                const modeSwitch = document.getElementById('mode-switch');
+                                const modeLabel = document.getElementById('mode-label');
+                                if (modeSwitch && modeLabel) {
+                                    modeSwitch.checked = true;
+                                    modeLabel.textContent = 'Online';
+                                    modeLabel.style.color = '#2196F3';
+                                    
+                                    // Disable SQL load controls
+                                    const sqlLoadControls = document.querySelectorAll('.sql-load-control');
+                                    sqlLoadControls.forEach(control => {
+                                        control.disabled = true;
+                                    });
+                                }
+                                
+                                // Load schema from Supabase
+                                if (window.getSchema) {
+                                    window.getSchema().then(() => {
+                                        console.log('Esquema cargado desde Supabase');
+                                        if (typeof updateTablasSelector === 'function') {
+                                            updateTablasSelector();
+                                        }
+                                    }).catch(error => {
+                                        console.error('Error cargando esquema:', error);
+                                    });
+                                }
+                            } else {
+                                console.warn('initSupabaseFromObject no está disponible');
                             }
                         } catch (error) {
                             console.error('Error configurando Supabase:', error);
@@ -475,7 +530,7 @@
                     console.error('Error procesando datos importados:', error);
                 }
             }
-        });
+        }
     </script>
     <style>
 /* Estilos para el menú de ayuda */
