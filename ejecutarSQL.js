@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import alasql from 'alasql';
 
 let supabaseClient = null;
 let credentials = null;
@@ -334,11 +333,15 @@ async function ejecutarSQL(sql, params = []) {
             return new Promise((resolve, reject) => {
                 try {
                     // Make sure alasql is available globally
-                    if (typeof alasql === 'undefined') {
+                    if (typeof window.alasql === 'function') {
+                        const result = window.alasql(sql, params);
+                        resolve(result);
+                    } else if (typeof alasql === 'function') {
+                        const result = alasql(sql, params);
+                        resolve(result);
+                    } else {
                         throw new Error('alasql no está disponible');
                     }
-                    const result = alasql(sql, params);
-                    resolve(result);
                 } catch (error) {
                     reject(error);
                 }

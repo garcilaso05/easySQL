@@ -120,7 +120,7 @@ function removeColumnInput(button) {
     updateColumnOrderButtons(container);
 }
 
-function createTableFromForm() {
+async function createTableFromForm() {
     const tableName = document.getElementById('tableName').value.trim();
     if (!tableName) {
         alert('Por favor, ingresa un nombre para la tabla.');
@@ -194,7 +194,18 @@ function createTableFromForm() {
     const query = `CREATE TABLE ${tableName} (${columns.map(col => col.definition).join(', ')})`;
 
     try {
-        ejecutarSQL(query);
+        // Use the global ejecutarSQL function
+        if (typeof window.ejecutarSQL === 'function') {
+            await window.ejecutarSQL(query);
+        } else if (typeof ejecutarSQL === 'function') {
+            await ejecutarSQL(query);
+        } else if (typeof alasql === 'function') {
+            // Fallback to alasql if ejecutarSQL is not available
+            alasql(query);
+        } else {
+            throw new Error('No hay función de ejecución SQL disponible');
+        }
+        
         schema.tables[tableName] = {
             columns: columns.map(({name, type, pk, notNull}) => ({
                 name, 
