@@ -6,7 +6,8 @@
     <title>easySQL - Gestión de Bases de Datos Simplificada</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="modern-header.css">
-    <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.2/dist/alasql.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.0/dist/vis-network.min.js"></script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -268,6 +269,7 @@
     </div>
     <!-- Scripts -->
     <script src="scripts/globalUtils.js"></script>
+    <script src="scripts/sqlHelpers.js"></script>
     <script src="scripts/notifications.js"></script>
     <script src="scripts/warningDialog.js"></script>
     <script src="scripts/main.js"></script>
@@ -309,8 +311,12 @@
             
         }).catch(error => {
             console.error('Error loading ejecutarSQL module:', error);
-            // Fallback to local mode
+            console.warn('Falling back to local-only mode');
+            
+            // Fallback to local mode only
             window.DB_MODE = 'local';
+            
+            // Provide basic ejecutarSQL implementation
             window.ejecutarSQL = function(sql, params = []) {
                 return new Promise((resolve, reject) => {
                     try {
@@ -325,6 +331,23 @@
                     }
                 });
             };
+            
+            // Provide stub functions for Supabase features
+            window.initSupabaseFromObject = function() {
+                console.warn('Supabase features not available in fallback mode');
+                return null;
+            };
+            
+            window.getSchema = function() {
+                console.warn('getSchema not available in fallback mode');
+                return Promise.resolve([]);
+            };
+            
+            window.processEasysqlFile = function() {
+                console.warn('processEasysqlFile not available in fallback mode');
+                return { hasSupabaseCredentials: false, supabaseConfig: null };
+            };
+            
             window.dispatchEvent(new CustomEvent('ejecutarSQLReady'));
         });
     </script>
@@ -397,6 +420,13 @@
             const sqlLoadControls = document.querySelectorAll('.sql-load-control');
             
             if (modeSwitch.checked) {
+                // Check if Supabase functions are available
+                if (typeof window.getSchema !== 'function' || typeof window.initSupabaseFromObject !== 'function') {
+                    alert('Las funciones de Supabase no están disponibles. Solo se puede usar el modo local.');
+                    modeSwitch.checked = false;
+                    return;
+                }
+                
                 window.DB_MODE = 'online';
                 modeLabel.textContent = 'Online';
                 modeLabel.style.color = '#2196F3';
@@ -410,10 +440,12 @@
                 if (window.getSchema) {
                     window.getSchema().then(() => {
                         console.log('Esquema actualizado desde Supabase');
-                        updateTablasSelector();
+                        if (typeof updateTablasSelector === 'function') {
+                            updateTablasSelector();
+                        }
                     }).catch(error => {
                         console.error('Error actualizando esquema:', error);
-                        alert('Error conectando con Supabase. Verifique las credenciales en .easysql');
+                        alert('Error conectando con Supabase. Verifique las credenciales.');
                     });
                 }
                 

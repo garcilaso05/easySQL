@@ -1,10 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+// Simple ejecutarSQL module for frontend use
+// Note: Supabase client will be loaded separately via CDN
 
 let supabaseClient = null;
 let credentials = null;
 let schema = [];
 let lastSchemaUpdate = null;
 const SCHEMA_CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+// Function to create Supabase client (assumes global supabase is available)
+function createSupabaseClient(url, key) {
+    if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
+        return window.supabase.createClient(url, key);
+    }
+    console.warn('Supabase client no está disponible. Usando modo local únicamente.');
+    return null;
+}
 
 /**
  * Load schema from Supabase
@@ -134,7 +144,13 @@ function initSupabaseFromObject(creds) {
     }
     
     credentials = creds;
-    supabaseClient = createClient(creds.SUPABASE_URL, creds.SUPABASE_KEY);
+    supabaseClient = createSupabaseClient(creds.SUPABASE_URL, creds.SUPABASE_KEY);
+    
+    if (!supabaseClient) {
+        console.warn('No se pudo crear cliente de Supabase. Funcionando en modo local únicamente.');
+        return null;
+    }
+    
     return supabaseClient;
 }
 

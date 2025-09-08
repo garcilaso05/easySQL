@@ -40,3 +40,11 @@ window.safeEjecutarSQL = safeEjecutarSQL;
 
 // Legacy alias for backwards compatibility
 window.ejecutarSQL_safe = safeEjecutarSQL;
+
+// Temporary shim for ejecutarSQL until the module loads
+if (!window.ejecutarSQL) {
+    window.ejecutarSQL = async function(sql, params = []) {
+        console.warn('ejecutarSQL called before module loaded, using safeEjecutarSQL');
+        return await safeEjecutarSQL(sql, params);
+    };
+}
